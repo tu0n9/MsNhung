@@ -1,0 +1,60 @@
+// Nạp mọi thứ tab Học phí và file Excel cần cho một tháng. Quy mô một trung tâm (vài trăm học sinh)
+// nên tải hết về rồi tính trên máy cho gọn.
+// ponytail: tải toàn bộ goi_hoc/phieu_thu; khi lên hàng chục nghìn phiếu thì chuyển sang view tổng hợp trong Postgres.
+import { congThang, tongHopHocSinh, type Goi, type PhieuThu, type Thang, type TongHopThang } from './hoc-phi'
+import { q, sb, type HocSinh, type Lop, type TaiKhoan } from './supabase'
+
+export interface ChiPhi { id: string; ngay: string; danh_muc: string; so_tien: number; ghi_chu: string | null }
+export interface DongHs extends TongHopThang { hs: HocSinh; soBuoi: number; dieuChinh: number }
+export interface DuLieuThang {
+  thang: Thang; lops: Lop[]; dong: DongHs[]; phieu: (PhieuThu & { id: string; hinh_thuc: string; ghi_chu: string | null })[]
+  chi: ChiPhi[]; luongTg: { tg: TaiKhoan; soBuoi: number; thanhTien: number }[]
+  diemDanh: { hoc_sinh_id: string; trang_thai: string; sticker: number; ngay: string; lop_id: string }[]
+  goi: Goi[]
+}
+
+export async function taiDuLieuThang(thang: Thang): Promise<DuLieuThang> {
+  const dau = `${thang}-01`, sau = `${congThang(thang, 1)}-01`
+  const [lops, hs, goi, phieu, chi, tgb, tgs, dd] = await Promise.all([
+    q(sb.from('lop').select('*').order('ten')),
+    q(sb.from('hoc_sinh').select('*').order('ho_ten')),
+    q(sb.from('goi_hoc').select('*')),
+    q(sb.from('phieu_thu').select('*').order('ngay_thu')),
+    q(sb.from('chi_phi').select('*').gte('ngay', dau).lt('ngay', sau).order('ngay')),
+    q(sb.from('tro_giang_buoi').select('tro_giang_id, don_gia, buoi_hoc!inner(ngay)').gte('buoi_hoc.ngay', dau).lt('buoi_hoc.ngay', sau)),
+    q(sb.from('tai_khoan').select('*').eq('vai_tro', 'tro_giang')),
+    q(sb.from('diem_danh').select('hoc_sinh_id, trang_thai, sticker, buoi_hoc!inner(ngay, lop_id)').gte('buoi_hoc.ngay', dau).lt('buoi_hoc.ngay', sau)),
+  ])
+  const goiL = goi as Goi[], phieuL = phieu as DuLieuThang['phieu']
+  const diemDanh = (dd as unknown as { hoc_sinh_id: string; trang_thai: string; sticker: number; buoi_hoc: { ngay: string; lop_id: string } }[])
+    .map((x) => ({ hoc_sinh_id: x.hoc_sinh_id, trang_thai: x.trang_thai, sticker: x.sticker, ngay: x.buoi_hoc.ngay, lop_id: x.buoi_hoc.lop_id }))
+
+  const dong = (hs as HocSinh[]).map((h) => {
+    const g = goiL.filter((x) => x.hoc_sinh_id === h.id)
+    const th = tongHopHocSinh(g, phieuL, thang)
+    return {
+      ...th, hs: h,
+      soBuoi: diemDanh.filter((x) => x.hoc_sinh_id === h.id && x.trang_thai !== 'vang').length,
+      // điều chỉnh và tiền dư của gói bắt đầu tháng này, để Excel hiện riêng cột "Điều chỉnh"
+      dieuChinh: g.filter((x) => x.thang_bat_dau.startsWith(thang)).reduce((s, x) => s + x.dieu_chinh - x.tien_du_tru, 0),
+    }
+  // học sinh ngừng học vẫn hiện nếu còn tiền liên quan tháng này
+  }).filter((d) => d.hs.trang_thai === 'dang_hoc' || d.phaiThu || d.noKyTruoc || d.thucThu || d.conPhaiThu)
+
+  const luongTg = (tgs as TaiKhoan[]).map((tg) => {
+    const ds = (tgb as { tro_giang_id: string; don_gia: number }[]).filter((x) => x.tro_giang_id === tg.id)
+    return { tg, soBuoi: ds.length, thanhTien: ds.reduce((s, x) => s + x.don_gia, 0) }
+  }).filter((x) => x.soBuoi > 0)
+
+  return { thang, lops: lops as Lop[], dong, phieu: phieuL.filter((p) => p.ngay_thu >= dau && p.ngay_thu < sau), chi: chi as ChiPhi[], luongTg, diemDanh, goi: goiL }
+}
+
+export function tongCong(d: DuLieuThang) {
+  const cong = (k: keyof TongHopThang) => d.dong.reduce((s, x) => s + x[k], 0)
+  const tongChi = d.chi.reduce((s, x) => s + x.so_tien, 0) + d.luongTg.reduce((s, x) => s + x.thanhTien, 0)
+  const thucThu = d.phieu.reduce((s, p) => s + p.so_tien, 0)
+  return {
+    phaiThu: cong('phaiThu'), noKyTruoc: cong('noKyTruoc'), daThu: cong('daThu'), conPhaiThu: cong('conPhaiThu'),
+    thucThu, tongChi, chenhLech: thucThu - tongChi,
+  }
+}

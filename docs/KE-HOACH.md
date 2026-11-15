@@ -56,6 +56,25 @@ Vì sao như vậy:
 | 8 | **Sao lưu**: GitHub Actions hằng đêm `pg_dump` sang repo riêng tư; nút "Sao lưu toàn bộ"; nhắc khi chốt sổ | Có bản dump đêm đầu tiên trong repo sao lưu |
 | R | **Review toàn bộ** trước khi giao cho cô Nhung dùng thật | Ghi kết quả vào cuối file này |
 
+## Tiến độ
+
+| Pha | Trạng thái | Kiểm chứng |
+|-----|-----------|------------|
+| 0–7 | ✅ 2026-11-15 | `npm test` 9/9 pass (`src/hoc-phi.test.ts`); `tsc` sạch; build OK. E2E Playwright Chromium ở khung 412px: admin đăng nhập → tạo trợ giảng → tạo lớp → thêm học sinh có avatar + SĐT phụ huynh → điểm danh, sticker, trợ giảng, ảnh lớp → thu gói 3 tháng 2 triệu → chi phí → tab Học phí (3.000.000 phải thu / 2.000.000 đã thu / 1.000.000 còn / chi 230.000 / chênh 1.770.000) → xuất Excel 7 loại trang có công thức → phụ huynh đăng nhập bằng SĐT, bị bắt đổi mật khẩu, thấy điểm danh, ảnh, học phí. Không lỗi JS. Khoá sổ thử qua API: tháng đã chốt từ chối thêm chi phí, sửa điểm danh, xoá phiếu thu; mở khoá phải có lý do. Edge Function: trợ giảng tạo giáo viên bị 403, trợ giảng đọc `chi_phi` ra rỗng. Dữ liệu thử đã xoá. |
+| 8 | ⏳ | Sao lưu đêm qua GitHub Actions: chưa làm. Nút "Sao lưu toàn bộ" và nhắc khi chốt sổ đã có. |
+| R | ⏳ | |
+
+### Chỗ lệch so với thiết kế ban đầu
+
+- **Chốt sổ không chụp lại số nợ.** Số của một tháng chỉ tính từ phiếu thu có ngày trước cuối tháng đó và dữ liệu đến
+  hết tháng bị trigger khoá, nên tính lại lúc nào cũng ra cùng con số; không cần bảng ảnh chụp. Chốt tháng M khoá mọi
+  thứ đến hết M (mốc `khoa_so.khoa_den`), mở khoá M thì các tháng sau M cũng mở.
+- **"Đã thu" của tháng M** = tiền thu được trong kỳ cho các khoản đến hết tháng M: gồm tiền đóng trước cho tháng M
+  và tiền trả nợ cũ thu trong tháng M. Nhờ vậy luôn có *Còn phải thu = Học phí + Nợ kỳ trước − Đã thu*. Tiền đóng
+  trước cho các tháng sau không nằm trong "Đã thu" mà chỉ nằm trong "Thực thu trong tháng".
+- **Lương trợ giảng không sinh dòng chi phí** mà tính từ `tro_giang_buoi` (đơn giá chốt lúc điểm danh) và cộng vào
+  tổng chi; trang Chi phí và Excel hiện riêng một dòng.
+
 ## Việc người dùng phải tự làm (cần trước pha 0–1)
 
 1. Tạo project Supabase (supabase.com, gói Free, chọn region Singapore). Gửi lại **Project URL** và **anon key**.

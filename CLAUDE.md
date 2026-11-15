@@ -8,11 +8,22 @@ thu tiền nhiều đợt, sổ thu chi, chốt sổ tháng, xuất Excel. Yêu 
 
 ## Tech stack
 
-Chưa chốt (đang grill, xem `docs/YEU-CAU.md`).
+React + Vite + Ant Design (PWA, `HashRouter`) gọi thẳng Supabase (project `msnhung`, Singapore). Phân quyền ở RLS
+(`supabase/migrations/`), tạo tài khoản qua Edge Function `supabase/functions/tai-khoan`. Tính tiền ở `src/hoc-phi.ts`
+(thuần, có test). Kiến trúc ở [`docs/KE-HOACH.md`](docs/KE-HOACH.md).
 
 ## Lệnh chạy
 
-Chưa có.
+| Việc | Lệnh |
+|------|------|
+| Chạy dev | `npm run dev` |
+| Test | `npm test` |
+| Build | `npm run build` |
+| Đẩy migration | `set -a; . ./.env; set +a; npx supabase db push --db-url "$SUPABASE_DB_URL"` |
+| Deploy Edge Function | `SUPABASE_ACCESS_TOKEN=… npx supabase functions deploy tai-khoan --project-ref yfwgavfznjnjwpvjacjf --use-api` |
+| Tạo/đặt lại admin break-glass | `npm run tao-admin` (mật khẩu từ `BREAK_GLASS_PASSWORD` trong `.env`) |
+
+`.env` (không commit) chứa URL, publishable key, secret key, mật khẩu DB, access token, mật khẩu break-glass.
 
 ## Quy ước
 
@@ -22,4 +33,6 @@ Chưa có.
 - Tiền là số nguyên VND, không dùng số thực.
 - Git: app nhỏ nên commit thẳng vào `main`, không cần nhánh feature hay PR (người dùng chốt 2026-11-15; luật này
   thay luật cấm commit vào `main` trong cấu hình global, chỉ áp dụng cho repo này).
+- Project Supabase tắt "tự expose bảng mới" và bật `pg_safeupdate`: bảng mới phải `grant` tường minh (kể cả
+  `service_role`), `UPDATE` phải có `WHERE`.
 - Không xoá dữ liệu thật (điểm danh, phiếu thu, tháng đã chốt sổ) khi khởi động, migrate hay seed.

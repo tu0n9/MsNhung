@@ -70,6 +70,8 @@ Vòng 2 (2026-11-15). Chỗ nào khác vòng 1 thì vòng 2 thắng:
   không tính tiền (coi như đổi lịch). Không học bù cũng không trừ tiền.
 - **Học bù:** ngồi vào buổi của lớp khác hoặc buổi bù riêng do giáo viên tạo.
 - **Hai chỉ số tiền:** "Đã thu" = tiền thu *cho* tháng đó; "Thực thu trong tháng" = tiền có *ngày thu* trong tháng.
+  (Khi làm, "Đã thu" được tính gồm cả tiền trả nợ cũ thu trong tháng, để *Còn phải thu = Học phí + Nợ kỳ trước −
+  Đã thu* luôn đúng; xem `docs/KE-HOACH.md` mục "Chỗ lệch".)
   Chênh lệch thu chi = thực thu − tổng chi (theo dòng tiền).
 - **Chốt sổ:** khoá điểm danh, phiếu thu, chi phí của tháng; nợ cuối kỳ ghi cố định làm nợ kỳ trước của tháng sau.
   Chỉ giáo viên mở khoá được, phải ghi lý do; chốt lại thì app tính lại.
