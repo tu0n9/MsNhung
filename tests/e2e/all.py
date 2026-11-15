@@ -80,10 +80,10 @@ with sync_playwright() as pw:
         lab(p, "Đơn giá một buổi (đ)").fill("100000")
         for t in ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]:
             p.locator(".ant-modal").get_by_text(t, exact=True).click()
-        lab(p, "Giờ học").fill("17:30–19:00")
+        lab(p, "Giờ học").fill("16:45–18:15")
         p.locator(".ant-modal").get_by_role("button", name="Lưu").click()
         expect(p.get_by_text("TEST Lớp Starters")).to_be_visible(timeout=15000)
-        expect(p.get_by_text(re.compile("17:30–19:00"))).to_be_visible()
+        expect(p.get_by_text(re.compile("16:45–18:15"))).to_be_visible()
         p.get_by_role("button", name="Thêm học sinh").click()
         lab(p, "Họ tên").fill("TEST Nguyễn Bảo An")
         chon(p, "Lớp", "TEST Lớp Starters")
@@ -280,7 +280,7 @@ with sync_playwright() as pw:
         assert p.get_by_text("Học phí", exact=True).count() == 0 or p.locator("nav").count() == 0
         # ô "chưa điểm danh" chỉ có khi phụ huynh đọc được buoi_hoc của lớp con (RLS), ô học bù khi đọc được buổi bù
         kiem_luoi()
-        expect(p.get_by_text(re.compile("17:30–19:00")).first).to_be_visible()
+        expect(p.get_by_text(re.compile("16:45–18:15")).first).to_be_visible()
         p.screenshot(path=os.path.join(OUT, "a-phu-huynh.png"), full_page=True)
         huong_dan(lambda: p.get_by_text("Xem hướng dẫn").click(), 1)
         thoat()

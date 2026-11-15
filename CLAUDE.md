@@ -29,6 +29,8 @@ Video hướng dẫn: `public/huong-dan/*.mp4` (quay bằng `tests/video/chuong.
 | Đẩy migration | `set -a; . ./.env; set +a; npx supabase db push --db-url "$SUPABASE_DB_URL"` |
 | Deploy Edge Function | `SUPABASE_ACCESS_TOKEN=… npx supabase functions deploy tai-khoan --project-ref yfwgavfznjnjwpvjacjf --use-api` |
 | Tạo/đặt lại admin break-glass | `npm run tao-admin` (mật khẩu từ `BREAK_GLASS_PASSWORD` trong `.env`) |
+| Tạo dữ liệu demo | `npm run tao-demo`: 3 lớp, 15 học sinh, 3 tháng tính tới hôm nay; thêm bên cạnh dữ liệu đang có, không tạo tài khoản mới (dùng `tg01`, phụ huynh `0356998740`); có lớp demo rồi thì từ chối |
+| Làm sạch như app mới | `npm run lam-moi`: gõ `XOA HET`; sao lưu JSON vào `sao-luu-may/` trước, xoá mọi dữ liệu và ảnh, mở khoá sổ, **giữ mọi tài khoản**. Người dùng tự chạy (auto mode chặn lệnh này) |
 
 `.env` (không commit) chứa URL, publishable key, secret key, mật khẩu DB, access token, mật khẩu break-glass.
 

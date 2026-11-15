@@ -7,7 +7,9 @@
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "tao-admin": "node --env-file=.env scripts/tao-admin.mjs",
-    "test:all": "bash tests/e2e/chay.sh"
+    "test:all": "bash tests/e2e/chay.sh",
+    "tao-demo": "node --env-file=.env scripts/tao-demo.mjs",
+    "lam-moi": "node --env-file=.env scripts/lam-moi.mjs"
   },
   "dependencies": {
     "@ant-design/icons": "^6.3.4",

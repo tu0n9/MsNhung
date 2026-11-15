@@ -188,6 +188,15 @@ Xoá lớp (2026-11-15):
   lại, chỉ bỏ liên kết học sinh. Tài khoản phụ huynh giữ lại.
 - Lớp có dữ liệu trong **tháng đã chốt sổ** thì database từ chối và không xoá gì; mở khoá tháng đó trước rồi xoá.
 
+Dữ liệu demo và làm sạch (2026-11-15):
+
+- **Demo để bàn giao thử** (`npm run tao-demo`): 3 lớp, 15 học sinh, điểm danh 3 tháng tính tới hôm nay (vắng, học bù
+  lớp khác, lớp nghỉ, một buổi quên điểm danh), ảnh lớp, gói 1 / 3 tháng với đủ kiểu đóng tiền, chi phí, chốt sổ 2
+  tháng trước. **Không tạo tài khoản mới**: dùng 3 tài khoản đang có (`admin`, trợ giảng `tg01`, phụ huynh
+  `0356998740` là phụ huynh của hai anh em trong demo). Thêm bên cạnh dữ liệu đang có, không xoá gì.
+- **Làm sạch như app mới** (`npm run lam-moi`, chỉ chạy khi người dùng cần): xoá mọi dữ liệu và ảnh, mở khoá sổ,
+  **giữ mọi tài khoản**; bắt gõ `XOA HET`, tải bản sao lưu JSON về `sao-luu-may/` trước khi xoá. Chạy trên máy có `.env`.
+
 ## Câu hỏi còn mở
 
 Không còn.
