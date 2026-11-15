@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { App, Avatar, Button, Card, Checkbox, DatePicker, Empty, Image, InputNumber, List, Modal, Segmented, Select, Space, Switch, Tag, Upload } from 'antd'
 import { CameraOutlined, PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
+import { MAU } from '../giao-dien'
 import { homNay, q, sb, taiAnhLen, urlAnh, type BuoiHoc, type DiemDanh as DD, type HocSinh, type Lop, type TaiKhoan } from '../supabase'
 
 const LOAI = { lich: 'Theo lịch', phu: 'Buổi phụ', bu: 'Buổi bù' }
@@ -141,9 +142,9 @@ function BuoiChiTiet({ buoi: b0, lop, quayLai }: { buoi: BuoiHoc; lop: Lop; quay
             const x = dd[h.id]
             const laBu = h.lop_id !== lop.id
             return (
-              <List.Item style={{ flexWrap: 'wrap', gap: 8, background: x ? undefined : '#fffbe6' }}>
+              <List.Item style={{ flexWrap: 'wrap', gap: 8, background: x ? undefined : MAU.vang }}>
                 <Space>
-                  <Avatar size={56} src={h.avatar && url[h.avatar]}>{h.ho_ten.split(' ').pop()?.[0]}</Avatar>
+                  <Avatar shape="square" size={56} src={h.avatar && url[h.avatar]}>{h.ho_ten.split(' ').pop()?.[0]}</Avatar>
                   <div><b>{h.ho_ten}</b><br /><small>⭐ {stickerTong[h.id] ?? 0} sticker{laBu && ' · học bù'}</small></div>
                 </Space>
                 <Space wrap>

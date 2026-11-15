@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { App, Avatar, Button, Card, Col, DatePicker, Input, Row, Segmented, Space, Statistic, Table, Tag } from 'antd'
+import { App, Avatar, Button, Card, DatePicker, Input, Segmented, Space, Tag } from 'antd'
 import dayjs from 'dayjs'
 import { taiDuLieuThang, tongCong, type DongHs, type DuLieuThang } from '../du-lieu'
 import { vnd, type Thang } from '../hoc-phi'
 import { q, sb, urlAnh, type HocSinh } from '../supabase'
 import HocSinhChiTiet from './HocSinhChiTiet'
+import { MAU } from '../giao-dien'
 
 const BANG = ['tai_khoan', 'lop', 'hoc_sinh', 'buoi_hoc', 'diem_danh', 'tro_giang_buoi', 'anh_buoi', 'goi_hoc', 'phieu_thu', 'chi_phi', 'khoa_so', 'nhat_ky_chot_so']
 
@@ -65,7 +66,6 @@ export default function HocPhi() {
     try { (await import('../xuat-excel')).xuatExcel(d) } catch (e) { message.error((e as Error).message) } finally { setDangXuat(false) }
   }
 
-  const so = (v: number, mau?: string) => <Statistic value={v} formatter={(x) => vnd(Number(x))} valueStyle={{ fontSize: 18, color: mau }} />
   return (
     <Space direction="vertical" style={{ width: '100%' }}>
       <Space wrap>
@@ -75,29 +75,47 @@ export default function HocPhi() {
         <Button onClick={() => saoLuuToanBo().catch((e) => message.error(e.message))}>Sao lưu toàn bộ</Button>
       </Space>
 
-      <Row gutter={[8, 8]}>
-        {([['Phải thu', t.phaiThu], ['Nợ kỳ trước', t.noKyTruoc], ['Đã thu', t.daThu], ['Còn phải thu', t.conPhaiThu, '#cf1322'],
-          ['Thực thu trong tháng', t.thucThu, '#389e0d'], ['Tổng chi', t.tongChi], ['Chênh lệch thu chi', t.chenhLech, t.chenhLech < 0 ? '#cf1322' : '#389e0d']] as const)
-          .map(([ten, v, mau]) => <Col key={ten} xs={12} md={6}><Card size="small" title={ten}>{so(v, mau)}</Card></Col>)}
-      </Row>
+      {/* phong cách 3: một khối kẻ ô như trang sổ, không tách thành nhiều thẻ */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', border: `1px solid ${MAU.vien}`, borderRadius: 6, background: '#fff' }}>
+        {([['Phải thu', t.phaiThu], ['Nợ kỳ trước', t.noKyTruoc], ['Đã thu', t.daThu], ['Thực thu trong tháng', t.thucThu, MAU.chinh],
+          ['Tổng chi', t.tongChi], ['Chênh lệch thu chi', t.chenhLech, t.chenhLech < 0 ? MAU.do : MAU.chinh]] as const).map(([ten, v, mau], i) => (
+          <div key={ten} style={{ padding: '10px 12px', borderBottom: `1px solid ${MAU.vien}`, borderRight: i % 2 === 0 ? `1px solid ${MAU.vien}` : undefined }}>
+            <div style={{ fontSize: 12, color: MAU.chuPhu }}>{ten}</div>
+            <b style={{ fontSize: 17, color: mau }}>{vnd(v)}</b>
+          </div>
+        ))}
+        <div style={{ gridColumn: 'span 2', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <span style={{ color: MAU.chuPhu }}>Còn phải thu</span>
+          <b style={{ fontSize: 24, color: t.conPhaiThu > 0 ? MAU.do : MAU.chinh }}>{vnd(t.conPhaiThu)}</b>
+        </div>
+      </div>
 
-      <Segmented value={loc} onChange={(v) => setLoc(v as typeof loc)} options={[{ value: 'tat_ca', label: 'Tất cả' }, { value: 'no', label: 'Còn nợ' }, { value: 'du', label: 'Đã đủ' }]} />
+      <Segmented value={loc} onChange={(v) => setLoc(v as typeof loc)} options={[
+        { value: 'tat_ca', label: 'Tất cả' }, { value: 'no', label: `Còn nợ ${d.dong.filter((r) => r.conPhaiThu > 0).length}` }, { value: 'du', label: 'Đã đủ' }]} />
 
       {d.lops.map((l) => {
         const ds = d.dong.filter((r) => r.hs.lop_id === l.id && loc1(r))
         if (!ds.length) return null
         return (
-          <Card key={l.id} size="small" title={l.ten}>
-            <Table size="small" rowKey={(r) => r.hs.id} dataSource={ds} pagination={false} scroll={{ x: true }}
-              onRow={(r) => ({ onClick: () => setXem(r.hs), style: { cursor: 'pointer' } })} columns={[
-                { title: 'Học sinh', fixed: 'left', render: (_, r) => <Space><Avatar src={r.hs.avatar && url[r.hs.avatar]}>{r.hs.ho_ten.split(' ').pop()?.[0]}</Avatar>{r.hs.ho_ten}</Space> },
-                { title: 'Buổi', dataIndex: 'soBuoi' },
-                { title: 'Học phí', render: (_, r) => vnd(r.phaiThu) },
-                { title: 'Nợ trước', render: (_, r) => vnd(r.noKyTruoc) },
-                { title: 'Đã thu', render: (_, r) => vnd(r.daThu) },
-                { title: 'Còn nợ', render: (_, r) => <b style={{ color: r.conPhaiThu > 0 ? '#cf1322' : undefined }}>{vnd(r.conPhaiThu)}</b> },
-                { title: '', render: (_, r) => r.conPhaiThu > 0 ? <Tag color="red">Còn nợ</Tag> : <Tag color="green">Đã đủ</Tag> },
-              ]} />
+          <Card key={l.id} size="small" title={l.ten} styles={{ body: { padding: 0 } }}>
+            {ds.map((r) => (
+              <button key={r.hs.id} type="button" onClick={() => setXem(r.hs)} style={{
+                all: 'unset', boxSizing: 'border-box', width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
+                padding: '10px 12px', borderTop: `1px solid ${MAU.vien}`,
+              }}>
+                <Avatar shape="square" src={r.hs.avatar && url[r.hs.avatar]}>{r.hs.ho_ten.split(' ').pop()?.[0]}</Avatar>
+                <div style={{ flexGrow: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 500 }}>{r.hs.ho_ten}</div>
+                  <div style={{ fontSize: 12, color: MAU.chuPhu }}>
+                    {r.soBuoi} buổi · học phí {vnd(r.phaiThu)}{r.noKyTruoc ? ` · nợ trước ${vnd(r.noKyTruoc)}` : ''}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <b style={{ color: r.conPhaiThu > 0 ? MAU.do : MAU.chinh }}>{r.conPhaiThu > 0 ? vnd(r.conPhaiThu) : 'Đã đủ'}</b>
+                  {r.conPhaiThu > 0 && <div style={{ fontSize: 12, color: MAU.chuPhu }}>còn nợ</div>}
+                </div>
+              </button>
+            ))}
           </Card>
         )
       })}

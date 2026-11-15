@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { App, Avatar, Button, Checkbox, Collapse, DatePicker, Form, Input, InputNumber, List, Modal, Popconfirm, Select, Space, Tag, Upload } from 'antd'
 import { PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
@@ -11,6 +12,7 @@ export default function LopHoc() {
   const { message } = App.useApp()
   const toi = useToi()
   const ql = laQuanLy(toi.vai_tro)
+  const nav = useNavigate()
   const [lops, setLops] = useState<Lop[]>([])
   const [hs, setHs] = useState<HocSinh[]>([])
   const [url, setUrl] = useState<Record<string, string>>({})
@@ -75,6 +77,7 @@ export default function LopHoc() {
       {ql && <Space wrap>
         <Button icon={<PlusOutlined />} onClick={() => setSuaLop({ lich: [], hoat_dong: true })}>Thêm lớp</Button>
         <Button icon={<PlusOutlined />} type="primary" disabled={!lops.length} onClick={() => setSuaHs({ ngay_vao: dayjs().format('YYYY-MM-DD') })}>Thêm học sinh</Button>
+        <Button onClick={() => nav('/import')}>Import Excel</Button>
         <Checkbox checked={hienNgung} onChange={(e) => setHienNgung(e.target.checked)}>Hiện học sinh đã ngừng học</Checkbox>
       </Space>}
       <Collapse defaultActiveKey={lops.map((l) => l.id)} key={lops.length} items={lops.map((l) => {
@@ -93,7 +96,7 @@ export default function LopHoc() {
                 <a style={{ color: 'red' }} onClick={(e) => e.stopPropagation()}>Xoá</a></Popconfirm>,
             ] : []}>
               <List.Item.Meta
-                avatar={<Avatar size={48} src={h.avatar && url[h.avatar]}>{h.ho_ten.split(' ').pop()?.[0]}</Avatar>}
+                avatar={<Avatar shape="square" size={48} src={h.avatar && url[h.avatar]}>{h.ho_ten.split(' ').pop()?.[0]}</Avatar>}
                 title={<>{h.ho_ten} {h.trang_thai === 'ngung' && <Tag>Ngừng học</Tag>}</>}
                 description={[h.ten_phu_huynh, h.sdt_phu_huynh].filter(Boolean).join(' · ')} />
             </List.Item>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { App, Button, Card, Form, Input } from 'antd'
 import { sb } from '../supabase'
+import { MAU } from '../giao-dien'
 
 export default function DangNhap() {
   const { message } = App.useApp()
@@ -18,7 +19,7 @@ export default function DangNhap() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 16, background: '#fff2e8' }}>
+    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 16, background: MAU.chinhNhat }}>
       <Card title="Anh ngữ Ms.Nhung" style={{ width: '100%', maxWidth: 360 }}>
         <Form layout="vertical" onFinish={dangNhap}>
           <Form.Item name="dinh_danh" label="Tên đăng nhập hoặc số điện thoại" rules={[{ required: true }]}>

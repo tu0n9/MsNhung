@@ -4,6 +4,7 @@ import { Button, Grid, Layout, Menu, Spin } from 'antd'
 import { BankOutlined, CheckSquareOutlined, DollarOutlined, TeamOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons'
 import type { Session } from '@supabase/supabase-js'
 import { laQuanLy, q, sb, type TaiKhoan } from './supabase'
+import { MAU } from './giao-dien'
 import DangNhap from './trang/DangNhap'
 import DoiMatKhau from './trang/DoiMatKhau'
 import DiemDanh from './trang/DiemDanh'
@@ -12,6 +13,7 @@ import HocPhi from './trang/HocPhi'
 import ChiPhi from './trang/ChiPhi'
 import TaiKhoanTrang from './trang/TaiKhoan'
 import PhuHuynh from './trang/PhuHuynh'
+import ImportExcel from './trang/ImportExcel'
 
 const NguoiDung = createContext<TaiKhoan>(null!)
 export const useToi = () => useContext(NguoiDung)
@@ -49,13 +51,14 @@ export default function App() {
       ]
   // điện thoại: thanh điều hướng dưới đáy, vì menu ngang bị gom vào nút "..." khó bấm
   const dienThoai = !manHinh.md
+  const dangO = (k: string) => loc.pathname === k || (k === '/lop' && loc.pathname === '/import')
 
   return (
     <NguoiDung.Provider value={toi}>
       <Layout style={{ minHeight: '100vh' }}>
         <Layout.Header style={{ display: 'flex', alignItems: 'center', padding: '0 12px', gap: 8 }}>
           <b style={{ color: '#fff', whiteSpace: 'nowrap' }}>Ms.Nhung</b>
-          {dienThoai ? <span style={{ flex: 1 }} /> : <Menu theme="dark" mode="horizontal" selectedKeys={[loc.pathname]} items={menu}
+          {dienThoai ? <span style={{ flex: 1 }} /> : <Menu theme="dark" mode="horizontal" selectedKeys={[loc.pathname === '/import' ? '/lop' : loc.pathname]} items={menu}
             onClick={(e) => nav(e.key)} style={{ flex: 1, minWidth: 0 }} />}
           <Button size="small" onClick={() => sb.auth.signOut()}>Thoát</Button>
         </Layout.Header>
@@ -69,6 +72,7 @@ export default function App() {
                 <Route path="/lop" element={<LopHoc />} />
                 {ql && <Route path="/hoc-phi" element={<HocPhi />} />}
                 {ql && <Route path="/chi-phi" element={<ChiPhi />} />}
+                {ql && <Route path="/import" element={<ImportExcel />} />}
                 <Route path="/tai-khoan" element={<TaiKhoanTrang />} />
               </>
             )}
@@ -77,11 +81,11 @@ export default function App() {
           </Routes>
         </Layout.Content>
         {dienThoai && menu.length > 1 && (
-          <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', background: '#fff', borderTop: '1px solid #eee', zIndex: 10 }}>
+          <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', background: '#fff', borderTop: `1px solid ${MAU.vien}`, zIndex: 10 }}>
             {menu.map((m) => (
               <button key={m.key} onClick={() => nav(m.key)} style={{
                 flex: 1, border: 0, background: 'none', padding: '8px 0 10px', fontSize: 11,
-                color: loc.pathname === m.key ? '#d4380d' : '#666', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+                color: dangO(m.key) ? MAU.chinh : MAU.chuMo, fontWeight: dangO(m.key) ? 600 : 400, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
               }}><span style={{ fontSize: 20 }}>{m.icon}</span>{m.label}</button>
             ))}
           </nav>

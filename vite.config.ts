@@ -11,7 +11,7 @@ export default defineConfig({
         name: 'Anh ngữ Ms.Nhung',
         short_name: 'Ms.Nhung',
         lang: 'vi',
-        theme_color: '#d4380d',
+        theme_color: '#0f7a5c',
         background_color: '#ffffff',
         display: 'standalone',
         icons: [
@@ -20,7 +20,7 @@ export default defineConfig({
         ],
       },
       // exceljs nặng, không cache sẵn cho lần mở đầu
-      workbox: { maximumFileSizeToCacheInBytes: 5 * 1024 * 1024 },
+      workbox: { maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, globPatterns: ['**/*.{js,css,html,png,woff2}'] },
     }),
   ],
   test: { include: ['src/**/*.test.ts'] },

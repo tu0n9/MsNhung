@@ -1,0 +1,2 @@
+/* số tiền, số buổi xếp thẳng cột như sổ */
+body { font-variant-numeric: tabular-nums; }

@@ -63,7 +63,7 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
     <Space direction="vertical" style={{ width: '100%' }}>
       <Space wrap>
         {quayLai && <Button onClick={quayLai}>← Quay lại</Button>}
-        <Avatar size={64} src={avatar}>{hs.ho_ten.split(' ').pop()?.[0]}</Avatar>
+        <Avatar shape="square" size={64} src={avatar}>{hs.ho_ten.split(' ').pop()?.[0]}</Avatar>
         <div><b style={{ fontSize: 18 }}>{hs.ho_ten}</b><br />{lop?.ten} {hs.trang_thai === 'ngung' && <Tag>Ngừng học</Tag>}</div>
         <DatePicker picker="month" value={dayjs(thang)} onChange={(d) => d && setThang(d.format('YYYY-MM'))} format="MM/YYYY" allowClear={false} />
       </Space>
