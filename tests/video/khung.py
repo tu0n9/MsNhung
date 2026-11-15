@@ -4,9 +4,8 @@ Mỗi video là một danh sách bước: câu thuyết minh (hiện phụ đề
 thao tác Playwright. Playwright quay hình (webm, không có tiếng); ffmpeg đặt từng câu đọc đúng lúc nó được nói rồi
 ghép thành MP4 (H.264 + AAC) để Windows / điện thoại mở được ngay.
 Dữ liệu mẫu tạo qua API với tên có "(mẫu)" và tự xoá sau khi quay (xem du_lieu_mau.py)."""
-import asyncio, json, os, re, shutil, subprocess, sys, time
+import json, os, re, shutil, subprocess, sys, time
 
-import edge_tts
 import imageio_ffmpeg
 from playwright.sync_api import sync_playwright
 
@@ -20,7 +19,7 @@ KHUNG = {"width": 412, "height": 860}
 
 CHU_THICH = """(t) => { let d = document.getElementById('chu-thich');
   if (!d) { d = document.createElement('div'); d.id = 'chu-thich'; document.body.appendChild(d);
-    Object.assign(d.style, { position: 'fixed', left: '8px', right: '8px', bottom: '70px', zIndex: 99999, padding: '10px 12px',
+    Object.assign(d.style, { position: 'fixed', left: '8px', right: '8px', top: '60px', zIndex: 99999, padding: '10px 12px',
       background: 'rgba(15,122,92,.95)', color: '#fff', borderRadius: '6px', fontSize: '15px', lineHeight: '1.45',
       fontFamily: '"Lexend Variable", sans-serif', boxShadow: '0 4px 14px rgba(0,0,0,.3)', pointerEvents: 'none' }) }
   d.textContent = t; d.style.display = t ? 'block' : 'none' }"""
@@ -33,8 +32,40 @@ def do_dai(file):
     return int(h) * 3600 + int(m) * 60 + float(s)
 
 
+def _doc_mot(text, out, so_lan):
+    for lan in range(so_lan):
+        # chạy ở tiến trình riêng: Playwright (sync) đã giữ event loop của tiến trình này
+        r = subprocess.run([sys.executable, "-m", "edge_tts", "--voice", GIONG, "--rate=-5%", "--text", text, "--write-media", out + ".tam"],
+                           capture_output=True)
+        if r.returncode == 0 and os.path.getsize(out + ".tam") > 1000:
+            os.replace(out + ".tam", out)
+            return True
+        time.sleep(1.5 * (lan + 1))
+    return False
+
+
 def doc(cau, file):
-    asyncio.run(edge_tts.Communicate(cau, GIONG, rate="-5%").save(file))
+    """Đọc câu ra mp3. Dịch vụ giọng đọc trực tuyến hay không trả tiếng (NoAudioReceived), câu dài càng dễ hỏng:
+    thử cả câu vài lần, không được thì cắt theo dấu câu, đọc từng đoạn rồi nối lại. Câu đã đọc được lưu đệm theo nội dung."""
+    import hashlib
+    dem = os.path.join(TAM, "giong", hashlib.sha1(f"{GIONG}|{cau}".encode()).hexdigest() + ".mp3")
+    os.makedirs(os.path.dirname(dem), exist_ok=True)
+    if not os.path.exists(dem):
+        doc_ra = cau.replace(":", ".")  # dấu hai chấm hay làm dịch vụ từ chối; phụ đề vẫn giữ nguyên câu gốc
+        if not _doc_mot(doc_ra, dem, 4):
+            doan = [d for d in re.split(r"(?<=[.,?!])\s+", doc_ra) if d.strip()]
+            tep = []
+            for i, d in enumerate(doan):
+                f = f"{dem}.{i}.mp3"
+                if not _doc_mot(d, f, 8):
+                    raise RuntimeError(f"không đọc được đoạn: {d}")
+                tep.append(f)
+            vao = sum((["-i", f] for f in tep), [])
+            noi = "".join(f"[{i}:a]" for i in range(len(tep))) + f"concat=n={len(tep)}:v=0:a=1[a]"
+            subprocess.run([FFMPEG, "-y", *vao, "-filter_complex", noi, "-map", "[a]", dem], check=True, capture_output=True)
+            for f in tep:
+                os.remove(f)
+    shutil.copy(dem, file)
     return do_dai(file)
 
 
@@ -51,7 +82,8 @@ class Quay:
     def __enter__(self):
         self.pw = sync_playwright().start()
         self.b = self.pw.chromium.launch(slow_mo=120)
-        self.ctx = self.b.new_context(viewport=KHUNG, record_video_dir=self.thu_muc, record_video_size=KHUNG, accept_downloads=True)
+        self.ctx = self.b.new_context(viewport=KHUNG, record_video_dir=self.thu_muc, record_video_size=KHUNG, accept_downloads=True,
+                                      permissions=["clipboard-read", "clipboard-write"])
         self.p = self.ctx.new_page()
         self.t0 = time.time()
         return self

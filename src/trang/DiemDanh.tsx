@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { App, Avatar, Button, Card, Checkbox, DatePicker, Empty, Image, InputNumber, List, Modal, Segmented, Select, Space, Switch, Tag, Upload } from 'antd'
+import { App, Avatar, Button, Card, Checkbox, DatePicker, Empty, Image, InputNumber, List, Modal, Radio, Segmented, Select, Space, Switch, Tag, Upload } from 'antd'
 import { CameraOutlined, PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { MAU } from '../giao-dien'
@@ -174,7 +174,10 @@ function BuoiChiTiet({ buoi: b0, lop, quayLai }: { buoi: BuoiHoc; lop: Lop; quay
                     <Segmented value={x ? 'hoc_bu' : 'khong'} onChange={(v) => (v === 'khong' ? boDiemDanh(h.id) : luu(h.id, { trang_thai: 'hoc_bu' }))}
                       options={[{ value: 'hoc_bu', label: 'Học bù' }, { value: 'khong', label: 'Không đến' }]} />
                   ) : (
-                    <Segmented value={x?.trang_thai} onChange={(v) => luu(h.id, { trang_thai: v as DD['trang_thai'] })}
+                    // Radio thay Segmented: Segmented chưa có giá trị thì tự hiện chọn sẵn ô đầu ("Có mặt") và bấm vào
+                    // ô đó không gọi onChange, nên em chưa điểm danh bấm "Có mặt" không được lưu. '' = chưa chọn ô nào.
+                    <Radio.Group optionType="button" buttonStyle="solid" value={x?.trang_thai ?? ''}
+                      onChange={(e) => luu(h.id, { trang_thai: e.target.value as DD['trang_thai'] })}
                       options={laBu ? [{ value: 'hoc_bu', label: 'Học bù' }, { value: 'vang', label: 'Vắng' }]
                         : [{ value: 'co_mat', label: 'Có mặt' }, { value: 'vang', label: 'Vắng' }]} />
                   )}

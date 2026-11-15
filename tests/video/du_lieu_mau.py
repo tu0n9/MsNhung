@@ -1,6 +1,6 @@
 """Dữ liệu mẫu cho video: tạo qua API, ghi id vào tam/da-tao.json, xoá đúng những id đó sau khi quay.
 Không đụng dữ liệu thật đang có (database dùng chung với bản thật)."""
-import json, os, urllib.error, urllib.request
+import json, os, urllib.error, urllib.parse, urllib.request
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 env = dict(l.split("=", 1) for l in open(os.path.join(REPO, ".env"), encoding="utf-8").read().splitlines() if "=" in l and not l.startswith("#"))
@@ -15,7 +15,8 @@ DAI_SDT_MAU = "090010%"
 def api(method, path, body=None, token=S, key=S, raw=None, kieu="application/json"):
     h = {"apikey": key, "Authorization": "Bearer " + token, "Content-Type": kieu, "Prefer": "return=representation"}
     data = raw if raw is not None else (json.dumps(body).encode() if body is not None else None)
-    req = urllib.request.Request(U + path, method=method, data=data, headers=h)
+    # tên lớp có dấu cách / tiếng Việt trong bộ lọc: mã hoá, giữ nguyên cú pháp lọc của PostgREST
+    req = urllib.request.Request(U + urllib.parse.quote(path, safe="/?=&(),.*:%-_"), method=method, data=data, headers=h)
     try:
         with urllib.request.urlopen(req) as r:
             t = r.read().decode()
@@ -63,13 +64,44 @@ def tao():
             api("PATCH", f"/rest/v1/hoc_sinh?id=eq.{h['id']}", {"avatar": duong})
             ds["anh"].append(duong)
         luu()
+    # tài khoản giáo viên mẫu dùng để quay (không lộ tài khoản admin trong video)
+    gv = tao_tai_khoan(A, vai_tro="giao_vien", ho_ten="Cô Nhung", ten_dang_nhap="conhung", mat_khau=MK_GV)
+    ds["tk"].append(gv)
+    api("PATCH", f"/rest/v1/tai_khoan?id=eq.{gv}", {"phai_doi_mat_khau": False})
+    luu()
+    # vài gói học để tab Học phí có số: Bảo nợ cả tháng 11, Huy đóng thiếu, Linh đóng trước 3 tháng
+    bao, linh, huy = ds["hs"][1], ds["hs"][2], ds["hs"][3]
+    g = lambda hs, bd, n: api("POST", "/rest/v1/goi_hoc", {"hoc_sinh_id": hs, "thang_bat_dau": f"{bd}-01", "so_thang": n, "don_gia": 150000,
+                                                            "buoi_du_kien": {t: dem_buoi([0, 2, 4], t) for t in thang_lien(bd, n)}})[0]["id"]
+    g(bao, "2026-11", 1)
+    api("POST", "/rest/v1/phieu_thu", {"goi_id": g(huy, "2026-11", 1), "so_tien": 1000000, "ngay_thu": "2026-11-05", "hinh_thuc": "tien_mat"})
+    api("POST", "/rest/v1/phieu_thu", {"goi_id": g(linh, "2026-09", 3), "so_tien": 5850000, "ngay_thu": "2026-09-02", "hinh_thuc": "chuyen_khoan"})
     return ds
+
+
+MK_GV = "CoNhung@2026"
+
+
+def thang_lien(bd, n):
+    y, m = map(int, bd.split("-"))
+    return [f"{y + (m - 1 + i) // 12}-{(m - 1 + i) % 12 + 1:02d}" for i in range(n)]
+
+
+def dem_buoi(lich, thang):
+    """Số ngày trong tháng rơi vào lịch tuần (getDay của JS: 0 = CN), như demBuoiDuKien ở src/hoc-phi.ts."""
+    import calendar, datetime
+    y, m = map(int, thang.split("-"))
+    return sum(1 for d in range(1, calendar.monthrange(y, m)[1] + 1) if (datetime.date(y, m, d).weekday() + 1) % 7 in lich)
 
 
 def xoa():
     if not os.path.exists(GHI):
         return
     ds = json.load(open(GHI, encoding="utf-8"))
+    # video chốt sổ chốt rồi mở khoá thật: trả mốc khoá về như trước TRƯỚC KHI xoá (tháng còn khoá thì trigger chặn xoá),
+    # và xoá nhật ký ghi trong lúc quay
+    api("PATCH", "/rest/v1/khoa_so?id=eq.true", {"khoa_den": ds["khoa_den"]})
+    api("DELETE", f"/rest/v1/nhat_ky_chot_so?id=gt.{ds['bat_dau']}")
     ten = ",".join(f'"{t}"' for t in LOP_TAO_TRONG_VIDEO)
     ds["lop"] += [l["id"] for l in api("GET", f"/rest/v1/lop?select=id&ten=in.({ten})")]
     lop = ",".join(ds["lop"]) or "00000000-0000-0000-0000-000000000000"
@@ -101,9 +133,6 @@ def xoa():
         api("DELETE", "/storage/v1/object/anh", {"prefixes": tep})
     ds["tk"] += [t["id"] for t in api("GET", f"/rest/v1/tai_khoan?select=id&so_dien_thoai=like.{DAI_SDT_MAU}")]
     ds["tk"] += [t["id"] for t in api("GET", "/rest/v1/tai_khoan?select=id&ten_dang_nhap=in.(colan,conhung)")]
-    # video chốt sổ chốt rồi mở khoá thật: trả mốc khoá về như trước, xoá nhật ký ghi trong lúc quay
-    api("PATCH", "/rest/v1/khoa_so?id=eq.true", {"khoa_den": ds["khoa_den"]})
-    api("DELETE", f"/rest/v1/nhat_ky_chot_so?id=gt.{ds['bat_dau']}")
     for t in sorted(set(ds["tk"])):
         try:
             api("DELETE", f"/auth/v1/admin/users/{t}")

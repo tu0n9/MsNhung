@@ -95,6 +95,8 @@ with sync_playwright() as pw:
         p.get_by_text("TEST Trợ giảng Lan").click()
         row = p.locator(".ant-list-item", has_text="TEST Nguyễn Bảo An")
         row.get_by_text("Có mặt", exact=True).click()
+        # chỉ bấm "Có mặt" (chưa nhập sticker) đã phải lưu: lỗi cũ Segmented nuốt cú bấm ô đầu tiên
+        expect(p.locator(".ant-card-head-title", has_text="Học sinh")).to_contain_text("(1/1 có mặt)", timeout=8000)
         row.locator(".ant-input-number input").fill("3")
         p.keyboard.press("Tab")
         p.wait_for_timeout(1500)

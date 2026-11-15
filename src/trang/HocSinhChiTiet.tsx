@@ -148,7 +148,9 @@ function ThuTien({ hs, lop, goi, phieu, buoiDb, daHoan, dong }: {
   const [form] = Form.useForm()
   const dangNo = goi.filter((g) => conNoGoi(g, phieu) > 0)
   const cuoi = goi[goi.length - 1]
-  const thangKe = cuoi ? thangHetGoi(cuoi) : dayjs(hs.ngay_vao).format('YYYY-MM')
+  // chưa có gói nào: lấy tháng muộn hơn giữa tháng vào học và tháng này. Học sinh chuyển từ sổ giấy (vào học từ lâu)
+  // mà mặc định tháng vào học thì gói đầu tiên bị ghi lùi về quá khứ, thành nợ kỳ trước.
+  const thangKe = cuoi ? thangHetGoi(cuoi) : [dayjs(hs.ngay_vao).format('YYYY-MM'), dayjs().format('YYYY-MM')].sort()[1]
   const duCon = duConLai(goi, buoiDb, hs.ngay_vao, daHoan, thangKe)
 
   const v = Form.useWatch([], form) ?? {}
