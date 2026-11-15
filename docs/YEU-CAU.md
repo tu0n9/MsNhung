@@ -101,7 +101,14 @@ Vòng 4 (2026-11-15):
 - **Quyền sửa:** trợ giảng sửa được điểm danh và sticker mọi buổi của tháng chưa chốt, giống giáo viên. Tháng đã chốt
   thì chỉ giáo viên mở khoá.
 
+Chốt hiểu biết chung (2026-11-15):
+
+- **Phụ huynh xem được ảnh lớp** của những buổi con mình có mặt.
+- **Đăng nhập bằng tên đăng nhập hoặc số điện thoại**, áp dụng cho mọi tài khoản.
+- **Tài khoản break-glass `admin`:** quyền cao nhất, tạo sẵn được các tài khoản khác (giáo viên, trợ giảng, phụ
+  huynh). Mật khẩu do người dùng cung cấp, **không ghi vào repo**; script seed đọc từ biến môi trường
+  `BREAK_GLASS_PASSWORD` trong `.env` (đã nằm trong `.gitignore`). Tài khoản này không bị bắt đổi mật khẩu.
+
 ## Câu hỏi còn mở
 
-- Phụ huynh có xem được ảnh lớp của những buổi con mình có mặt không? Đang theo đề xuất: **có**. Người dùng chưa
-  trả lời rõ.
+Không còn.
