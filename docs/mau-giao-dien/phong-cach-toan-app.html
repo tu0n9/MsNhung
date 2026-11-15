@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mẫu giao diện: 3 phong cách cho cả app</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lexend:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px 24px 64px; background: #e9e9e7; color: #222;
+    font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  h1.trang { margin: 0 0 6px; font-size: 26px; }
+  .mo-ta { margin: 0 0 32px; color: #555; max-width: 75ch; line-height: 1.55; }
+  section.phong-cach { margin-bottom: 64px; }
+  section.phong-cach > h2 { margin: 0 0 4px; font-size: 20px; }
+  section.phong-cach > p { margin: 0 0 20px; color: #555; max-width: 80ch; line-height: 1.5; }
+  .hang { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; }
+  .nhan-man { font-size: 13px; color: #666; margin-bottom: 8px; }
+
+  /* ===== Token theo phong cách ===== */
+  .p1 { --font: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; --nen: #f5f5f5; --mat: #ffffff; --chu: #262626; --phu: #595959; --mo: #8c8c8c;
+        --nhan: #d4380d; --nhan-nhat: #fff2e8; --vien: #f0f0f0; --bo: 8px; --bo-lon: 8px; --dau-nen: #001529; --dau-chu: #ffffff;
+        --tot: #237804; --tot-nen: #f6ffed; --xau: #a8071a; --xau-nen: #fff2f0; --dem: 12px; }
+  .p2 { --font: "Be Vietnam Pro", -apple-system, sans-serif; --nen: #f4f7fb; --mat: #ffffff; --chu: #1d2433; --phu: #4b5568; --mo: #7b8597;
+        --nhan: #1f6feb; --nhan-nhat: #e8f0fe; --vien: #e6eaf0; --bo: 14px; --bo-lon: 20px; --dau-nen: #ffffff; --dau-chu: #1d2433;
+        --tot: #11734b; --tot-nen: #e6f6ee; --xau: #b42318; --xau-nen: #fdecea; --dem: 14px; }
+  .p3 { --font: "Lexend", -apple-system, sans-serif; --nen: #fbfbf9; --mat: #ffffff; --chu: #1b1f1d; --phu: #4a524e; --mo: #79817d;
+        --nhan: #0f7a5c; --nhan-nhat: #e3f3ed; --vien: #e4e7e5; --bo: 4px; --bo-lon: 6px; --dau-nen: #0f7a5c; --dau-chu: #ffffff;
+        --tot: #0f7a5c; --tot-nen: #e3f3ed; --xau: #b3261e; --xau-nen: #fbe9e7; --dem: 10px; }
+
+  /* ===== Khung điện thoại ===== */
+  .dt { width: 390px; height: 844px; border-radius: 28px; overflow: hidden; display: flex; flex-direction: column;
+    background: var(--nen); color: var(--chu); font-family: var(--font); font-size: 14px;
+    box-shadow: 0 0 0 10px #1f1f1f, 0 24px 48px rgba(0,0,0,.22); }
+  .dau { height: 56px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px;
+    background: var(--dau-nen); color: var(--dau-chu); }
+  .p2 .dau { border-bottom: 1px solid var(--vien); }
+  .dau b { font-size: 17px; }
+  .dau .phu-dau { font-size: 12px; opacity: .8; }
+  .than { flex-grow: 1; overflow: hidden; padding: 14px 16px 0; display: flex; flex-direction: column; gap: var(--dem); }
+  .tieu-de { margin: 0; font-size: 20px; font-weight: 600; }
+  .phu { color: var(--phu); font-size: 13px; }
+  .mat { background: var(--mat); border: 1px solid var(--vien); border-radius: var(--bo-lon); }
+  .p2 .mat { border-color: transparent; box-shadow: 0 1px 2px rgba(16,24,40,.06), 0 1px 3px rgba(16,24,40,.08); }
+  .nut { height: 44px; border-radius: var(--bo); border: 0; font: inherit; font-weight: 600; cursor: pointer; }
+  .nut-chinh { background: var(--nhan); color: #fff; }
+  .nut-phu { background: var(--mat); color: var(--chu); border: 1px solid var(--vien); }
+  .the-nho { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+  .tot { background: var(--tot-nen); color: var(--tot); }
+  .xau { background: var(--xau-nen); color: var(--xau); }
+  .trung { background: var(--vien); color: var(--phu); }
+  .p3 .the-nho { border-radius: 3px; }
+
+  .day { flex-shrink: 0; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--mat); border-top: 1px solid var(--vien); }
+  .day a { padding: 10px 0 12px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; color: var(--mo); text-decoration: none; }
+  .day a i { width: 22px; height: 22px; border-radius: 6px; background: var(--vien); display: block; }
+  .day a.dang { color: var(--nhan); font-weight: 600; }
+  .day a.dang i { background: var(--nhan); }
+  .p2 .day a.dang i { border-radius: 999px; }
+
+  /* ===== Màn điểm danh ===== */
+  .thanh-buoi { display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; }
+  .ds-hs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .ds-hs li { display: flex; align-items: center; gap: 12px; padding: 10px 12px; }
+  .anh { width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-weight: 600; color: #fff; }
+  .p3 .anh { border-radius: 8px; }
+  .ten-hs { flex-grow: 1; min-width: 0; }
+  .ten-hs b { display: block; font-weight: 600; }
+  .ten-hs span { font-size: 12px; color: var(--phu); }
+  /* danh sách: tên một dòng, nút trạng thái và sticker xuống dòng dưới cho đủ chỗ bấm */
+  .ds-hs li { flex-wrap: wrap; row-gap: 8px; }
+  .ds-hs .ten-hs { flex-basis: calc(100% - 64px); }
+  .ds-hs .chon-tt { margin-left: 60px; }
+  .p3 .ds-hs .chon-tt { margin-left: 52px; }
+  .ds-hs .sticker { margin-left: auto; }
+  .chon-tt { display: flex; border: 1px solid var(--vien); border-radius: var(--bo); overflow: hidden; }
+  .chon-tt button { white-space: nowrap; }
+  .chon-tt button { height: 36px; padding: 0 10px; border: 0; background: var(--mat); font: inherit; font-size: 13px; color: var(--phu); }
+  .chon-tt button.co { background: var(--tot-nen); color: var(--tot); font-weight: 600; }
+  .chon-tt button.vang { background: var(--xau-nen); color: var(--xau); font-weight: 600; }
+  .sticker { display: flex; align-items: center; gap: 4px; }
+  .sticker button { width: 32px; height: 32px; border-radius: var(--bo); border: 1px solid var(--vien); background: var(--mat); font: inherit; font-size: 16px; }
+  .sticker b { min-width: 18px; text-align: center; }
+
+  /* Phong cách 2: điểm danh dạng lưới ảnh, chạm vào ảnh để đổi có mặt / vắng */
+  .p2 .ds-hs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .p2 .ds-hs .ten-hs { flex-basis: auto; }
+  .p2 .ds-hs .sticker { margin-left: 0; }
+  .p2 .ds-hs li { flex-direction: column; flex-wrap: nowrap; text-align: center; gap: 6px; padding: 12px 6px; border-radius: var(--bo-lon); position: relative; }
+  .p2 .ds-hs .anh { width: 64px; height: 64px; font-size: 20px; }
+  .p2 .ds-hs li.vang-mat .anh { filter: grayscale(1); opacity: .45; }
+  .dau-tick { display: none; }
+  .p2 .ds-hs li .dau-tick { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 50%; background: var(--tot); color: #fff; font-size: 13px; display: grid; place-items: center; }
+  .p2 .ds-hs li.vang-mat .dau-tick { background: var(--xau); }
+  .p2 .chon-tt { display: none; }
+  .p2 .ten-hs span { display: none; }
+  .p2 .sticker button { width: 28px; height: 28px; }
+
+  /* Phong cách 3: danh sách dày, không thẻ, phân cách bằng đường kẻ */
+  .p3 .ds-hs { gap: 0; }
+  .p3 .ds-hs li { border-radius: 0; border: 0; border-bottom: 1px solid var(--vien); background: transparent; padding: 10px 0; }
+  .p3 .ds-hs .anh { width: 40px; height: 40px; }
+
+  /* ===== Màn học phí ===== */
+  .o-so { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .o-so div { padding: 12px; }
+  .o-so span { font-size: 12px; color: var(--phu); display: block; }
+  .o-so b { font-size: 18px; font-variant-numeric: tabular-nums; }
+  .o-so .lon { grid-column: span 2; display: flex; justify-content: space-between; align-items: baseline; }
+  .o-so .lon b { font-size: 24px; color: var(--xau); }
+  .p3 .o-so { gap: 0; border: 1px solid var(--vien); border-radius: var(--bo-lon); background: var(--mat); }
+  .p3 .o-so div { border: 0; border-radius: 0; background: transparent; border-bottom: 1px solid var(--vien); }
+  .p3 .o-so div:nth-child(odd):not(.lon) { border-right: 1px solid var(--vien); }
+  .p3 .o-so .lon { border-bottom: 0; }
+  .loc { display: flex; gap: 6px; }
+  .loc button { height: 32px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--vien); background: var(--mat); font: inherit; font-size: 13px; color: var(--phu); }
+  .loc button.chon { border-color: var(--nhan); background: var(--nhan-nhat); color: var(--nhan); font-weight: 600; }
+  .p3 .loc button { border-radius: var(--bo); }
+  .ds-tien { list-style: none; margin: 0; padding: 0; }
+  .ds-tien li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--vien); }
+  .ds-tien li:last-child { border-bottom: 0; }
+  .ds-tien .anh { width: 36px; height: 36px; font-size: 13px; }
+  .ds-tien .so { font-variant-numeric: tabular-nums; text-align: right; }
+  .ds-tien .so b { display: block; }
+
+  /* ===== Màn chi tiết học sinh ===== */
+  .dau-hs { display: flex; gap: 14px; align-items: center; padding: 14px; }
+  .dau-hs .anh { width: 64px; height: 64px; font-size: 22px; }
+  .chi-so { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; }
+  .chi-so div { padding: 12px 4px; }
+  .chi-so div + div { border-left: 1px solid var(--vien); }
+  .chi-so b { display: block; font-size: 22px; }
+  .chi-so span { font-size: 12px; color: var(--phu); }
+  .lich { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 12px; }
+  .lich span { height: 28px; display: grid; place-items: center; font-size: 12px; border-radius: var(--bo); color: var(--mo); }
+  .lich span.c { background: var(--tot-nen); color: var(--tot); font-weight: 600; }
+  .lich span.v { background: var(--xau-nen); color: var(--xau); font-weight: 600; }
+  .lich span.h { color: var(--phu); font-weight: 600; font-size: 11px; }
+  .dong-tien { display: flex; justify-content: space-between; padding: 8px 14px; font-size: 13px; }
+  .dong-tien b { font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<h1 class="trang">Ba phong cách cho cả app Anh ngữ Ms.Nhung</h1>
+<p class="mo-ta">Mỗi phong cách vẽ cùng 3 màn hay dùng nhất: điểm danh một buổi, tab Học phí, chi tiết một học sinh (phụ huynh cũng thấy màn này).
+Khác nhau ở màu, chữ, độ bo góc và cách bố trí. Chọn một phong cách, hoặc lấy phần này của cái này ghép phần kia của cái kia.
+Mẫu màn import Excel ở file <a href="import-excel.html">import-excel.html</a> cùng thư mục.</p>
+
+<div id="cac-phong-cach"></div>
+
+<script>
+// Một bộ màn dùng chung, mỗi phong cách chỉ đổi token và một ít bố trí bằng CSS, để so sánh công bằng.
+const HS = [
+  ['Nguyễn Gia Bảo', '#5b8def', 'co', 3, 41], ['Trần Khánh Linh', '#e0795b', 'co', 2, 34],
+  ['Lê Minh Châu', '#3fae8c', 'vang', 0, 12], ['Phạm Đức Anh', '#a36fd6', 'co', 1, 27],
+  ['Đỗ Hải Yến', '#d9a13b', 'co', 2, 19], ['Hoàng Tuệ Nhi', '#4aa3c9', 'co', 0, 8],
+];
+const chuDau = (t) => t.split(' ').pop()[0];
+const day = (dang) => `<nav class="day">${['Điểm danh','Lớp','Học phí','Chi phí','Tài khoản']
+  .map((t) => `<a href="#" class="${t === dang ? 'dang' : ''}"><i></i>${t}</a>`).join('')}</nav>`;
+const dau = (tieu, phu) => `<div class="dau"><div><b>${tieu}</b>${phu ? `<div class="phu-dau">${phu}</div>` : ''}</div><span style="font-size:13px">Thoát</span></div>`;
+
+const diemDanh = () => `<div class="dt">${dau('Ms.Nhung', 'Chủ nhật 15/11')}
+  <main class="than">
+    <div class="mat thanh-buoi"><div><b>Movers 2</b><div class="phu">17:30, trợ giảng: cô Lan</div></div><span class="the-nho tot">5/6 có mặt</span></div>
+    <ul class="ds-hs">${HS.map(([ten, mau, tt, st, tong]) => `
+      <li class="mat ${tt === 'vang' ? 'vang-mat' : ''}">
+        <span class="dau-tick" aria-hidden="true">${tt === 'vang' ? '×' : '✓'}</span>
+        <span class="anh" style="background:${mau}">${chuDau(ten)}</span>
+        <div class="ten-hs"><b>${ten}</b><span>Tổng ${tong} sticker</span></div>
+        <div class="chon-tt"><button type="button" class="${tt === 'co' ? 'co' : ''}">Có mặt</button><button type="button" class="${tt === 'vang' ? 'vang' : ''}">Vắng</button></div>
+        <div class="sticker"><button type="button" aria-label="Bớt sticker">−</button><b>${st}</b><button type="button" aria-label="Thêm sticker">+</button></div>
+      </li>`).join('')}
+    </ul>
+    <button class="nut nut-phu" type="button">Chụp ảnh lớp</button>
+  </main>${day('Điểm danh')}</div>`;
+
+const hocPhi = () => `<div class="dt">${dau('Học phí', 'Tháng 11/2026')}
+  <main class="than">
+    <div class="o-so">
+      <div class="mat"><span>Phải thu</span><b>18.400.000</b></div>
+      <div class="mat"><span>Đã thu</span><b>14.900.000</b></div>
+      <div class="mat"><span>Thực thu trong tháng</span><b>16.250.000</b></div>
+      <div class="mat"><span>Tổng chi</span><b>4.380.000</b></div>
+      <div class="mat lon"><span>Còn phải thu</span><b>3.500.000 đ</b></div>
+    </div>
+    <div class="loc"><button type="button">Tất cả</button><button type="button" class="chon">Còn nợ 4</button><button type="button">Đã đủ</button></div>
+    <div class="mat">
+      <div style="padding:10px 12px;font-weight:600;border-bottom:1px solid var(--vien)">Movers 2</div>
+      <ul class="ds-tien">${[['Lê Minh Châu','#3fae8c','1.200.000','Nợ tháng 10'],['Phạm Đức Anh','#a36fd6','600.000','Đóng thiếu']].map(([t,m,n,g]) => `
+        <li><span class="anh" style="background:${m}">${chuDau(t)}</span><div class="ten-hs"><b>${t}</b><span>${g}</span></div>
+        <div class="so"><b style="color:var(--xau)">${n}</b><span class="phu">còn nợ</span></div></li>`).join('')}</ul>
+    </div>
+    <div class="mat">
+      <div style="padding:10px 12px;font-weight:600;border-bottom:1px solid var(--vien)">Starters 1</div>
+      <ul class="ds-tien">${[['Vũ Ngọc Hân','#e0795b','900.000','Nợ tháng 11'],['Ngô Thảo My','#5b8def','800.000','Chưa đóng']].map(([t,m,n,g]) => `
+        <li><span class="anh" style="background:${m}">${chuDau(t)}</span><div class="ten-hs"><b>${t}</b><span>${g}</span></div>
+        <div class="so"><b style="color:var(--xau)">${n}</b><span class="phu">còn nợ</span></div></li>`).join('')}</ul>
+    </div>
+  </main>${day('Học phí')}</div>`;
+
+const chiTiet = () => `<div class="dt">${dau('Lê Minh Châu', 'Movers 2')}
+  <main class="than">
+    <div class="mat dau-hs"><span class="anh" style="background:#3fae8c">C</span>
+      <div><b style="font-size:17px">Lê Minh Châu</b><div class="phu">Phụ huynh: chị Hằng, 0987 220 413</div></div></div>
+    <div class="mat chi-so"><div><b>11</b><span>buổi tháng 11</span></div><div><b>12</b><span>sticker</span></div><div><b>1</b><span>buổi chưa bù</span></div></div>
+    <div class="mat">
+      <div style="padding:12px 14px 0;font-weight:600">Điểm danh tháng 11</div>
+      <div class="lich">${['T2','T3','T4','T5','T6','T7','CN'].map((h) => `<span class="h">${h}</span>`).join('')}
+        ${Array.from({ length: 30 }, (_, i) => { const d = i + 1; const lich = [3,5,7,10,12,14,17,19,21,24,26,28]; const v = d === 12;
+          return `<span class="${lich.includes(d) ? (v ? 'v' : 'c') : ''}">${d}</span>`; }).join('')}
+      </div>
+    </div>
+    <div class="mat">
+      <div class="dong-tien"><span>Học phí tháng này</span><b>1.200.000 đ</b></div>
+      <div class="dong-tien"><span>Nợ kỳ trước</span><b>1.200.000 đ</b></div>
+      <div class="dong-tien"><span>Đã thu</span><b>1.200.000 đ</b></div>
+      <div class="dong-tien" style="border-top:1px solid var(--vien);padding-top:10px"><span><b>Còn phải nộp</b></span><b style="color:var(--xau)">1.200.000 đ</b></div>
+    </div>
+    <button class="nut nut-chinh" type="button">Thu tiền</button>
+  </main>${day('Lớp')}</div>`;
+
+const PHONG_CACH = [
+  ['p1', '1. Giữ nguyên, làm gọn lại', 'Đầu trang xanh đen, màu cam như app hiện tại, chữ hệ thống, bo góc 8px. Điểm danh dạng danh sách có nút Có mặt / Vắng. Ít thay đổi nhất, quen với người đã thử app.'],
+  ['p2', '2. Sáng và thân thiện', 'Nền sáng, đầu trang trắng, màu xanh dương, chữ Be Vietnam Pro (font do người Việt thiết kế, dấu đẹp), bo góc lớn. Điểm danh là lưới ảnh: chạm vào ảnh em nào để chuyển có mặt / vắng, nhận mặt nhanh. Hợp trung tâm dạy trẻ em.'],
+  ['p3', '3. Sổ tay giáo viên', 'Đầu trang xanh lá đậm, chữ Lexend dễ đọc, góc vuông, ít khung viền, phân cách bằng đường kẻ. Nhiều dòng trên một màn nhất, số liệu tiền xếp thẳng cột. Hợp khi lớp đông, xem sổ nhiều.'],
+];
+document.getElementById('cac-phong-cach').innerHTML = PHONG_CACH.map(([lop, ten, mo]) => `
+  <section class="phong-cach"><h2>${ten}</h2><p>${mo}</p>
+    <div class="hang ${lop}">
+      <div><div class="nhan-man">Điểm danh một buổi</div>${diemDanh()}</div>
+      <div><div class="nhan-man">Tab Học phí</div>${hocPhi()}</div>
+      <div><div class="nhan-man">Chi tiết học sinh</div>${chiTiet()}</div>
+    </div>
+  </section>`).join('');
+</script>
+</body>
+</html>

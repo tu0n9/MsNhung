@@ -45,6 +45,7 @@ export default function LopHoc() {
       const ban = {
         ho_ten: v.ho_ten, lop_id: v.lop_id, ten_phu_huynh: v.ten_phu_huynh || null, sdt_phu_huynh: sdt, phu_huynh_id,
         ngay_vao: v.ngay_vao_d.format('YYYY-MM-DD'), don_gia_rieng: v.don_gia_rieng ?? null, ghi_chu: v.ghi_chu || null,
+        sticker_dau_ky: v.sticker_dau_ky ?? 0,
       }
       const luu = await q(suaHs?.id
         ? sb.from('hoc_sinh').update(ban).eq('id', suaHs.id).select().single()
@@ -123,6 +124,7 @@ export default function LopHoc() {
           <Form.Item name="sdt_phu_huynh" label="SĐT phụ huynh (tạo tài khoản phụ huynh, mật khẩu đầu = SĐT)"><Input inputMode="tel" /></Form.Item>
           <Form.Item name="ngay_vao_d" label="Ngày vào học" rules={[{ required: true }]}><DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} /></Form.Item>
           <Form.Item name="don_gia_rieng" label="Đơn giá riêng (để trống = theo lớp)"><InputNumber min={0} step={10000} style={{ width: '100%' }} /></Form.Item>
+          <Form.Item name="sticker_dau_ky" label="Sticker đã có từ trước (sổ giấy)"><InputNumber<number> min={0} style={{ width: '100%' }} /></Form.Item>
           <Form.Item name="ghi_chu" label="Ghi chú"><Input.TextArea rows={2} /></Form.Item>
           <Button type="primary" htmlType="submit" block>Lưu</Button>
         </Form>

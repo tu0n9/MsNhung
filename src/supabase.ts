@@ -11,7 +11,7 @@ export interface Lop { id: string; ten: string; don_gia: number; lich: number[];
 export interface HocSinh {
   id: string; ho_ten: string; lop_id: string; avatar: string | null; ten_phu_huynh: string | null
   sdt_phu_huynh: string | null; phu_huynh_id: string | null; ngay_vao: string; don_gia_rieng: number | null
-  trang_thai: 'dang_hoc' | 'ngung'; ghi_chu: string | null
+  trang_thai: 'dang_hoc' | 'ngung'; ghi_chu: string | null; sticker_dau_ky: number
 }
 export interface BuoiHoc { id: string; lop_id: string; ngay: string; loai: 'lich' | 'phu' | 'bu'; lop_nghi: boolean; ghi_chu: string | null }
 export interface DiemDanh { buoi_id: string; hoc_sinh_id: string; trang_thai: 'co_mat' | 'vang' | 'hoc_bu'; sticker: number }

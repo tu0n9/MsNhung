@@ -54,7 +54,7 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
   }, [thang, dd.length])
 
   const soCoMat = buoiIdsCoMat.length
-  const tongSticker = dd.reduce((s, x) => s + x.sticker, 0)
+  const tongSticker = (hs.sticker_dau_ky ?? 0) + dd.reduce((s, x) => s + x.sticker, 0)
   const chuaBu = dd.filter((x) => x.trang_thai === 'vang').length - dd.filter((x) => x.trang_thai === 'hoc_bu').length
   const th = useMemo(() => tongHopHocSinh(goi, phieu, thang), [goi, phieu, thang])
   const tinNhan = tinNhanPhuHuynh(hs.ho_ten, thang, th, soCoMat)

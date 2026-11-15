@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mẫu giao diện: Import Excel</title>
+<style>
+  :root {
+    --cam: #d4380d; --cam-nhat: #fff2e8; --cam-dam: #ad2102;
+    --xanh: #237804; --xanh-nen: #f6ffed; --xanh-vien: #b7eb8f;
+    --do: #a8071a; --do-nen: #fff2f0; --do-vien: #ffccc7;
+    --chu: #262626; --chu-phu: #595959; --chu-mo: #8c8c8c;
+    --vien: #f0f0f0; --vien-dam: #d9d9d9; --nen: #f5f5f5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 32px 24px 64px; background: #e8e8e8; color: var(--chu);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: 14px; }
+  h1.trang { margin: 0 0 6px; font-size: 26px; }
+  p.mo-ta { margin: 0 0 28px; color: var(--chu-phu); max-width: 70ch; line-height: 1.5; }
+  .hang { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; margin-bottom: 48px; }
+  figure { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+  figcaption b { display: block; font-size: 16px; }
+  figcaption span { color: var(--chu-phu); font-size: 13px; display: block; max-width: 390px; line-height: 1.45; margin-top: 4px; }
+
+  /* khung điện thoại */
+  .dt { width: 390px; height: 844px; background: var(--nen); border-radius: 28px; overflow: hidden; position: relative;
+    display: flex; flex-direction: column; box-shadow: 0 0 0 10px #1f1f1f, 0 24px 48px rgba(0,0,0,.25); }
+  .dau { height: 56px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: #001529; }
+  .dau b { color: #fff; font-size: 16px; }
+  .nut-thoat { height: 28px; padding: 0 10px; border: 1px solid var(--vien-dam); border-radius: 6px; background: #fff; font-size: 13px; }
+  .than { flex-grow: 1; overflow: hidden; padding: 12px 16px 0; display: flex; flex-direction: column; gap: 12px; }
+  .dieu-huong { flex-shrink: 0; display: grid; grid-template-columns: repeat(5, 1fr); background: #fff; border-top: 1px solid #eee; }
+  .dieu-huong a { padding: 12px 0; text-align: center; font-size: 11px; color: #666; text-decoration: none; }
+  .dieu-huong a.dang { color: var(--cam); font-weight: 600; }
+  a { color: var(--cam); }
+  h2.tieu-de { margin: 0; font-size: 20px; font-weight: 600; }
+
+  .nut { height: 44px; border-radius: 8px; font-size: 15px; font-family: inherit; cursor: pointer; }
+  .nut-chinh { border: 0; background: var(--cam); color: #fff; font-weight: 500; }
+  .nut-phu { border: 1px solid var(--vien-dam); background: #fff; color: var(--chu); }
+  .nut-chu { border: 0; background: none; color: var(--cam); font-size: 13px; height: 32px; }
+  .chan { flex-shrink: 0; padding: 10px 16px; background: #fff; border-top: 1px solid var(--vien); display: flex; flex-direction: column; gap: 4px; }
+
+  .the { background: #fff; border: 1px solid var(--vien); border-radius: 8px; }
+  .file { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+  .file .ten { font-weight: 500; }
+  .nho { font-size: 12px; color: var(--chu-phu); }
+
+  .tom-tat-loi { padding: 12px; border: 1px solid var(--do-vien); background: var(--do-nen); border-radius: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .tom-tat-loi h3 { margin: 0; font-size: 14px; color: var(--do); }
+  .tom-tat-loi a { font-size: 13px; }
+
+  .loc { display: flex; gap: 6px; }
+  .loc button { height: 32px; padding: 0 12px; border-radius: 16px; border: 1px solid var(--vien-dam); background: #fff; font-size: 13px; white-space: nowrap; font-family: inherit; }
+  .loc button.chon { border-color: var(--cam); background: var(--cam-nhat); color: var(--cam); }
+
+  .dong { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .dong li { padding: 10px 12px; background: #fff; border: 1px solid var(--vien); border-radius: 8px; display: flex; gap: 10px; align-items: flex-start; }
+  .dong li.loi { border-color: var(--do-vien); }
+  .dong .so { width: 26px; font-size: 12px; color: var(--chu-mo); padding-top: 2px; }
+  .dong .noi { flex-grow: 1; }
+  .dong .ten { font-weight: 500; }
+  .dong .ly-do { font-size: 12px; color: var(--do); margin-top: 2px; }
+  .nhan { font-size: 12px; padding: 1px 8px; border-radius: 4px; border: 1px solid; white-space: nowrap; }
+  .nhan.moi { background: var(--xanh-nen); color: var(--xanh); border-color: var(--xanh-vien); }
+  .nhan.loi { background: var(--do-nen); color: var(--do); border-color: var(--do-vien); }
+  .nhan.co { background: #fafafa; color: var(--chu-phu); border-color: var(--vien-dam); }
+
+  .buoc { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .buoc li { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--chu-phu); }
+  .buoc li::before { content: ""; height: 4px; border-radius: 2px; background: var(--cam); }
+  .buoc li.dang { color: var(--chu); font-weight: 600; }
+
+  /* B: ngăn kéo */
+  .nen-mo { position: absolute; inset: 0; background: rgba(0,0,0,.45); }
+  .ngan-keo { position: absolute; left: 0; right: 0; bottom: 0; height: 724px; background: #fff; border-radius: 16px 16px 0 0; display: flex; flex-direction: column; }
+  .tay-cam { width: 40px; height: 4px; border-radius: 2px; background: var(--vien-dam); margin: 8px auto 0; }
+  .the-tab { display: flex; margin: 10px 16px 0; border-bottom: 1px solid var(--vien); }
+  .the-tab button { height: 40px; padding: 0 14px; border: 0; background: none; font-size: 14px; color: var(--chu-phu); font-family: inherit; }
+  .the-tab button.chon { color: var(--cam); border-bottom: 2px solid var(--cam); font-weight: 500; }
+  table.bang { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.bang th { background: #fafafa; text-align: left; padding: 8px 6px; font-weight: 500; color: var(--chu-phu); }
+  table.bang td { padding: 10px 6px; border-top: 1px solid var(--vien); }
+  table.bang th:first-child, table.bang td:first-child { padding-left: 16px; color: var(--chu-mo); width: 32px; }
+  table.bang th:last-child, table.bang td:last-child { padding-right: 16px; }
+  table.bang tr.loi td { background: var(--do-nen); }
+
+  /* C: tóm tắt */
+  .o-so { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .o-so div { padding: 12px 10px; border-radius: 8px; background: #fff; border: 1px solid var(--vien); }
+  .o-so b { display: block; font-size: 26px; line-height: 1.1; }
+  .o-so span { font-size: 12px; color: var(--chu-phu); }
+  .o-so .xanh b { color: var(--xanh); } .o-so .do { border-color: var(--do-vien); background: var(--do-nen); } .o-so .do b { color: var(--do); }
+  .can-sua { padding: 12px; display: flex; flex-direction: column; gap: 4px; border-color: var(--do-vien); }
+  .can-sua .goi-y { font-size: 12px; color: var(--chu-phu); }
+  details.the { padding: 12px; }
+  details summary { cursor: pointer; font-weight: 500; }
+
+  /* tiến độ */
+  .thanh { height: 10px; border-radius: 5px; background: var(--vien); overflow: hidden; }
+  .thanh i { display: block; height: 100%; width: 65%; background: var(--cam); }
+  .ket-qua { padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .ket-qua ul { margin: 0; padding-left: 18px; line-height: 1.7; }
+
+  /* Excel */
+  .excel { width: 1100px; background: #fff; border: 1px solid #c8c8c8; font-family: Calibri, "Segoe UI", Arial, sans-serif; font-size: 13px; box-shadow: 0 12px 32px rgba(0,0,0,.15); }
+  .excel table { border-collapse: collapse; width: 100%; }
+  .excel td, .excel th { border: 1px solid #d4d4d4; padding: 5px 8px; height: 26px; white-space: nowrap; }
+  .excel thead th { background: #f3f3f3; color: #666; font-weight: 400; font-size: 12px; }
+  .excel .hang-so { background: #f3f3f3; color: #666; width: 36px; text-align: center; }
+  .excel .tieu { background: #ffe7ba; font-weight: 700; }
+  .excel .bat-buoc { color: #a8071a; }
+  .excel .vd { color: #8c8c8c; font-style: italic; }
+  .excel .tha { position: relative; }
+  .excel .tha::after { content: "▾"; position: absolute; right: 6px; color: #666; }
+  .tab-excel { display: flex; gap: 2px; padding: 4px 8px; background: #f3f3f3; border-top: 1px solid #c8c8c8; }
+  .tab-excel span { padding: 4px 14px; font-size: 12px; background: #e6e6e6; }
+  .tab-excel span.chon { background: #fff; color: #217346; font-weight: 700; border-bottom: 2px solid #217346; }
+  .chu-thich { margin: 10px 0 0; color: var(--chu-phu); font-size: 13px; max-width: 1100px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<h1 class="trang">Import lớp và học sinh bằng Excel</h1>
+<p class="mo-ta">Ba cách sắp xếp màn kiểm tra trước khi nhập. Số liệu giống nhau ở cả ba: file có 3 lớp và 52 học sinh,
+trong đó 48 dòng mới, 5 dòng đã có (bỏ qua), 2 dòng lỗi. Màn "Đang nhập" và file mẫu Excel dùng chung cho mọi phương án.</p>
+
+<div class="hang">
+
+  <!-- ===== A ===== -->
+  <figure>
+    <figcaption><b>A. Trang riêng, 3 bước</b>
+      <span>Mở một trang riêng, có thanh bước Tải mẫu / Chọn file / Kiểm tra. Lỗi gom ở đầu, bấm vào nhảy tới dòng đó. Lọc theo Lỗi / Đã có / Mới. Rộng chỗ nhất, dễ dùng khi file dài.</span></figcaption>
+    <div class="dt">
+      <div class="dau"><b>Ms.Nhung</b><button class="nut-thoat" type="button">Thoát</button></div>
+      <main class="than">
+        <a href="#" style="font-size:13px;text-decoration:none">← Lớp và học sinh</a>
+        <h2 class="tieu-de">Import từ Excel</h2>
+        <ol class="buoc" aria-label="Các bước"><li>1. Tải mẫu</li><li>2. Chọn file</li><li class="dang" aria-current="step">3. Kiểm tra</li></ol>
+        <div class="the file">
+          <div style="flex-grow:1"><div class="ten">hoc-sinh-thang-11.xlsx</div><div class="nho">3 lớp, 52 học sinh</div></div>
+          <button class="nut-chu" type="button">Đổi file</button>
+        </div>
+        <section class="tom-tat-loi" role="alert">
+          <h3>2 dòng cần sửa, sẽ không được nhập</h3>
+          <a href="#">Dòng 14, Phạm Đức Anh: SĐT phụ huynh thiếu 1 số</a>
+          <a href="#">Dòng 31, Vũ Ngọc Hân: chưa chọn lớp</a>
+        </section>
+        <div class="loc" role="tablist"><button class="chon" type="button">Tất cả 55</button><button type="button">Lỗi 2</button><button type="button">Đã có 5</button><button type="button">Mới 48</button></div>
+        <ul class="dong">
+          <li><span class="so">Lớp</span><div class="noi"><div class="ten">Movers 2</div><div class="nho">120.000 đ/buổi, T3 T5 T7</div></div><span class="nhan moi">Mới</span></li>
+          <li class="loi"><span class="so">14</span><div class="noi"><div class="ten">Phạm Đức Anh</div><div class="nho">Starters 1, chị Thu, 091248730</div><div class="ly-do">SĐT phụ huynh phải có 10 số, bắt đầu bằng 0</div></div><span class="nhan loi">Lỗi</span></li>
+          <li><span class="so">15</span><div class="noi"><div class="ten">Trần Khánh Linh</div><div class="nho">Starters 1, anh Tuấn, 0903 615 240</div></div><span class="nhan co">Đã có</span></li>
+          <li><span class="so">16</span><div class="noi"><div class="ten">Lê Minh Châu</div><div class="nho">Movers 2, chị Hằng, 0987 220 413, 12 sticker</div></div><span class="nhan moi">Mới</span></li>
+        </ul>
+      </main>
+      <div class="chan"><button class="nut nut-chinh" type="button">Nhập 48 dòng mới</button><button class="nut-chu" type="button">Tải danh sách lỗi (.xlsx)</button></div>
+      <nav class="dieu-huong"><a href="#">Điểm danh</a><a class="dang" href="#">Lớp</a><a href="#">Học phí</a><a href="#">Chi phí</a><a href="#">Tài khoản</a></nav>
+    </div>
+  </figure>
+
+  <!-- ===== B ===== -->
+  <figure>
+    <figcaption><b>B. Ngăn kéo trượt lên trên trang Lớp</b>
+      <span>Không rời trang Lớp. Ngăn kéo có 2 tab Lớp / Học sinh, bảng gọn, dòng lỗi tô đỏ lên đầu. Nhanh cho file ngắn, chật hơn khi nhiều lỗi.</span></figcaption>
+    <div class="dt">
+      <div class="dau"><b>Ms.Nhung</b><button class="nut-thoat" type="button">Thoát</button></div>
+      <div class="than" aria-hidden="true">
+        <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="the" style="padding:6px 12px">+ Thêm lớp</span><span class="the" style="padding:6px 12px">+ Thêm học sinh</span><span class="the" style="padding:6px 12px">Import Excel</span></div>
+        <div class="the" style="height:56px"></div><div class="the" style="height:64px"></div>
+      </div>
+      <div class="nen-mo"></div>
+      <section class="ngan-keo" role="dialog" aria-modal="true" aria-label="Import Excel">
+        <div class="tay-cam"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:4px 8px 4px 16px">
+          <h2 style="margin:0;font-size:18px">Import Excel</h2>
+          <button type="button" aria-label="Đóng" style="width:44px;height:44px;border:0;background:none;font-size:22px;color:#595959">×</button>
+        </div>
+        <div style="padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="nut nut-phu" type="button" style="font-size:14px">Tải file mẫu</button>
+          <button class="nut" type="button" style="font-size:14px;border:1px solid var(--cam);background:var(--cam-nhat);color:var(--cam)">Chọn file khác</button>
+        </div>
+        <p style="margin:10px 16px 0;font-size:13px;color:var(--chu-phu)">hoc-sinh-thang-11.xlsx: <b style="color:var(--xanh)">48 mới</b>, 5 đã có, <b style="color:var(--do)">2 lỗi</b></p>
+        <div class="the-tab" role="tablist"><button type="button">Lớp (3)</button><button class="chon" type="button">Học sinh (52)</button></div>
+        <div style="flex-grow:1;overflow:hidden">
+          <table class="bang">
+            <thead><tr><th>#</th><th>Học sinh</th><th>Lớp</th><th>Kết quả</th></tr></thead>
+            <tbody>
+              <tr class="loi"><td>14</td><td>Phạm Đức Anh<div style="font-size:12px;color:var(--do)">SĐT thiếu 1 số</div></td><td>Starters 1</td><td style="color:var(--do);font-weight:500">Lỗi</td></tr>
+              <tr class="loi"><td>31</td><td>Vũ Ngọc Hân<div style="font-size:12px;color:var(--do)">Chưa chọn lớp</div></td><td style="color:var(--chu-mo)">(trống)</td><td style="color:var(--do);font-weight:500">Lỗi</td></tr>
+              <tr><td>15</td><td>Trần Khánh Linh</td><td>Starters 1</td><td style="color:var(--chu-phu)">Đã có</td></tr>
+              <tr><td>16</td><td>Lê Minh Châu</td><td>Movers 2</td><td style="color:var(--xanh)">Mới</td></tr>
+              <tr><td>17</td><td>Nguyễn Gia Bảo</td><td>Movers 2</td><td style="color:var(--xanh)">Mới</td></tr>
+              <tr><td>18</td><td>Đỗ Hải Yến</td><td>Flyers A</td><td style="color:var(--xanh)">Mới</td></tr>
+              <tr><td>19</td><td>Hoàng Tuệ Nhi</td><td>Flyers A</td><td style="color:var(--xanh)">Mới</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="padding:10px 16px 16px;border-top:1px solid var(--vien);display:grid;grid-template-columns:1fr 2fr;gap:8px">
+          <button class="nut nut-phu" type="button">Huỷ</button><button class="nut nut-chinh" type="button">Nhập 48 dòng mới</button>
+        </div>
+      </section>
+    </div>
+  </figure>
+
+  <!-- ===== C ===== -->
+  <figure>
+    <figcaption><b>C. Tóm tắt trước, chi tiết sau</b>
+      <span>Ba ô số lớn cho biết ngay sẽ có gì. Chỉ bày ra các dòng cần sửa kèm gợi ý cách sửa; 48 dòng mới gập lại, muốn xem thì mở. Ít cuộn nhất khi file đúng gần hết.</span></figcaption>
+    <div class="dt">
+      <div class="dau"><b>Ms.Nhung</b><button class="nut-thoat" type="button">Thoát</button></div>
+      <main class="than">
+        <a href="#" style="font-size:13px;text-decoration:none">← Lớp và học sinh</a>
+        <h2 class="tieu-de">Kiểm tra file</h2>
+        <div class="the file"><div style="flex-grow:1"><div class="ten">hoc-sinh-thang-11.xlsx</div><div class="nho">55 dòng, đọc xong lúc 19:42</div></div><button class="nut-chu" type="button">Đổi file</button></div>
+        <div class="o-so">
+          <div class="xanh"><b>48</b><span>sẽ thêm mới</span></div>
+          <div><b>5</b><span>đã có, bỏ qua</span></div>
+          <div class="do"><b>2</b><span>cần sửa</span></div>
+        </div>
+        <h3 style="margin:4px 0 0;font-size:15px">Cần sửa trong file rồi import lại</h3>
+        <div class="the can-sua">
+          <div><b>Dòng 14</b>, Phạm Đức Anh</div>
+          <div style="color:var(--do);font-size:13px">SĐT phụ huynh "091248730" chỉ có 9 số</div>
+          <div class="goi-y">Gợi ý: kiểm tra lại số, phải đủ 10 số và bắt đầu bằng 0</div>
+        </div>
+        <div class="the can-sua">
+          <div><b>Dòng 31</b>, Vũ Ngọc Hân</div>
+          <div style="color:var(--do);font-size:13px">Chưa chọn lớp</div>
+          <div class="goi-y">Gợi ý: chọn lớp trong ô thả xuống ở cột B</div>
+        </div>
+        <details class="the"><summary>Xem 48 dòng sẽ thêm</summary></details>
+        <details class="the"><summary>Xem 5 dòng đã có</summary></details>
+      </main>
+      <div class="chan"><button class="nut nut-chinh" type="button">Nhập 48 dòng mới</button><button class="nut-chu" type="button">Tải danh sách lỗi (.xlsx)</button></div>
+      <nav class="dieu-huong"><a href="#">Điểm danh</a><a class="dang" href="#">Lớp</a><a href="#">Học phí</a><a href="#">Chi phí</a><a href="#">Tài khoản</a></nav>
+    </div>
+  </figure>
+
+  <!-- ===== Tiến độ ===== -->
+  <figure>
+    <figcaption><b>Đang nhập và kết quả (dùng chung)</b>
+      <span>Tạo tài khoản phụ huynh mất 1 đến 2 giây mỗi số, nên có thanh tiến độ và dặn không đóng trang. Xong thì hiện kết quả và lời nhắc mật khẩu đầu của phụ huynh.</span></figcaption>
+    <div class="dt">
+      <div class="dau"><b>Ms.Nhung</b><button class="nut-thoat" type="button">Thoát</button></div>
+      <main class="than">
+        <h2 class="tieu-de">Đang nhập</h2>
+        <div class="the" style="padding:16px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;justify-content:space-between"><span>Học sinh</span><b>31 / 48</b></div>
+          <div class="thanh" role="progressbar" aria-valuenow="31" aria-valuemin="0" aria-valuemax="48"><i></i></div>
+          <div class="nho">Đang tạo tài khoản phụ huynh cho Nguyễn Gia Bảo</div>
+          <div class="nho" style="color:var(--do)">Giữ trang này mở cho đến khi xong.</div>
+        </div>
+
+        <h2 class="tieu-de" style="margin-top:12px">Kết quả</h2>
+        <div class="the ket-qua">
+          <div style="display:flex;align-items:center;gap:8px"><span class="nhan moi">Xong</span><b>Đã thêm 1 lớp và 47 học sinh</b></div>
+          <ul>
+            <li>Tạo 41 tài khoản phụ huynh mới, 6 em dùng chung số với anh chị em đã có</li>
+            <li>Bỏ qua 5 dòng đã có</li>
+            <li>2 dòng lỗi chưa nhập</li>
+          </ul>
+          <div class="nho" style="background:var(--cam-nhat);padding:8px 10px;border-radius:6px">Phụ huynh đăng nhập bằng số điện thoại, mật khẩu đầu là chính số điện thoại.</div>
+          <button class="nut nut-phu" type="button" style="font-size:14px">Tải danh sách lỗi để sửa</button>
+          <button class="nut nut-chinh" type="button">Về trang Lớp</button>
+        </div>
+      </main>
+      <nav class="dieu-huong"><a href="#">Điểm danh</a><a class="dang" href="#">Lớp</a><a href="#">Học phí</a><a href="#">Chi phí</a><a href="#">Tài khoản</a></nav>
+    </div>
+  </figure>
+</div>
+
+<!-- ===== File mẫu Excel ===== -->
+<figure>
+  <figcaption><b>File mẫu Excel: trang "Học sinh"</b>
+    <span style="max-width:none">Ba trang: Hướng dẫn, Lớp, Học sinh. Tiêu đề đỏ là cột bắt buộc. Dòng 2 là ví dụ in nghiêng, app tự bỏ qua.</span></figcaption>
+  <div class="excel">
+    <table>
+      <thead><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th></tr></thead>
+      <tbody>
+        <tr><td class="hang-so">1</td><td class="tieu bat-buoc">Họ tên *</td><td class="tieu bat-buoc">Lớp *</td><td class="tieu">Tên phụ huynh</td><td class="tieu">SĐT phụ huynh</td><td class="tieu">Ngày vào học</td><td class="tieu">Đơn giá riêng</td><td class="tieu">Sticker đã có</td><td class="tieu">Ghi chú</td></tr>
+        <tr><td class="hang-so">2</td><td class="vd">Ví dụ: Nguyễn Gia Bảo</td><td class="vd tha">Movers 2</td><td class="vd">Chị Hằng</td><td class="vd">0987220413</td><td class="vd">01/11/2026</td><td class="vd"></td><td class="vd">12</td><td class="vd">Anh trai học Flyers A</td></tr>
+        <tr><td class="hang-so">3</td><td>Trần Khánh Linh</td><td class="tha">Starters 1</td><td>Anh Tuấn</td><td>0903615240</td><td>15/09/2026</td><td></td><td>34</td><td></td></tr>
+        <tr><td class="hang-so">4</td><td>Lê Minh Châu</td><td class="tha">Movers 2</td><td>Chị Hằng</td><td>0987220413</td><td>01/11/2026</td><td>100000</td><td>12</td><td>Giảm giá anh chị em</td></tr>
+        <tr><td class="hang-so">5</td><td></td><td class="tha"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+        <tr><td class="hang-so">6</td><td></td><td class="tha"></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      </tbody>
+    </table>
+    <div class="tab-excel"><span>Hướng dẫn</span><span>Lớp</span><span class="chon">Học sinh</span></div>
+  </div>
+  <p class="chu-thich">
+    Trang <b>Lớp</b>: Tên lớp *, Đơn giá/buổi *, rồi 7 cột T2 T3 T4 T5 T6 T7 CN, đánh "x" vào ngày có học; có sẵn các lớp đang có.<br>
+    Cột <b>Lớp</b> ở trang Học sinh là ô thả xuống lấy từ trang Lớp. Cột <b>SĐT phụ huynh</b> để định dạng Text nên không mất số 0 đầu.
+    <b>Ngày vào học</b> là ô ngày, để trống thì lấy ngày import.
+  </p>
+</figure>
+
+</body>
+</html>

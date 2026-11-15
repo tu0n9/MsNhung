@@ -89,7 +89,7 @@ function BuoiChiTiet({ buoi: b0, lop, quayLai }: { buoi: BuoiHoc; lop: Lop; quay
     const ids = ds.map((h) => h.id)
     if (ids.length) {
       const st = await q(sb.from('diem_danh').select('hoc_sinh_id, sticker').in('hoc_sinh_id', ids))
-      const tong: Record<string, number> = {}
+      const tong: Record<string, number> = Object.fromEntries(ds.map((h) => [h.id, h.sticker_dau_ky ?? 0]))
       for (const x of st as { hoc_sinh_id: string; sticker: number }[]) tong[x.hoc_sinh_id] = (tong[x.hoc_sinh_id] ?? 0) + x.sticker
       setStickerTong(tong)
     }

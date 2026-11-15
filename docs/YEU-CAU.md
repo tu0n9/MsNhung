@@ -111,6 +111,20 @@ Chốt hiểu biết chung (2026-11-15):
   huynh). Mật khẩu do người dùng cung cấp, **không ghi vào repo**; script seed đọc từ biến môi trường
   `BREAK_GLASS_PASSWORD` trong `.env` (đã nằm trong `.gitignore`). Tài khoản này không bị bắt đổi mật khẩu.
 
+Import lớp và học sinh bằng Excel (grill 2026-11-15):
+
+- **Một file mẫu** gồm 3 trang `Hướng dẫn`, `Lớp`, `Học sinh`. File tải về đã điền sẵn các lớp đang có; cột Lớp
+  của trang Học sinh là danh sách thả xuống lấy từ trang Lớp.
+- **Chỉ thêm mới, không sửa.** Lớp trùng tên, hoặc học sinh trùng (họ tên + lớp + SĐT phụ huynh) thì bỏ qua và báo.
+- **Xem trước rồi mới nhập:** từng dòng xanh/đỏ kèm lý do; nhập các dòng hợp lệ; tải được danh sách lỗi ra Excel;
+  import lại cùng file sau khi sửa vẫn an toàn vì dòng đã có bị bỏ qua.
+- **Cột:** Lớp = Tên lớp*, Đơn giá/buổi*, T2…CN đánh "x". Học sinh = Họ tên*, Lớp*, Tên phụ huynh, SĐT phụ huynh,
+  Ngày vào học (trống = hôm nay), Đơn giá riêng, Ghi chú, **Sticker đã có** (số sticker tích luỹ từ sổ giấy, cần
+  trường mới trên học sinh). Không có cột Nợ cũ: nợ cũ ghi lúc Thu tiền bằng ô điều chỉnh. Ảnh thêm trong app.
+- **Tự tạo tài khoản phụ huynh** theo SĐT như khi thêm tay, có thanh tiến độ.
+- Chỉ giáo viên và admin được import. SĐT bỏ ký tự thừa, `+84` → `0`, phải còn 10 số bắt đầu bằng 0; cột SĐT
+  trong mẫu định dạng Text.
+
 ## Câu hỏi còn mở
 
 Không còn.
