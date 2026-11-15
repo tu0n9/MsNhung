@@ -246,6 +246,21 @@ with sync_playwright() as pw:
         p.wait_for_timeout(2000)
         expect(p.locator(".ant-segmented")).to_contain_text("Mới 0")
     buoc("import Excel: 4 lỗi, nhập 1 lớp 2 học sinh, import lại → Mới 0", b_import)
+
+    def b_xoa_lop():
+        nav("Lớp")
+        p.locator(".ant-collapse-item", has_text="TEST Movers 2").get_by_role("button", name="Sửa lớp", exact=True).click()
+        p.locator(".ant-modal").get_by_role("button", name="Xoá lớp").click()
+        hop = p.locator(".ant-modal-confirm")
+        expect(hop.get_by_role("button", name="Xoá hẳn")).to_be_disabled()
+        hop.get_by_label("Gõ lại tên lớp").fill("TEST Movers")
+        expect(hop.get_by_role("button", name="Xoá hẳn")).to_be_disabled()
+        hop.get_by_label("Gõ lại tên lớp").fill("TEST Movers 2")
+        hop.get_by_role("button", name="Xoá hẳn").click()
+        expect(p.get_by_text("Đã xoá lớp TEST Movers 2")).to_be_visible(timeout=15000)
+        expect(p.locator(".ant-collapse-item", has_text="TEST Movers 2")).to_have_count(0)
+        assert p.get_by_text("TEST Lê Minh Châu").count() == 0, "học sinh của lớp đã xoá vẫn còn"
+    buoc("xoá lớp có học sinh: gõ sai tên thì nút Xoá hẳn bị khoá, gõ đúng thì lớp + học sinh biến mất", b_xoa_lop)
     def thoat():
         p.get_by_text("Thoát").click()
         expect(lab(p, "Tên đăng nhập hoặc số điện thoại")).to_be_visible(timeout=15000)

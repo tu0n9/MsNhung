@@ -94,12 +94,37 @@ try:
     ok("mở khoá thiếu lý do bị từ chối", goi("POST", "/rest/v1/rpc/mo_khoa", A, {"thang": "2026-11-01", "ly_do": " "})[0] == 400)
     ok("mở khoá có lý do", goi("POST", "/rest/v1/rpc/mo_khoa", A, {"thang": "2026-11-01", "ly_do": "TEST"})[0] == 204)
     ok("sau mở khoá sửa lại được", goi("PATCH", "/rest/v1/diem_danh?sticker=eq.3", A, {"sticker": 3})[0] == 204)
+    goi("POST", "/rest/v1/rpc/chot_so", A, {"thang": "2026-11-01"})
+    _, lop_st = SV("GET", "/rest/v1/lop?select=id&ten=eq.TEST%20L%E1%BB%9Bp%20Starters")
+    c, _ = goi("POST", "/rest/v1/rpc/xoa_lop", A, {"p_lop": lop_st[0]["id"], "p_ten": "TEST Lớp Starters"})
+    ok("khoá: xoá lớp có dữ liệu tháng đã chốt bị từ chối, không mất dòng nào",
+       c == 400 and len(SV("GET", f"/rest/v1/buoi_hoc?select=id&lop_id=eq.{lop_st[0]['id']}")[1]) > 0)
 finally:
     # trả khoá sổ về như trước test, xoá nhật ký do test ghi
     SV("PATCH", "/rest/v1/khoa_so?id=eq.true", {"khoa_den": khoa_truoc[0]["khoa_den"]})
     SV("DELETE", "/rest/v1/nhat_ky_chot_so?ly_do=is.null&thang=eq.2026-11-01")
     SV("DELETE", "/rest/v1/nhat_ky_chot_so?ly_do=eq.TEST")
     ok("khoá sổ đã trả về như trước", SV("GET", "/rest/v1/khoa_so?select=khoa_den")[1] == khoa_truoc)
+
+# xoá hẳn lớp TEST Lớp Starters (có học sinh, điểm danh, gói, phiếu thu, trợ giảng, ảnh): phải sạch ở mọi bảng
+lop_id = lop_st[0]["id"]
+ok("trợ giảng không xoá được lớp", goi("POST", "/rest/v1/rpc/xoa_lop", T, {"p_lop": lop_id, "p_ten": "TEST Lớp Starters"})[0] == 400)
+_, buoi_st = SV("GET", f"/rest/v1/buoi_hoc?select=id&lop_id=eq.{lop_id}")
+bids = ",".join(b["id"] for b in buoi_st)
+c, anh_xoa = goi("POST", "/rest/v1/rpc/xoa_lop", A, {"p_lop": lop_id, "p_ten": "TEST Lớp Starters"})
+con_lai = {
+    "lop": SV("GET", f"/rest/v1/lop?select=id&id=eq.{lop_id}")[1],
+    "hoc_sinh": SV("GET", f"/rest/v1/hoc_sinh?select=id&id=eq.{hs_id}")[1],
+    "buoi_hoc": SV("GET", f"/rest/v1/buoi_hoc?select=id&lop_id=eq.{lop_id}")[1],
+    "diem_danh": SV("GET", f"/rest/v1/diem_danh?select=buoi_id&buoi_id=in.({bids})")[1],
+    "goi_hoc": SV("GET", f"/rest/v1/goi_hoc?select=id&hoc_sinh_id=eq.{hs_id}")[1],
+    "anh_buoi": SV("GET", f"/rest/v1/anh_buoi?select=id&buoi_id=in.({bids})")[1],
+}
+ok(f"xoá lớp có dữ liệu: sạch mọi bảng, trả {len(anh_xoa) if c == 200 else '?'} đường dẫn ảnh",
+   c == 200 and not any(con_lai.values()) and len(anh_xoa) >= 2)
+# client xoá file theo danh sách trả về; ở đây làm thay để Storage không sót file test
+if c == 200 and anh_xoa:
+    goi("DELETE", "/storage/v1/object/anh", S, {"prefixes": anh_xoa}, key=S)
 
 for k, t in KQ:
     print(k, "|", t)

@@ -179,6 +179,15 @@ Dọn ảnh lớp cũ (2026-11-15):
 - Tab Học phí hiện "Ảnh đang dùng: X MB / 1 GB" (hàm `dung_luong_anh()`, chỉ giáo viên); quá 800 MB thì chữ đỏ.
 - Secret `SUPABASE_SECRET_KEY` trong GitHub Actions do người dùng tự thêm.
 
+Xoá lớp (2026-11-15):
+
+- **Lớp có dữ liệu vẫn xoá hẳn được**; xoá nhầm là lỗi người dùng. Nút "Xoá lớp" trong form Sửa lớp, giáo viên và admin,
+  phải gõ lại đúng tên lớp thì nút "Xoá hẳn" mới bật.
+- Xoá cùng lúc: học sinh của lớp và mọi thứ của các em (điểm danh ở mọi lớp, gói học, phiếu thu, avatar), buổi học của
+  lớp và mọi thứ gắn với buổi (điểm danh của em lớp khác sang học bù, trợ giảng, ảnh). Khoản chi "Hoàn học phí" giữ
+  lại, chỉ bỏ liên kết học sinh. Tài khoản phụ huynh giữ lại.
+- Lớp có dữ liệu trong **tháng đã chốt sổ** thì database từ chối và không xoá gì; mở khoá tháng đó trước rồi xoá.
+
 ## Câu hỏi còn mở
 
 Không còn.

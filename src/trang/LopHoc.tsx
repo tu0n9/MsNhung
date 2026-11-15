@@ -10,7 +10,7 @@ import { O_TIEN } from '../giao-dien'
 import HocSinhChiTiet from './HocSinhChiTiet'
 
 export default function LopHoc() {
-  const { message } = App.useApp()
+  const { message, modal } = App.useApp()
   const toi = useToi()
   const ql = laQuanLy(toi.vai_tro)
   const nav = useNavigate()
@@ -60,6 +60,28 @@ export default function LopHoc() {
       setSuaHs(null); tai()
     } catch (e) { message.error((e as Error).message) }
   })
+
+  const xoaLop = (l: Partial<Lop>) => {
+    const soHs = hs.filter((h) => h.lop_id === l.id).length
+    // nút chỉ bật khi gõ đúng tên: không cần ném lỗi để giữ hộp mở (lỗi ném ra từ onOk thành promise không ai bắt)
+    const hop = modal.confirm({
+      title: `Xoá hẳn lớp ${l.ten}?`, okText: 'Xoá hẳn', okButtonProps: { danger: true, disabled: true },
+      content: <>
+        <p>Xoá luôn {soHs} học sinh của lớp cùng toàn bộ buổi học, điểm danh, ảnh, gói học, phiếu thu của các em. Không lấy
+          lại được trong app (chỉ còn trong bản sao lưu đêm). Lớp có dữ liệu ở tháng đã chốt sổ thì phải mở khoá tháng đó trước.</p>
+        <Input placeholder="Gõ lại tên lớp để xác nhận" aria-label="Gõ lại tên lớp"
+          onChange={(e) => hop.update({ okButtonProps: { danger: true, disabled: e.target.value.trim() !== l.ten } })} />
+      </>,
+      onOk: async () => {
+        try {
+          const anh = await q(sb.rpc('xoa_lop', { p_lop: l.id, p_ten: l.ten })) as string[]
+          // database đã xoá xong; file ảnh còn sót chỉ tốn chỗ, không làm sai số liệu
+          if (anh.length) await sb.storage.from('anh').remove(anh)
+          message.success(`Đã xoá lớp ${l.ten}`); setSuaLop(null); tai()
+        } catch (e) { message.error((e as Error).message) }
+      },
+    })
+  }
 
   const doiTrangThai = async (h: HocSinh) => {
     await q(sb.from('hoc_sinh').update({ trang_thai: h.trang_thai === 'ngung' ? 'dang_hoc' : 'ngung' }).eq('id', h.id))
@@ -115,6 +137,7 @@ export default function LopHoc() {
           <Form.Item name="gio" label="Giờ học"><Input placeholder="17:30–19:00" /></Form.Item>
           <Form.Item name="hoat_dong" label="Đang mở" valuePropName="checked"><Checkbox /></Form.Item>
           <Button type="primary" htmlType="submit" block loading={dangLuuLop}>Lưu</Button>
+          {suaLop?.id && <Button danger block style={{ marginTop: 8 }} onClick={() => xoaLop(suaLop)}>Xoá lớp</Button>}
         </Form>
       </Modal>
 
