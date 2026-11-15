@@ -1,6 +1,6 @@
 """Kịch bản 8 video hướng dẫn. Chạy: python -I -X utf8 tests/video/chuong.py [số video ...]
 Cần dev server http://127.0.0.1:5180. Các video nối tiếp nhau trên cùng một bộ dữ liệu mẫu (du_lieu_mau.tao),
-xoá sạch sau khi quay. Video ra docs/huong-dan/NN-ten.mp4."""
+xoá sạch sau khi quay. Video ra public/huong-dan/NN-ten.mp4 (trang Hướng dẫn trong app)."""
 import os, re, subprocess, sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -45,6 +45,9 @@ def v1_dang_nhap():
         for ten in ["Điểm danh", "Lớp", "Học phí", "Chi phí", "Tài khoản"]:
             v.chi(p.locator("nav").get_by_text(ten, exact=True))
             p.wait_for_timeout(700)
+        v.noi("Nút Hướng dẫn ở góc trên mở lại các video này bất cứ lúc nào.")
+        v.chi(p.get_by_role("button", name="Hướng dẫn"))
+        p.wait_for_timeout(1200)
         v.noi("Muốn đổi mật khẩu thì vào Tài khoản, bấm Đổi mật khẩu của tôi.")
         nav(v, "Tài khoản")
         v.chi(p.get_by_role("button", name="Đổi mật khẩu của tôi"))
@@ -66,6 +69,8 @@ def v2_lop_hoc_sinh():
         for t in ["T7", "CN"]:
             v.bam(m.get_by_text(t, exact=True), 0.4)
         v.noi("Lịch tuần rất quan trọng: app dựa vào đó để tự tạo các buổi học và tính số buổi trong học phí.")
+        v.noi("Ô Giờ học ghi giờ lớp học để phụ huynh xem. Lớp học khác giờ giữa các thứ thì ghi rõ từng thứ.")
+        v.go(m.get_by_label("Giờ học", exact=True), "T7 8:00, CN 9:30")
         v.bam(m.get_by_role("button", name="Lưu"), 2)
         v.noi("Tiếp theo, bấm Thêm học sinh. Nhập họ tên và chọn lớp.")
         v.bam(p.get_by_role("button", name="Thêm học sinh"))
@@ -159,7 +164,20 @@ def v4_diem_danh():
         v.bam(p.locator(".ant-list-item", has_text="Buổi bù").get_by_role("button", name="Điểm danh"), 2)
         v.noi("Trong buổi bù, em nào đến thì chọn Học bù, số buổi chưa bù giảm đi một. Em không đến thì để Không đến, không bị tính gì.")
         v.bam(p.locator(".ant-list-item", has_text="Phạm Đức Huy").get_by_text("Học bù", exact=True), 1.2)
-        v.noi("Nếu em đi học bù cùng một lớp khác, mở buổi của lớp đó và dùng ô Thêm học sinh lớp khác học bù buổi này.", 1)
+        v.noi("Nếu em đi học bù cùng một lớp khác, mở buổi của lớp đó và dùng ô Thêm học sinh lớp khác học bù buổi này.")
+        v.bam(p.get_by_role("button", name="← Quay lại"), 1.5)
+        v.noi("Muốn xem cả tháng của một em, vào Lớp và bấm tên em đó.")
+        nav(v, "Lớp")
+        v.bam(p.get_by_text("Phạm Đức Huy"), 2)
+        luoi = p.locator(".ant-card", has_text="Điểm danh tháng")
+        luoi.scroll_into_view_if_needed()
+        v.noi("Lưới Điểm danh tháng tô màu từng ngày: xanh lá là có mặt, đỏ là vắng, xanh dương có chữ bù là học bù, xám gạch ngang là lớp nghỉ.")
+        v.noi("Ô nền vàng viền vàng là buổi đã qua mà chưa điểm danh, nhìn vào là biết buổi nào còn quên. Ô viền đen là hôm nay.")
+        v.noi("Chạm vào một ngày để xem chi tiết. Hôm nay em Huy vắng buổi chính nhưng đã học bù ở buổi bù riêng.")
+        v.bam(p.locator('[data-ngay="2026-11-15"]'), 1.5)
+        v.chi(p.locator("[data-chi-tiet-ngay]"))
+        p.wait_for_timeout(1500)
+        v.noi("Phụ huynh cũng thấy đúng lưới này trên trang của con mình.", 1)
 
 
 def v5_thu_hoc_phi():
@@ -279,13 +297,21 @@ def v8_phu_huynh():
         v.go(p.get_by_label("Nhập lại", exact=True), "MinhAnh@2026")
         v.bam(p.get_by_role("button", name="Lưu"), 3)
         v.noi("Phụ huynh thấy thông tin của con: số buổi đi học trong tháng, tổng sticker, số buổi chưa học bù và số tiền cần nộp.")
-        v.noi("Kéo xuống để xem từng buổi đi học, ảnh lớp các buổi con có mặt, và chi tiết học phí.")
-        for nhan in ["Điểm danh tháng", "Ảnh lớp", "Học phí"]:
+        v.noi("Dưới tên con là lớp và giờ học. Lưới Điểm danh tháng tô màu từng ngày: xanh lá là con có mặt, đỏ là vắng, xanh dương có chữ bù là học bù, xám là lớp nghỉ.")
+        luoi = p.locator(".ant-card", has_text="Điểm danh tháng")
+        luoi.scroll_into_view_if_needed()
+        v.chi(luoi)
+        p.wait_for_timeout(1000)
+        v.noi("Chạm vào một ngày để xem buổi đó con có mặt không và được mấy sticker. Ví dụ ngày năm con vắng, ngày sáu con đã học bù ở lớp khác.")
+        v.bam(p.locator('[data-ngay="2026-11-05"]'), 1.5)
+        v.bam(p.locator('[data-ngay="2026-11-06"]'), 1.5)
+        v.noi("Kéo xuống nữa để xem ảnh lớp các buổi con có mặt, và chi tiết học phí.")
+        for nhan in ["Ảnh lớp", "Học phí"]:
             loc = p.get_by_text(re.compile("^" + nhan)).first
             if loc.count():
                 v.chi(loc)
                 p.wait_for_timeout(1500)
-        v.noi("Nhà có nhiều con học ở trung tâm thì mỗi con là một thẻ ở trên cùng. Quên mật khẩu thì nhờ trung tâm đặt lại.", 1)
+        v.noi("Nhà có nhiều con học ở trung tâm thì mỗi con là một thẻ ở trên cùng. Quên mật khẩu thì nhờ trung tâm đặt lại. Liên kết Xem hướng dẫn ở cuối trang mở lại video này.", 1)
 
 
 CHUONG = [v1_dang_nhap, v2_lop_hoc_sinh, v3_import, v4_diem_danh, v5_thu_hoc_phi, v6_chi_phi, v7_hoc_phi, v8_phu_huynh]

@@ -14,6 +14,7 @@ import ChiPhi from './trang/ChiPhi'
 import TaiKhoanTrang from './trang/TaiKhoan'
 import PhuHuynh from './trang/PhuHuynh'
 import ImportExcel from './trang/ImportExcel'
+import HuongDan from './trang/HuongDan'
 
 const NguoiDung = createContext<TaiKhoan>(null!)
 export const useToi = () => useContext(NguoiDung)
@@ -60,6 +61,8 @@ export default function App() {
           <b style={{ color: '#fff', whiteSpace: 'nowrap' }}>Ms.Nhung</b>
           {dienThoai ? <span style={{ flex: 1 }} /> : <Menu theme="dark" mode="horizontal" selectedKeys={[loc.pathname === '/import' ? '/lop' : loc.pathname]} items={menu}
             onClick={(e) => nav(e.key)} style={{ flex: 1, minWidth: 0 }} />}
+          {/* thanh dưới đã đủ 5 mục, thêm mục thứ 6 thì chật trên điện thoại; phụ huynh có liên kết riêng ở trang Con tôi */}
+          {toi.vai_tro !== 'phu_huynh' && <Button size="small" onClick={() => nav('/huong-dan')}>Hướng dẫn</Button>}
           <Button size="small" onClick={() => sb.auth.signOut()}>Thoát</Button>
         </Layout.Header>
         <Layout.Content style={{ padding: 12, paddingBottom: dienThoai ? 76 : 12, maxWidth: 1200, width: '100%', margin: '0 auto' }}>
@@ -77,6 +80,7 @@ export default function App() {
               </>
             )}
             <Route path="/doi-mat-khau" element={<DoiMatKhau xong={() => nav('/')} />} />
+            <Route path="/huong-dan" element={<HuongDan />} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Layout.Content>

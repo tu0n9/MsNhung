@@ -141,7 +141,7 @@ Sau review pha R (2026-11-15):
 - **Chỉ giáo viên** đánh "Lớp nghỉ" và thêm buổi phụ / bù (buổi lớp nghỉ sinh tiền dư).
 - Trợ giảng đọc được đơn giá lớp qua API là **chấp nhận được** (giao diện đã ẩn); trợ giảng thấy đơn giá của chính mình.
 - Video hướng dẫn: nhiều video ngắn theo từng việc, có giọng đọc tiếng Việt (Microsoft HoaiMy qua `edge-tts`).
-  Video để trên máy (`docs/huong-dan/*.mp4`, không đưa vào git); người dùng tự gửi cho cô Nhung. Quay lại bằng
+  ~~Video để trên máy, không đưa vào git~~ (thay ở mục "Video hướng dẫn trong app" bên dưới). Quay lại bằng
   `python -I -X utf8 tests/video/chuong.py [số video]` (cần dev server 127.0.0.1:5180).
 
 Lưới lịch điểm danh tháng và giờ học (grill 2026-11-15):
@@ -158,6 +158,14 @@ Lưới lịch điểm danh tháng và giờ học (grill 2026-11-15):
   của em trước (cả buổi học bù ở lớp khác), rồi mới tới buổi của lớp.
 - **Giờ học:** mỗi lớp một ô giờ chung dạng chữ (ví dụ "17:30–19:00"), không bắt buộc; hiện ở trang Lớp, Điểm danh và
   chi tiết học sinh (phụ huynh thấy). Chưa có giờ riêng cho từng thứ, chưa có cột giờ trong file import.
+
+Video hướng dẫn trong app (2026-11-15):
+
+- **Video nằm trong repo** ở `public/huong-dan/*.mp4` (khoảng 11 MB), Vercel phục vụ như file tĩnh; không dùng bộ nhớ
+  Supabase. Repo riêng tư nên không liên kết sang GitHub (người xem phải có quyền vào repo).
+- **Trang Hướng dẫn** trong app, lọc theo vai trò: giáo viên/admin 8 video, trợ giảng video 1 và 4, phụ huynh video 8.
+  Giáo viên, trợ giảng vào bằng nút "Hướng dẫn" cạnh "Thoát"; phụ huynh bằng liên kết "Xem hướng dẫn" cạnh "Đổi mật khẩu".
+- Service worker không cache sẵn video; video chỉ tải khi bấm xem.
 
 ## Câu hỏi còn mở
 

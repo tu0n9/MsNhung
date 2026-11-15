@@ -12,7 +12,7 @@ from playwright.sync_api import sync_playwright
 GIONG = "vi-VN-HoaiMyNeural"
 FFMPEG = imageio_ffmpeg.get_ffmpeg_exe()
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-RA = os.path.join(REPO, "docs", "huong-dan")
+RA = os.path.join(REPO, "public", "huong-dan")  # Vercel phát thẳng trong app (trang Hướng dẫn)
 TAM = os.path.join(REPO, "tests", "video", "tam")
 URL = "http://127.0.0.1:5180/"
 KHUNG = {"width": 412, "height": 860}

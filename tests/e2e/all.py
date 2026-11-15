@@ -49,10 +49,18 @@ with sync_playwright() as pw:
     def nav(t):
         p.locator("nav").get_by_text(t, exact=True).click()
 
+    def huong_dan(vao, so_video):
+        vao()
+        expect(p.locator("video")).to_have_count(so_video, timeout=10000)
+        # readyState >= 1: đã đọc được metadata, tức file mp4 có thật và được phục vụ đúng kiểu
+        p.wait_for_function("[...document.querySelectorAll('video')].every(v => v.readyState >= 1)", timeout=20000)
+        p.get_by_role("button", name="← Quay lại").click()
+
     def b_admin():
         dang_nhap(p, "admin", PW)
         expect(p.get_by_text("Thoát")).to_be_visible(timeout=20000)
-    buoc("admin đăng nhập", b_admin)
+        huong_dan(lambda: p.get_by_role("button", name="Hướng dẫn").click(), 8)
+    buoc("admin đăng nhập, trang Hướng dẫn đủ 8 video phát được", b_admin)
 
     def b_tao_tg():
         nav("Tài khoản")
@@ -258,8 +266,9 @@ with sync_playwright() as pw:
         kiem_luoi()
         expect(p.get_by_text(re.compile("17:30–19:00")).first).to_be_visible()
         p.screenshot(path=os.path.join(OUT, "a-phu-huynh.png"), full_page=True)
+        huong_dan(lambda: p.get_by_text("Xem hướng dẫn").click(), 1)
         thoat()
-    buoc("phụ huynh: SĐT, bắt đổi mật khẩu, thấy con + ảnh lớp + lưới tháng + giờ học, không có tab quản lý", b_phu_huynh)
+    buoc("phụ huynh: SĐT, bắt đổi mật khẩu, thấy con + ảnh lớp + lưới tháng + giờ học + 1 video hướng dẫn, không có tab quản lý", b_phu_huynh)
 
     def b_tro_giang():
         dang_nhap(p, "testlan", "0911000001")
@@ -274,8 +283,9 @@ with sync_playwright() as pw:
         vai = p.locator(".ant-table-tbody .ant-tag").all_inner_texts()
         assert "Quản trị" not in vai and "Giáo viên" not in vai and vai.count("Trợ giảng") == 1, vai
         p.screenshot(path=os.path.join(OUT, "a-tro-giang.png"), full_page=True)
+        huong_dan(lambda: p.get_by_role("button", name="Hướng dẫn").click(), 2)
         thoat()
-    buoc("trợ giảng: không có tab tiền, chỉ thấy tài khoản mình + phụ huynh", b_tro_giang)
+    buoc("trợ giảng: không có tab tiền, chỉ thấy tài khoản mình + phụ huynh, 2 video hướng dẫn", b_tro_giang)
 
     KQ.append(("PASS" if not loi else "FAIL", f"không lỗi JS ({len(loi)})" + (": " + loi[0][:150] if loi else "")))
     b.close()

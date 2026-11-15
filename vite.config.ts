@@ -19,8 +19,12 @@ export default defineConfig({
           { src: 'icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
         ],
       },
-      // exceljs nặng, không cache sẵn cho lần mở đầu
-      workbox: { maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, globPatterns: ['**/*.{js,css,html,png,woff2}'] },
+      // exceljs nặng, không cache sẵn cho lần mở đầu. Video hướng dẫn (public/huong-dan, ~11 MB) không cache sẵn và không
+      // bị service worker đổi thành index.html khi mở thẳng link mp4.
+      workbox: {
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, globPatterns: ['**/*.{js,css,html,png,woff2}'],
+        navigateFallbackDenylist: [/^\/huong-dan\//],
+      },
     }),
   ],
   test: { include: ['src/**/*.test.ts'] },

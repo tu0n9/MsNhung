@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Empty, Tabs } from 'antd'
+import { Empty, Space, Tabs } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import { q, sb, type HocSinh, type Lop } from '../supabase'
 import HocSinhChiTiet from './HocSinhChiTiet'
@@ -17,7 +17,7 @@ export default function PhuHuynh() {
   return (
     <>
       <Tabs items={con.map((h) => ({ key: h.id, label: h.ho_ten, children: <HocSinhChiTiet hs={h} lop={lops.find((l) => l.id === h.lop_id)!} chiXem /> }))} />
-      <a onClick={() => nav('/doi-mat-khau')}>Đổi mật khẩu</a>
+      <Space size="large"><a onClick={() => nav('/doi-mat-khau')}>Đổi mật khẩu</a><a onClick={() => nav('/huong-dan')}>Xem hướng dẫn</a></Space>
     </>
   )
 }
