@@ -74,7 +74,7 @@ function BuoiChiTiet({ buoi: b0, lop, quayLai }: { buoi: BuoiHoc; lop: Lop; quay
     const [cuaLop, d, tg, tgb, a, tatCa] = await Promise.all([
       q(sb.from('hoc_sinh').select('*').eq('lop_id', lop.id).eq('trang_thai', 'dang_hoc').lte('ngay_vao', buoi.ngay).order('ho_ten')),
       q(sb.from('diem_danh').select('*').eq('buoi_id', buoi.id)),
-      q(sb.from('tai_khoan').select('*').eq('vai_tro', 'tro_giang').eq('hoat_dong', true)),
+      q(sb.rpc('ds_tro_giang')),  // chỉ tên, không đơn giá: trợ giảng không xem được lương nhau
       q(sb.from('tro_giang_buoi').select('tro_giang_id').eq('buoi_id', buoi.id)),
       q(sb.from('anh_buoi').select('id, duong_dan').eq('buoi_id', buoi.id).order('tao_luc')),
       q(sb.from('hoc_sinh').select('*').eq('trang_thai', 'dang_hoc').order('ho_ten')),

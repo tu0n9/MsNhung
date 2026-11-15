@@ -8,21 +8,21 @@ export interface ChiPhi { id: string; ngay: string; danh_muc: string; so_tien: n
 export interface DongHs extends TongHopThang { hs: HocSinh; soBuoi: number; dieuChinh: number }
 export interface DuLieuThang {
   thang: Thang; lops: Lop[]; dong: DongHs[]; phieu: (PhieuThu & { id: string; hinh_thuc: string; ghi_chu: string | null })[]
-  chi: ChiPhi[]; luongTg: { tg: TaiKhoan; soBuoi: number; thanhTien: number }[]
+  chi: ChiPhi[]; luongTg: { tg: Pick<TaiKhoan, 'id' | 'ho_ten'>; soBuoi: number; thanhTien: number }[]
   diemDanh: { hoc_sinh_id: string; trang_thai: string; sticker: number; ngay: string; lop_id: string }[]
   goi: Goi[]
 }
 
 export async function taiDuLieuThang(thang: Thang): Promise<DuLieuThang> {
   const dau = `${thang}-01`, sau = `${congThang(thang, 1)}-01`
-  const [lops, hs, goi, phieu, chi, tgb, tgs, dd] = await Promise.all([
+  const [lops, hs, goi, phieu, chi, luong, dd] = await Promise.all([
     q(sb.from('lop').select('*').order('ten')),
     q(sb.from('hoc_sinh').select('*').order('ho_ten')),
     q(sb.from('goi_hoc').select('*')),
     q(sb.from('phieu_thu').select('*').order('ngay_thu')),
     q(sb.from('chi_phi').select('*').gte('ngay', dau).lt('ngay', sau).order('ngay')),
-    q(sb.from('tro_giang_buoi').select('tro_giang_id, don_gia, buoi_hoc!inner(ngay)').gte('buoi_hoc.ngay', dau).lt('buoi_hoc.ngay', sau)),
-    q(sb.from('tai_khoan').select('*').eq('vai_tro', 'tro_giang')),
+    // cột đơn giá của tro_giang_buoi không cấp cho client; lương tính trong hàm chỉ giáo viên gọi được
+    q(sb.rpc('luong_tro_giang', { tu: dau, den: sau })),
     q(sb.from('diem_danh').select('hoc_sinh_id, trang_thai, sticker, buoi_hoc!inner(ngay, lop_id)').gte('buoi_hoc.ngay', dau).lt('buoi_hoc.ngay', sau)),
   ])
   const goiL = goi as Goi[], phieuL = phieu as DuLieuThang['phieu']
@@ -41,10 +41,8 @@ export async function taiDuLieuThang(thang: Thang): Promise<DuLieuThang> {
   // học sinh ngừng học vẫn hiện nếu còn tiền liên quan tháng này
   }).filter((d) => d.hs.trang_thai === 'dang_hoc' || d.phaiThu || d.noKyTruoc || d.thucThu || d.conPhaiThu)
 
-  const luongTg = (tgs as TaiKhoan[]).map((tg) => {
-    const ds = (tgb as { tro_giang_id: string; don_gia: number }[]).filter((x) => x.tro_giang_id === tg.id)
-    return { tg, soBuoi: ds.length, thanhTien: ds.reduce((s, x) => s + x.don_gia, 0) }
-  }).filter((x) => x.soBuoi > 0)
+  const luongTg = (luong as { tro_giang_id: string; ho_ten: string; so_buoi: number; thanh_tien: number }[])
+    .map((x) => ({ tg: { id: x.tro_giang_id, ho_ten: x.ho_ten }, soBuoi: Number(x.so_buoi), thanhTien: Number(x.thanh_tien) }))
 
   return { thang, lops: lops as Lop[], dong, phieu: phieuL.filter((p) => p.ngay_thu >= dau && p.ngay_thu < sau), chi: chi as ChiPhi[], luongTg, diemDanh, goi: goiL }
 }

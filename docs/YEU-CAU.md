@@ -125,6 +125,14 @@ Import lớp và học sinh bằng Excel (grill 2026-11-15):
 - Chỉ giáo viên và admin được import. SĐT bỏ ký tự thừa, `+84` → `0`, phải còn 10 số bắt đầu bằng 0; cột SĐT
   trong mẫu định dạng Text.
 
+Giao diện và quyền trợ giảng (2026-11-15):
+
+- **Phong cách 2 "Sáng và thân thiện"** cho cả app (mẫu: `docs/mau-giao-dien/phong-cach-toan-app.html`): nền sáng,
+  màu xanh dương, font Be Vietnam Pro, bo góc lớn, điểm danh dạng lưới ảnh chạm để đổi có mặt / vắng.
+- **Màn import kiểu A**: trang riêng 3 bước, tóm tắt lỗi ở đầu, lọc Lỗi / Đã có / Mới (mẫu: `import-excel.html`).
+- **Trợ giảng chỉ thấy tài khoản của mình và của phụ huynh**; không đọc được đơn giá trả trợ giảng (kể cả qua API).
+  Danh sách trợ giảng để điểm danh lấy qua hàm `ds_tro_giang()` (chỉ tên); lương qua `luong_tro_giang()` (chỉ giáo viên).
+
 ## Câu hỏi còn mở
 
 Không còn.

@@ -10,7 +10,8 @@ const BANG = ['tai_khoan', 'lop', 'hoc_sinh', 'buoi_hoc', 'diem_danh', 'tro_gian
 
 export async function saoLuuToanBo() {
   const du: Record<string, unknown> = { luc: new Date().toISOString() }
-  for (const b of BANG) du[b] = await q(sb.from(b).select('*'))
+  // tro_giang_buoi: client không được đọc cột đơn giá; bản sao lưu đêm (pg_dump) mới có đủ
+  for (const b of BANG) du[b] = await q(sb.from(b).select(b === 'tro_giang_buoi' ? 'buoi_id, tro_giang_id' : '*'))
   const a = document.createElement('a')
   a.href = URL.createObjectURL(new Blob([JSON.stringify(du)], { type: 'application/json' }))
   a.download = `sao-luu-msnhung-${dayjs().format('YYYY-MM-DD-HHmm')}.json`
