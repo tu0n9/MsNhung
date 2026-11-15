@@ -7,3 +7,4 @@ supabase/.temp/
 tests/e2e/out/
 tests/video/tam/
 docs/huong-dan/*.mp4
+__pycache__/
