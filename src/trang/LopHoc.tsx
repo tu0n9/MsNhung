@@ -31,7 +31,7 @@ export default function LopHoc() {
 
   const [luuLop, dangLuuLop] = useMotLan(async (v: Lop) => {
     try {
-      const ban = { ten: v.ten, don_gia: v.don_gia, lich: v.lich ?? [], hoat_dong: v.hoat_dong ?? true }
+      const ban = { ten: v.ten, don_gia: v.don_gia, lich: v.lich ?? [], gio: v.gio?.trim() || null, hoat_dong: v.hoat_dong ?? true }
       await q(suaLop?.id ? sb.from('lop').update(ban).eq('id', suaLop.id) : sb.from('lop').insert(ban))
       setSuaLop(null); tai()
     } catch (e) { message.error((e as Error).message) }
@@ -85,7 +85,7 @@ export default function LopHoc() {
         const ds = hs.filter((h) => h.lop_id === l.id && (hienNgung || h.trang_thai === 'dang_hoc'))
         return {
           key: l.id,
-          label: <Space wrap><b>{l.ten}</b><span>{l.lich.map((t) => THU[t]).join('-')}</span>
+          label: <Space wrap><b>{l.ten}</b><span>{l.lich.map((t) => THU[t]).join('-')}{l.gio && ` · ${l.gio}`}</span>
             {ql && <span>{vnd(l.don_gia)}/buổi</span>}<Tag>{ds.length} HS</Tag>{!l.hoat_dong && <Tag>Ngừng</Tag>}</Space>,
           extra: ql && <Button size="small" onClick={(e) => { e.stopPropagation(); setSuaLop(l) }}>Sửa lớp</Button>,
           children: <List dataSource={ds} locale={{ emptyText: 'Chưa có học sinh' }} renderItem={(h) => (
@@ -112,6 +112,7 @@ export default function LopHoc() {
             <InputNumber<number> {...O_TIEN} step={10000} />
           </Form.Item>
           <Form.Item name="lich" label="Lịch học trong tuần"><Checkbox.Group options={[1, 2, 3, 4, 5, 6, 0].map((t) => ({ value: t, label: THU[t] }))} /></Form.Item>
+          <Form.Item name="gio" label="Giờ học"><Input placeholder="17:30–19:00" /></Form.Item>
           <Form.Item name="hoat_dong" label="Đang mở" valuePropName="checked"><Checkbox /></Form.Item>
           <Button type="primary" htmlType="submit" block loading={dangLuuLop}>Lưu</Button>
         </Form>

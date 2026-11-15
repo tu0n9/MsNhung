@@ -144,6 +144,21 @@ Sau review pha R (2026-11-15):
   Video để trên máy (`docs/huong-dan/*.mp4`, không đưa vào git); người dùng tự gửi cho cô Nhung. Quay lại bằng
   `python -I -X utf8 tests/video/chuong.py [số video]` (cần dev server 127.0.0.1:5180).
 
+Lưới lịch điểm danh tháng và giờ học (grill 2026-11-15):
+
+- **"Điểm danh tháng" ở màn chi tiết học sinh là lưới lịch** 7 cột T2 → CN, thay hẳn danh sách từng buổi. Giáo viên
+  và phụ huynh dùng chung. Chạm vào một ô thì dòng cố định dưới lưới hiện mọi buổi của ngày đó (loại buổi, trạng thái,
+  sticker); dưới lưới có chú thích màu.
+- **Màu ô:** Có mặt xanh lá; Vắng đỏ; Học bù xanh dương có chữ "bù"; Lớp nghỉ xám gạch ngang; buổi đã qua mà chưa
+  điểm danh nền vàng viền vàng đậm; buổi sắp tới số thường; ngày không có buổi số mờ; hôm nay viền đậm.
+- **Nguồn ngày có buổi:** các buổi đã sinh của lớp (`buoi_hoc`), không suy từ lịch tuần. Bỏ qua buổi trước ngày vào
+  học, buổi bù riêng mà em không đến, và buổi chưa điểm danh của học sinh đã ngừng học. Buổi phụ tính như buổi lịch.
+- **Chỉ ngày trước hôm nay** mới tính "chưa điểm danh"; buổi hôm nay chưa điểm danh là buổi sắp tới.
+- **Ngày có nhiều buổi** tô theo thứ tự Vắng > Chưa điểm danh > Học bù > Có mặt > Lớp nghỉ. Trạng thái lấy từ điểm danh
+  của em trước (cả buổi học bù ở lớp khác), rồi mới tới buổi của lớp.
+- **Giờ học:** mỗi lớp một ô giờ chung dạng chữ (ví dụ "17:30–19:00"), không bắt buộc; hiện ở trang Lớp, Điểm danh và
+  chi tiết học sinh (phụ huynh thấy). Chưa có giờ riêng cho từng thứ, chưa có cột giờ trong file import.
+
 ## Câu hỏi còn mở
 
 Không còn.

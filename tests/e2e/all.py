@@ -1,4 +1,5 @@
 import os, re, sys, subprocess, json
+from datetime import date, timedelta
 from playwright.sync_api import sync_playwright, expect
 
 D = os.path.dirname(os.path.abspath(__file__))
@@ -71,8 +72,10 @@ with sync_playwright() as pw:
         lab(p, "Đơn giá một buổi (đ)").fill("100000")
         for t in ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]:
             p.locator(".ant-modal").get_by_text(t, exact=True).click()
+        lab(p, "Giờ học").fill("17:30–19:00")
         p.locator(".ant-modal").get_by_role("button", name="Lưu").click()
         expect(p.get_by_text("TEST Lớp Starters")).to_be_visible(timeout=15000)
+        expect(p.get_by_text(re.compile("17:30–19:00"))).to_be_visible()
         p.get_by_role("button", name="Thêm học sinh").click()
         lab(p, "Họ tên").fill("TEST Nguyễn Bảo An")
         chon(p, "Lớp", "TEST Lớp Starters")
@@ -87,7 +90,7 @@ with sync_playwright() as pw:
         p.wait_for_timeout(2500)
         n = p.locator(".ant-list-item", has_text="TEST Nguyễn Bảo An").count()
         assert n == 1, f"học sinh bị tạo {n} lần"
-    buoc("tạo lớp + học sinh (avatar, SĐT phụ huynh, sticker đã có 5), Enter + bấm Lưu không tạo trùng", b_lop_hs)
+    buoc("tạo lớp (có giờ học) + học sinh (avatar, SĐT phụ huynh, sticker đã có 5), Enter + bấm Lưu không tạo trùng", b_lop_hs)
 
     def b_diem_danh():
         nav("Điểm danh")
@@ -125,6 +128,56 @@ with sync_playwright() as pw:
         p.wait_for_timeout(1200)
         p.get_by_role("button", name="← Quay lại").click()
     buoc("buổi bù riêng: chỉ có Học bù / Không đến, không có nút Tất cả có mặt", b_buoi_bu)
+
+    # lưới lịch: hôm nay có mặt (bước điểm danh), hôm qua vắng, hôm kia có mặt + học bù ở buổi bù riêng (ô ra học bù),
+    # các ngày trước đó chưa điểm danh. Lớp TEST học cả 7 ngày, em vào học 01/11.
+    HN = date.today()
+    NG = {k: (HN - timedelta(days=n)).isoformat() for k, n in [("nay", 0), ("qua", 1), ("kia", 2), ("truoc", 3)]}
+
+    def mo_ngay(d):
+        p.locator(".ant-picker").first.click()
+        p.locator(f'.ant-picker-dropdown:visible .ant-picker-cell[title="{d}"]').click()
+        p.wait_for_timeout(1500)
+
+    def diem_danh_ngay(d, tt):
+        mo_ngay(d)
+        p.locator(".ant-list-item", has_text="Theo lịch").filter(has_text="TEST Lớp Starters").get_by_role("button", name="Điểm danh").click()
+        p.locator(".ant-list-item", has_text="TEST Nguyễn Bảo An").get_by_text(tt, exact=True).click()
+        expect(p.locator(".ant-card-head-title", has_text="Học sinh")).to_contain_text("(1/1 có mặt)" if tt == "Có mặt" else "(0/1 có mặt)", timeout=8000)
+        p.get_by_role("button", name="← Quay lại").click()
+
+    def kiem_luoi():
+        o = lambda k: p.locator(f'[data-ngay="{NG[k]}"]')
+        expect(o("nay")).to_have_attribute("data-trang-thai", "co_mat", timeout=15000)
+        expect(o("qua")).to_have_attribute("data-trang-thai", "vang")
+        expect(o("kia")).to_have_attribute("data-trang-thai", "hoc_bu")
+        if NG["truoc"] >= HN.replace(day=1).isoformat():
+            expect(o("truoc")).to_have_attribute("data-trang-thai", "chua_diem_danh")
+        o("kia").click()
+        ct = p.locator("[data-chi-tiet-ngay]")
+        expect(ct).to_contain_text("Buổi bù: Học bù")
+        expect(ct).to_contain_text("Có mặt")
+
+    def b_luoi():
+        assert NG["kia"][:7] == NG["nay"][:7], "bước này cần chạy từ ngày 3 của tháng"
+        diem_danh_ngay(NG["qua"], "Vắng")
+        diem_danh_ngay(NG["kia"], "Có mặt")
+        p.get_by_role("button", name="Thêm buổi phụ / bù").click()
+        m = p.locator(".ant-modal")
+        m.get_by_text("Buổi bù riêng").click()
+        m.locator(".ant-select").click()
+        p.locator(".ant-select-dropdown:visible .ant-select-item-option", has_text="TEST Lớp Starters").click()
+        m.get_by_role("button", name=re.compile("^(OK|Đồng ý)$")).click()
+        p.locator(".ant-list-item", has_text="Buổi bù").get_by_role("button", name="Điểm danh").click()
+        p.locator(".ant-list-item", has_text="TEST Nguyễn Bảo An").get_by_text("Học bù", exact=True).click()
+        p.wait_for_timeout(1500)
+        p.get_by_role("button", name="← Quay lại").click()
+        nav("Lớp")
+        p.get_by_text("TEST Nguyễn Bảo An").click()
+        kiem_luoi()
+        p.screenshot(path=os.path.join(OUT, "a-luoi-giao-vien.png"), full_page=True)
+        p.get_by_role("button", name="← Quay lại").click()
+    buoc("lưới điểm danh tháng (giáo viên): có mặt / vắng / học bù / chưa điểm danh, chạm ô hiện chi tiết", b_luoi)
 
     def b_thu_tien():
         nav("Lớp")
@@ -201,9 +254,12 @@ with sync_playwright() as pw:
         expect(p.get_by_text("Tổng sticker")).to_be_visible()
         expect(p.get_by_text("Ảnh lớp")).to_be_visible()
         assert p.get_by_text("Học phí", exact=True).count() == 0 or p.locator("nav").count() == 0
+        # ô "chưa điểm danh" chỉ có khi phụ huynh đọc được buoi_hoc của lớp con (RLS), ô học bù khi đọc được buổi bù
+        kiem_luoi()
+        expect(p.get_by_text(re.compile("17:30–19:00")).first).to_be_visible()
         p.screenshot(path=os.path.join(OUT, "a-phu-huynh.png"), full_page=True)
         thoat()
-    buoc("phụ huynh: SĐT, bắt đổi mật khẩu, thấy con + ảnh lớp, không có tab quản lý", b_phu_huynh)
+    buoc("phụ huynh: SĐT, bắt đổi mật khẩu, thấy con + ảnh lớp + lưới tháng + giờ học, không có tab quản lý", b_phu_huynh)
 
     def b_tro_giang():
         dang_nhap(p, "testlan", "0911000001")

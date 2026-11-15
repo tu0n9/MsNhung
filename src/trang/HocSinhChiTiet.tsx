@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
-import { App, Avatar, Button, Card, DatePicker, Descriptions, Form, Input, InputNumber, List, Modal, Popconfirm, Radio, Select, Space, Statistic, Table, Tag } from 'antd'
+import { App, Avatar, Button, Card, DatePicker, Descriptions, Form, Input, InputNumber, Modal, Popconfirm, Radio, Select, Space, Statistic, Table, Tag } from 'antd'
 import dayjs from 'dayjs'
 import { useToi } from '../App'
-import { O_TIEN } from '../giao-dien'
-import { goiTaiKhoan, laQuanLy, q, sb, useMotLan, urlAnh, type BuoiHoc, type HocSinh, type Lop } from '../supabase'
+import { MAU, O_TIEN } from '../giao-dien'
+import { goiTaiKhoan, homNay, laQuanLy, q, sb, useMotLan, urlAnh, type BuoiHoc, type HocSinh, type Lop } from '../supabase'
 import {
-  conNoGoi, daDongGoi, demBuoiDuKien, demChuaBu, duConLai, thangHetGoi, tienDuGoi, tinNhanPhuHuynh, tongGoi, tongHopHocSinh, vnd,
+  congThang, conNoGoi, daDongGoi, demBuoiDuKien, demChuaBu, duConLai, thangHetGoi, tienDuGoi, tinNhanPhuHuynh, tongGoi, tongHopHocSinh, vnd,
   type Goi, type PhieuThu, type Thang,
 } from '../hoc-phi'
+import { luoiThang, type ONgay, type TrangThaiO } from '../diem-danh-thang'
 
 type Phieu = PhieuThu & { id: string; hinh_thuc: string; ghi_chu: string | null }
-const TRANG_THAI = { co_mat: ['Có mặt', 'green'], vang: ['Vắng', 'red'], hoc_bu: ['Học bù', 'blue'] } as const
 const tenGoi = (g: Goi) => `${g.so_thang} tháng từ ${g.thang_bat_dau.slice(5, 7)}/${g.thang_bat_dau.slice(0, 4)}`
 
 export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSinh; lop: Lop; quayLai?: () => void; chiXem?: boolean }) {
@@ -18,7 +18,8 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
   const toi = useToi()
   const ql = laQuanLy(toi.vai_tro) && !chiXem
   const [thang, setThang] = useState<Thang>(dayjs().format('YYYY-MM'))
-  const [dd, setDd] = useState<{ trang_thai: keyof typeof TRANG_THAI; sticker: number; buoi_hoc: BuoiHoc }[]>([])
+  const [dd, setDd] = useState<{ trang_thai: 'co_mat' | 'vang' | 'hoc_bu'; sticker: number; buoi_hoc: BuoiHoc }[]>([])
+  const [buoiThang, setBuoiThang] = useState<BuoiHoc[]>([])
   const [goi, setGoi] = useState<(Goi & { ly_do_dieu_chinh: string | null })[]>([])
   const [phieu, setPhieu] = useState<Phieu[]>([])
   const [buoiDb, setBuoiDb] = useState<BuoiHoc[]>([])
@@ -43,6 +44,11 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
     if (hs.avatar) setAvatar((await urlAnh([hs.avatar]))[hs.avatar])
   }
   useEffect(() => { tai().catch((e) => message.error(e.message)) }, [hs.id])
+  // cần cả buổi em chưa có điểm danh để biết ngày có lịch, lớp nghỉ, buổi quên điểm danh
+  useEffect(() => {
+    q(sb.from('buoi_hoc').select('*').eq('lop_id', hs.lop_id).gte('ngay', `${thang}-01`).lt('ngay', `${congThang(thang, 1)}-01`))
+      .then((b) => setBuoiThang(b as BuoiHoc[])).catch((e) => message.error(e.message))
+  }, [hs.id, thang])
 
   const trongThang = dd.filter((x) => x.buoi_hoc.ngay.startsWith(thang)).sort((a, b) => a.buoi_hoc.ngay.localeCompare(b.buoi_hoc.ngay))
   const buoiIdsCoMat = trongThang.filter((x) => x.trang_thai !== 'vang').map((x) => x.buoi_hoc.id)
@@ -65,7 +71,7 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
       <Space wrap>
         {quayLai && <Button onClick={quayLai}>← Quay lại</Button>}
         <Avatar shape="square" size={64} src={avatar}>{hs.ho_ten.split(' ').pop()?.[0]}</Avatar>
-        <div><b style={{ fontSize: 18 }}>{hs.ho_ten}</b><br />{lop?.ten} {hs.trang_thai === 'ngung' && <Tag>Ngừng học</Tag>}</div>
+        <div><b style={{ fontSize: 18 }}>{hs.ho_ten}</b><br />{lop?.ten}{lop?.gio && ` · ${lop.gio}`} {hs.trang_thai === 'ngung' && <Tag>Ngừng học</Tag>}</div>
         <DatePicker picker="month" value={dayjs(thang)} onChange={(d) => d && setThang(d.format('YYYY-MM'))} format="MM/YYYY" allowClear={false} />
       </Space>
 
@@ -79,12 +85,7 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
       </Card>
 
       <Card size="small" title={`Điểm danh tháng ${thang.slice(5)}/${thang.slice(0, 4)}`}>
-        <List size="small" dataSource={trongThang} locale={{ emptyText: 'Chưa có buổi nào' }} renderItem={(x) => (
-          <List.Item>
-            {dayjs(x.buoi_hoc.ngay).format('dd DD/MM')}
-            <Space><Tag color={TRANG_THAI[x.trang_thai][1]}>{TRANG_THAI[x.trang_thai][0]}</Tag>⭐ {x.sticker}</Space>
-          </List.Item>
-        )} />
+        <LuoiThang key={thang} o={luoiThang(thang, buoiThang, dd, hs.ngay_vao, hs.trang_thai === 'dang_hoc', homNay())} lopId={hs.lop_id} />
       </Card>
 
       {chiXem && anh.length > 0 && <Card size="small" title="Ảnh lớp">
@@ -139,6 +140,56 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
       {thuTien && <ThuTien hs={hs} lop={lop} goi={goi} phieu={phieu} buoiDb={buoiDb} daHoan={daHoan} dong={() => { setThuTien(false); tai() }} />}
     </Space>
   )
+}
+
+const O: Record<TrangThaiO, { ten: string; style: React.CSSProperties }> = {
+  co_mat: { ten: 'Có mặt', style: { background: MAU.chinhNhat, color: MAU.chinh, fontWeight: 600 } },
+  vang: { ten: 'Vắng', style: { background: MAU.doNhat, color: MAU.do, fontWeight: 600 } },
+  hoc_bu: { ten: 'Học bù', style: { background: MAU.xanhNhat, color: MAU.xanh, fontWeight: 600 } },
+  lop_nghi: { ten: 'Lớp nghỉ', style: { background: MAU.xam, color: MAU.chuMo, textDecoration: 'line-through' } },
+  chua_diem_danh: { ten: 'Chưa điểm danh', style: { background: MAU.vang, color: MAU.chu, borderColor: MAU.vangDam } },
+  sap_toi: { ten: 'Có lịch học', style: { color: MAU.chu, borderColor: MAU.vien } },
+  trong: { ten: 'Không có buổi', style: { color: MAU.chuMo, opacity: 0.6 } },
+}
+const LOAI_BUOI = { lich: '', phu: 'Buổi phụ: ', bu: 'Buổi bù: ' }
+
+function LuoiThang({ o, lopId }: { o: (ONgay | null)[]; lopId: string }) {
+  const [chon, setChon] = useState(() => o.find((x) => x?.hom_nay) ?? null)
+  return <>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+      {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((t) => <span key={t} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: MAU.chuPhu }}>{t}</span>)}
+      {o.map((x, i) => x === null ? <span key={i} /> : (
+        <button key={x.ngay} type="button" data-ngay={x.ngay} data-trang-thai={x.trang_thai} onClick={() => setChon(x)}
+          aria-label={`${dayjs(x.ngay).format('DD/MM')}: ${O[x.trang_thai].ten}`} aria-pressed={chon?.ngay === x.ngay}
+          style={{
+            position: 'relative', height: 40, border: '2px solid transparent', borderRadius: 4, background: 'none', font: 'inherit',
+            fontSize: 13, cursor: 'pointer', padding: 0, ...O[x.trang_thai].style,
+            ...(x.hom_nay && { outline: `2px solid ${MAU.chu}`, outlineOffset: 1 }),
+            ...(chon?.ngay === x.ngay && { boxShadow: `0 0 0 2px ${MAU.chinh} inset` }),
+          }}>
+          {Number(x.ngay.slice(8))}
+          {x.trang_thai === 'hoc_bu' && <span style={{ position: 'absolute', top: 1, right: 3, fontSize: 9, lineHeight: 1 }}>bù</span>}
+        </button>
+      ))}
+    </div>
+    <div style={{ marginTop: 10, padding: '8px 0', borderTop: `1px solid ${MAU.vien}`, minHeight: 40 }} data-chi-tiet-ngay>
+      {!chon ? <span style={{ color: MAU.chuPhu }}>Chạm vào một ngày để xem chi tiết</span> : <>
+        <b style={{ textTransform: 'capitalize' }}>{dayjs(chon.ngay).format('dddd DD/MM')}</b>
+        {chon.buoi.length === 0 && <div style={{ color: MAU.chuPhu }}>Không có buổi học</div>}
+        {chon.buoi.map((b) => <div key={b.buoi.id}>
+          {LOAI_BUOI[b.buoi.loai]}<span style={{ color: O[b.trang_thai].style.color }}>{O[b.trang_thai].ten}</span>
+          {b.buoi.lop_id !== lopId && ' (ở lớp khác)'}
+          {(b.trang_thai === 'co_mat' || b.trang_thai === 'hoc_bu') && ` · ⭐ ${b.sticker}`}
+        </div>)}
+      </>}
+    </div>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 12px', fontSize: 12, color: MAU.chuPhu }}>
+      {(['co_mat', 'vang', 'hoc_bu', 'lop_nghi', 'chua_diem_danh'] as const).map((k) => <span key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+        <i style={{ width: 14, height: 14, borderRadius: 3, border: '2px solid transparent', ...O[k].style }} />{O[k].ten}
+      </span>)}
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><i style={{ width: 14, height: 14, borderRadius: 3, border: `2px solid ${MAU.chu}` }} />Hôm nay</span>
+    </div>
+  </>
 }
 
 function ThuTien({ hs, lop, goi, phieu, buoiDb, daHoan, dong }: {

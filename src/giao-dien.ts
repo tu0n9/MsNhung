@@ -4,7 +4,7 @@ import type { ThemeConfig } from 'antd'
 
 export const MAU = {
   chinh: '#0f7a5c', chinhDam: '#0b5e47', chinhNhat: '#e3f3ed',
-  do: '#b3261e', doNhat: '#fbe9e7', vang: '#fff8e1',
+  do: '#b3261e', doNhat: '#fbe9e7', vang: '#fff8e1', vangDam: '#d99a00', xanh: '#1d5fb4', xanhNhat: '#e6eefb', xam: '#eceeed',
   chu: '#1b1f1d', chuPhu: '#4a524e', chuMo: '#79817d', vien: '#e4e7e5', nen: '#fbfbf9',
 }
 

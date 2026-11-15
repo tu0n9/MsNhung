@@ -4,7 +4,7 @@ import { chuanNgay, chuanSdt, chuanTien, docFile, kiemTra, type DongHsTho, type 
 import type { HocSinh, Lop } from './supabase'
 
 const HOM_NAY = '2026-11-15'
-const lopCo: Lop[] = [{ id: 'l1', ten: 'Starters 1', don_gia: 100000, lich: [1, 3], hoat_dong: true }]
+const lopCo: Lop[] = [{ id: 'l1', ten: 'Starters 1', don_gia: 100000, lich: [1, 3], gio: null, hoat_dong: true }]
 const hsCo = [{ id: 'h1', ho_ten: 'Trần Khánh Linh', lop_id: 'l1', sdt_phu_huynh: '0903615240' }] as HocSinh[]
 const hs = (so: number, o: Partial<DongHsTho>): DongHsTho => ({
   so, hoTen: 'Lê Minh Châu', lop: 'Starters 1', tenPh: '', sdt: '', ngayVao: '', donGiaRieng: '', sticker: '', ghiChu: '', ...o,

@@ -8,7 +8,7 @@ export interface TaiKhoan {
   id: string; ten_dang_nhap: string | null; so_dien_thoai: string | null; ho_ten: string
   vai_tro: VaiTro; phai_doi_mat_khau: boolean; don_gia_buoi: number; hoat_dong: boolean
 }
-export interface Lop { id: string; ten: string; don_gia: number; lich: number[]; hoat_dong: boolean }
+export interface Lop { id: string; ten: string; don_gia: number; lich: number[]; gio: string | null; hoat_dong: boolean }
 export interface HocSinh {
   id: string; ho_ten: string; lop_id: string; avatar: string | null; ten_phu_huynh: string | null
   sdt_phu_huynh: string | null; phu_huynh_id: string | null; ngay_vao: string; don_gia_rieng: number | null

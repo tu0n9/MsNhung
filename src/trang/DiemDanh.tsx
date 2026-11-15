@@ -46,7 +46,7 @@ export default function DiemDanh() {
         <List bordered dataSource={buois} renderItem={(b) => (
           <List.Item onClick={() => setMo(b)} style={{ cursor: 'pointer' }}
             extra={b.lop_nghi ? <Tag color="red">Lớp nghỉ</Tag> : <Button type="primary">Điểm danh</Button>}>
-            <List.Item.Meta title={tenLop(b.lop_id)} description={LOAI[b.loai]} />
+            <List.Item.Meta title={tenLop(b.lop_id)} description={[LOAI[b.loai], lops.find((l) => l.id === b.lop_id)?.gio].filter(Boolean).join(' · ')} />
           </List.Item>
         )} />
       )}
