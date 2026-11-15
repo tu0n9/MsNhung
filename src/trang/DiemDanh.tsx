@@ -198,7 +198,8 @@ function BuoiChiTiet({ buoi: b0, lop, quayLai }: { buoi: BuoiHoc; lop: Lop; quay
 
       <Card size="small" title="Ảnh lớp (minh chứng)">
         <Image.PreviewGroup>
-          <Space wrap>{anh.map((a) => <Image key={a.id} width={100} height={100} style={{ objectFit: 'cover' }} src={url[a.duong_dan]} />)}</Space>
+          {/* ảnh đã được workflow don-anh cất lên GitHub thì không còn file, không ký được link: ẩn thay vì hiện ảnh vỡ */}
+          <Space wrap>{anh.filter((a) => url[a.duong_dan]).map((a) => <Image key={a.id} width={100} height={100} style={{ objectFit: 'cover' }} src={url[a.duong_dan]} />)}</Space>
         </Image.PreviewGroup>
         <Upload accept="image/*" multiple showUploadList={false} customRequest={async ({ file, onSuccess, onError }) => {
           try {

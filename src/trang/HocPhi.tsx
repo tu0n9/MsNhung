@@ -28,6 +28,8 @@ export default function HocPhi() {
   const [xem, setXem] = useState<HocSinh | null>(null)
   const [url, setUrl] = useState<Record<string, string>>({})
   const [dangXuat, setDangXuat] = useState(false)
+  const [dungLuong, setDungLuong] = useState<number>()
+  useEffect(() => { sb.rpc('dung_luong_anh').then(({ data }) => setDungLuong(data ?? undefined)) }, [])
 
   const tai = async () => {
     const [x, k] = await Promise.all([taiDuLieuThang(thang), q(sb.from('khoa_so').select('khoa_den').single())])
@@ -74,6 +76,9 @@ export default function HocPhi() {
         <Button type="primary" loading={dangXuat} onClick={xuat}>Xuất Excel</Button>
         <Button onClick={() => saoLuuToanBo().catch((e) => message.error(e.message))}>Sao lưu toàn bộ</Button>
       </Space>
+      {dungLuong !== undefined && <div style={{ fontSize: 13, color: dungLuong > 800 * 2 ** 20 ? MAU.do : MAU.chuPhu }} data-dung-luong-anh>
+        Ảnh đang dùng: {(dungLuong / 2 ** 20).toFixed(1)} MB / 1 GB. Ảnh lớp cũ hơn 3 tháng tự cất lên GitHub và xoá khỏi đây mỗi tháng.
+      </div>}
 
       {/* phong cách 3: một khối kẻ ô như trang sổ, không tách thành nhiều thẻ */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', border: `1px solid ${MAU.vien}`, borderRadius: 6, background: '#fff' }}>

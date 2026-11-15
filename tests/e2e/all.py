@@ -215,6 +215,7 @@ with sync_playwright() as pw:
         nav("Học phí")
         p.wait_for_timeout(2500)
         expect(p.locator("button", has_text="TEST Nguyễn Bảo An")).to_contain_text("1.000.000 đ")
+        expect(p.locator("[data-dung-luong-anh]")).to_contain_text("MB / 1 GB")  # hàm dung_luong_anh() chạy được
         p.screenshot(path=os.path.join(OUT, "a-hoc-phi.png"), full_page=True)
         with p.expect_download() as dl:
             p.get_by_role("button", name="Xuất Excel").click()
@@ -223,7 +224,7 @@ with sync_playwright() as pw:
         js = "const E=require('exceljs');const w=new E.Workbook();w.xlsx.readFile(process.argv[1]).then(()=>console.log(JSON.stringify(w.worksheets.map(x=>x.name))))"
         ten = json.loads(subprocess.run(["node", "-e", js, f], cwd=REPO, capture_output=True, text=True, encoding="utf-8").stdout)
         assert ten[0] == "Tổng hợp" and ten[-5:] == ["Điểm danh", "Sổ thu", "Chi phí", "Công nợ", "Trợ giảng"] and "TEST Lớp Starters" in ten, ten
-    buoc("tab Học phí đúng số + Excel đủ trang đúng thứ tự", b_hoc_phi)
+    buoc("tab Học phí đúng số + dung lượng ảnh + Excel đủ trang đúng thứ tự", b_hoc_phi)
 
     def b_import():
         nav("Lớp")

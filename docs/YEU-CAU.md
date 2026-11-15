@@ -167,6 +167,18 @@ Video hướng dẫn trong app (2026-11-15):
   Giáo viên, trợ giảng vào bằng nút "Hướng dẫn" cạnh "Thoát"; phụ huynh bằng liên kết "Xem hướng dẫn" cạnh "Đổi mật khẩu".
 - Service worker không cache sẵn video; video chỉ tải khi bấm xem.
 
+Dọn ảnh lớp cũ (2026-11-15):
+
+- Dữ liệu điểm danh, học phí **không xoá** (vài MB mỗi năm, cần cho công nợ, Excel, lịch sử). Thứ làm đầy bộ nhớ là
+  ảnh lớp (khoảng 1 GB mỗi năm ở quy mô 10 lớp), nên chỉ dọn ảnh lớp; avatar giữ nguyên.
+- **Tự động hằng tháng** bằng GitHub Actions (`.github/workflows/don-anh.yml`, 01:30 ngày 2), không có nút trong app,
+  không cần tải về máy: ảnh của buổi **cũ hơn 3 tháng** (giữ tháng này và 3 tháng trước) được nén zip theo tháng, đưa
+  lên **GitHub Release** `anh-YYYY-MM`, tải lại so khớp rồi mới xoá file khỏi Supabase. Dòng `anh_buoi` giữ lại (tháng
+  đã chốt sổ không cho xoá dòng); app ẩn ảnh không còn file.
+- **Release ảnh của tháng cũ hơn 6 tháng bị xoá hẳn khỏi GitHub**: sau đó ảnh không còn ở đâu nữa.
+- Tab Học phí hiện "Ảnh đang dùng: X MB / 1 GB" (hàm `dung_luong_anh()`, chỉ giáo viên); quá 800 MB thì chữ đỏ.
+- Secret `SUPABASE_SECRET_KEY` trong GitHub Actions do người dùng tự thêm.
+
 ## Câu hỏi còn mở
 
 Không còn.

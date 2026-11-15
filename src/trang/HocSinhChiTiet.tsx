@@ -88,8 +88,9 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
         <LuoiThang key={thang} o={luoiThang(thang, buoiThang, dd, hs.ngay_vao, hs.trang_thai === 'dang_hoc', homNay())} lopId={hs.lop_id} />
       </Card>
 
-      {chiXem && anh.length > 0 && <Card size="small" title="Ảnh lớp">
-        <Space wrap>{anh.map((a) => <a key={a.duong_dan} href={urlA[a.duong_dan]} target="_blank" rel="noreferrer">
+      {/* ảnh đã được workflow don-anh cất lên GitHub thì không còn file, không ký được link: ẩn thay vì hiện ảnh vỡ */}
+      {chiXem && anh.some((a) => urlA[a.duong_dan]) && <Card size="small" title="Ảnh lớp">
+        <Space wrap>{anh.filter((a) => urlA[a.duong_dan]).map((a) => <a key={a.duong_dan} href={urlA[a.duong_dan]} target="_blank" rel="noreferrer">
           <img src={urlA[a.duong_dan]} width={100} height={100} style={{ objectFit: 'cover' }} alt={a.ngay} /></a>)}</Space>
       </Card>}
 

@@ -1,0 +1,102 @@
+# Dọn ảnh lớp cũ khỏi Supabase Storage (gói Free 1 GB, ảnh lớp đầy sau khoảng một năm) — người dùng chốt 2026-11-15.
+# Mỗi tháng: ảnh của các buổi cũ hơn N tháng (mặc định 3) được nén thành zip theo tháng, đưa lên GitHub Release
+# `anh-YYYY-MM` của repo này, tải lại để so khớp, khớp rồi mới xoá file khỏi Storage. Dòng `anh_buoi` giữ nguyên
+# (tháng đã chốt sổ không cho xoá dòng; dòng giữ lại cho biết buổi đó từng có ảnh), app tự ẩn ảnh không còn file.
+# Ảnh đã dọn chỉ xem được trên GitHub (repo riêng tư). Avatar không bị đụng.
+# Bước 2: release ảnh của tháng cũ hơn 6 tháng bị xoá hẳn khỏi GitHub (người dùng chốt 2026-11-15) — sau đó ảnh
+# không còn ở đâu nữa.
+# Cần secret SUPABASE_SECRET_KEY (Settings > Secrets and variables > Actions), giá trị lấy từ .env.
+name: don-anh
+on:
+  schedule:
+    - cron: '30 18 1 * *'  # 01:30 giờ Việt Nam ngày 2 hằng tháng
+  workflow_dispatch:
+    inputs:
+      cu_hon:
+        description: 'Dọn ảnh của các tháng cũ hơn bao nhiêu tháng (giữ tháng này và N tháng trước)'
+        default: '3'
+      xoa:
+        description: 'Xoá khỏi Supabase sau khi cất (bỏ chọn = chỉ cất lên GitHub để thử)'
+        type: boolean
+        default: true
+      giu_github:
+        description: 'Xoá hẳn release ảnh trên GitHub của các tháng cũ hơn bao nhiêu tháng'
+        default: '6'
+
+permissions:
+  contents: write
+
+concurrency: don-anh
+
+jobs:
+  don-anh:
+    runs-on: ubuntu-latest
+    env:
+      U: https://yfwgavfznjnjwpvjacjf.supabase.co  # URL công khai, đã nằm sẵn trong bundle frontend
+      K: ${{ secrets.SUPABASE_SECRET_KEY }}
+      GH_TOKEN: ${{ github.token }}
+      R: ${{ github.repository }}
+      CU_HON: ${{ inputs.cu_hon || '3' }}
+      XOA: ${{ github.event_name == 'schedule' || inputs.xoa }}
+      GIU_GITHUB: ${{ inputs.giu_github || '6' }}
+    steps:
+      - name: Cất ảnh cũ lên GitHub Release rồi xoá khỏi Supabase
+        run: |
+          set -euo pipefail
+          [ -n "$K" ] || { echo "Thiếu secret SUPABASE_SECRET_KEY"; exit 1; }
+          H=(-H "apikey: $K" -H "Authorization: Bearer $K")
+          MOC=$(TZ=Asia/Ho_Chi_Minh date -d "$(TZ=Asia/Ho_Chi_Minh date +%Y-%m-01) -$CU_HON month" +%Y-%m-01)
+          echo "Dọn ảnh các buổi trước $MOC (xoá: $XOA)" | tee -a "$GITHUB_STEP_SUMMARY"
+          mkdir -p tam && cd tam
+
+          # PostgREST trả tối đa 1000 dòng mỗi lần
+          : > ds.tsv
+          for ((o = 0; ; o += 1000)); do
+            curl -sSf --globoff "${H[@]}" \
+              "$U/rest/v1/anh_buoi?select=duong_dan,buoi_hoc!inner(ngay,lop(ten))&buoi_hoc.ngay=lt.$MOC&order=duong_dan&limit=1000&offset=$o" > trang.json
+            jq -r '.[] | [.duong_dan, .buoi_hoc.ngay, (.buoi_hoc.lop.ten | gsub("/"; "-"))] | @tsv' trang.json >> ds.tsv
+            [ "$(jq length trang.json)" -lt 1000 ] && break
+          done
+          echo "$(wc -l < ds.tsv) dòng ảnh trước mốc" | tee -a "$GITHUB_STEP_SUMMARY"
+
+          # file đã dọn ở lần trước trả 400 → bỏ qua
+          while IFS=$'\t' read -r duong ngay lop; do
+            t=${ngay:0:7}; d="$t/$ngay $lop"; mkdir -p "$d"
+            ma=$(curl -sS "${H[@]}" -o "$d/$(basename "$duong")" -w '%{http_code}' "$U/storage/v1/object/anh/$duong")
+            if [ "$ma" = 200 ]; then echo "$duong" >> "$t.ds"; else rm -f "$d/$(basename "$duong")"; fi
+          done < ds.tsv
+
+          NGAY=$(TZ=Asia/Ho_Chi_Minh date +%Y%m%d-%H%M)
+          for ds in *.ds; do
+            [ -e "$ds" ] || { echo "Không có ảnh nào cần dọn" | tee -a "$GITHUB_STEP_SUMMARY"; break; }
+            t=${ds%.ds}; n=$(wc -l < "$ds"); z="anh-$t-$NGAY.zip"
+            zip -q -r -0 "$z" "$t"  # ảnh JPEG đã nén sẵn, nén thêm chỉ tốn thời gian
+            gh release view "anh-$t" -R "$R" >/dev/null 2>&1 ||
+              gh release create "anh-$t" -R "$R" --title "Ảnh lớp tháng $t" --notes "Ảnh lớp đã dọn khỏi Supabase. Mỗi lần dọn là một file zip."
+            gh release upload "anh-$t" "$z" -R "$R"
+            # chỉ xoá khi bản trên GitHub tải về được và giống hệt bản vừa nén
+            rm -rf kiem && gh release download "anh-$t" -R "$R" -p "$z" -D kiem
+            cmp "$z" "kiem/$z"
+            [ "$(unzip -Z1 "kiem/$z" | grep -c '\.jpg$')" -eq "$n" ]
+            if [ "$XOA" = true ]; then
+              split -l 100 "$ds" lo.
+              for lo in lo.*; do
+                curl -sSf "${H[@]}" -X DELETE -H "Content-Type: application/json" "$U/storage/v1/object/anh" \
+                  -d "$(jq -R . "$lo" | jq -s '{prefixes: .}')" > /dev/null
+              done
+              rm -f lo.*
+            fi
+            echo "- $t: $n ảnh, $(du -h "$z" | cut -f1) → release anh-$t/$z$([ "$XOA" = true ] && echo ', đã xoá khỏi Supabase')" | tee -a "$GITHUB_STEP_SUMMARY"
+          done
+
+      - name: Xoá hẳn release ảnh quá hạn trên GitHub
+        run: |
+          set -euo pipefail
+          MOC=$(TZ=Asia/Ho_Chi_Minh date -d "$(TZ=Asia/Ho_Chi_Minh date +%Y-%m-01) -$GIU_GITHUB month" +%Y-%m)
+          echo "Xoá release ảnh của các tháng trước $MOC" | tee -a "$GITHUB_STEP_SUMMARY"
+          for tag in $(gh release list -R "$R" --limit 1000 --json tagName -q '.[].tagName' | grep -E '^anh-[0-9]{4}-[0-9]{2}$' || true); do
+            if [[ "${tag#anh-}" < "$MOC" ]]; then
+              gh release delete "$tag" -R "$R" --yes --cleanup-tag
+              echo "- đã xoá $tag" | tee -a "$GITHUB_STEP_SUMMARY"
+            fi
+          done

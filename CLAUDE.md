@@ -14,6 +14,9 @@ React + Vite + Ant Design (PWA, `HashRouter`) gọi thẳng Supabase (project `m
 
 Bản chạy thật: **https://ms-nhung.vercel.app** (Vercel team `tuong6`, tự deploy mỗi lần push `main`).
 Sao lưu database: GitHub Actions `sao-luu` 01:00 giờ VN → nhánh `sao-luu`.
+Dọn ảnh lớp: GitHub Actions `don-anh` 01:30 ngày 2 hằng tháng → ảnh cũ hơn 3 tháng lên Release `anh-YYYY-MM` rồi xoá
+khỏi Supabase; release cũ hơn 6 tháng bị xoá hẳn. Cần secret `SUPABASE_SECRET_KEY`.
+Video hướng dẫn: `public/huong-dan/*.mp4` (quay bằng `tests/video/chuong.py`), trang Hướng dẫn trong app.
 
 ## Lệnh chạy
 
