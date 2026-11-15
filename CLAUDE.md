@@ -12,6 +12,9 @@ React + Vite + Ant Design (PWA, `HashRouter`) gọi thẳng Supabase (project `m
 (`supabase/migrations/`), tạo tài khoản qua Edge Function `supabase/functions/tai-khoan`. Tính tiền ở `src/hoc-phi.ts`
 (thuần, có test). Kiến trúc ở [`docs/KE-HOACH.md`](docs/KE-HOACH.md).
 
+Bản chạy thật: **https://ms-nhung.vercel.app** (Vercel team `tuong6`, tự deploy mỗi lần push `main`).
+Sao lưu database: GitHub Actions `sao-luu` 01:00 giờ VN → nhánh `sao-luu`.
+
 ## Lệnh chạy
 
 | Việc | Lệnh |

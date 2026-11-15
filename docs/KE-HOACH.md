@@ -62,6 +62,7 @@ Vì sao như vậy:
 |-----|-----------|------------|
 | 0–7 | ✅ 2026-11-15 | `npm test` 9/9 pass (`src/hoc-phi.test.ts`); `tsc` sạch; build OK. E2E Playwright Chromium ở khung 412px: admin đăng nhập → tạo trợ giảng → tạo lớp → thêm học sinh có avatar + SĐT phụ huynh → điểm danh, sticker, trợ giảng, ảnh lớp → thu gói 3 tháng 2 triệu → chi phí → tab Học phí (3.000.000 phải thu / 2.000.000 đã thu / 1.000.000 còn / chi 230.000 / chênh 1.770.000) → xuất Excel 7 loại trang có công thức → phụ huynh đăng nhập bằng SĐT, bị bắt đổi mật khẩu, thấy điểm danh, ảnh, học phí. Không lỗi JS. Khoá sổ thử qua API: tháng đã chốt từ chối thêm chi phí, sửa điểm danh, xoá phiếu thu; mở khoá phải có lý do. Edge Function: trợ giảng tạo giáo viên bị 403, trợ giảng đọc `chi_phi` ra rỗng. Dữ liệu thử đã xoá. |
 | 8 | ✅ 2026-11-15 | Workflow `.github/workflows/sao-luu.yml` chạy 01:00 giờ VN, dump `roles.sql` / `schema.sql` / `data.sql` vào nhánh `sao-luu` của chính repo (người dùng chọn). Secret `SUPABASE_DB_URL` đã đặt. Chạy tay lần đầu thành công (1m39s); `data.sql` có 47 lệnh COPY gồm `auth.users` và `public.tai_khoan`. **Ảnh trong Storage không nằm trong bản dump.** Nút "Sao lưu toàn bộ" (JSON) và nhắc tải khi chốt sổ có trong app. |
+| Deploy | ✅ 2026-11-15 | https://ms-nhung.vercel.app: Playwright Chromium 412px đăng nhập admin, đi qua 5 tab, không lỗi JS; `manifest.webmanifest` và `sw.js` trả 200 (cài PWA được). |
 | R | ⏳ | |
 
 ### Chỗ lệch so với thiết kế ban đầu
