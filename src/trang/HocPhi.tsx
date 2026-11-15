@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { App, Avatar, Button, Card, DatePicker, Input, Segmented, Space, Tag } from 'antd'
 import dayjs from 'dayjs'
 import { taiDuLieuThang, tongCong, type DongHs, type DuLieuThang } from '../du-lieu'
-import { vnd, type Thang } from '../hoc-phi'
+import { trangThaiThang, vnd, type Thang } from '../hoc-phi'
 import { q, sb, urlAnh, type HocSinh } from '../supabase'
 import HocSinhChiTiet from './HocSinhChiTiet'
 import { MAU } from '../giao-dien'
@@ -111,7 +111,7 @@ export default function HocPhi() {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <b style={{ color: r.conPhaiThu > 0 ? MAU.do : MAU.chinh }}>{r.conPhaiThu > 0 ? vnd(r.conPhaiThu) : 'Đã đủ'}</b>
+                  <b style={{ color: r.conPhaiThu > 0 ? MAU.do : MAU.chinh }}>{r.conPhaiThu > 0 ? vnd(r.conPhaiThu) : trangThaiThang(r) === 'dong_truoc' ? 'Đã đủ (đóng trước)' : 'Đã đủ'}</b>
                   {r.conPhaiThu > 0 && <div style={{ fontSize: 12, color: MAU.chuPhu }}>còn nợ</div>}
                 </div>
               </button>

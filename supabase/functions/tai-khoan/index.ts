@@ -9,9 +9,13 @@ const cors = {
 const tra = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
 
-const QUYEN: Record<string, string[]> = {
+// vai trò được TẠO và được ĐẶT LẠI mật khẩu, theo vai trò người gọi (khớp policy "sua" của tai_khoan)
+const QUYEN_TAO: Record<string, string[]> = {
   admin: ['giao_vien', 'tro_giang', 'phu_huynh'],
   giao_vien: ['tro_giang', 'phu_huynh'],
+}
+const QUYEN_DAT_LAI: Record<string, string[]> = {
+  ...QUYEN_TAO,
   tro_giang: ['phu_huynh'],
 }
 const chuanSdt = (s?: string) => (s ?? '').replace(/\D/g, '') || null
@@ -25,12 +29,11 @@ Deno.serve(async (req) => {
   if (!u.user) return tra({ loi: 'Chưa đăng nhập' }, 401)
   const { data: toi } = await sb.from('tai_khoan').select('vai_tro, hoat_dong').eq('id', u.user.id).single()
   if (!toi?.hoat_dong) return tra({ loi: 'Tài khoản bị khoá' }, 403)
-  const duocPhep = QUYEN[toi.vai_tro] ?? []
 
   const b = await req.json()
 
   if (b.hanh_dong === 'tao') {
-    if (!duocPhep.includes(b.vai_tro) || (toi.vai_tro === 'tro_giang')) return tra({ loi: 'Không có quyền tạo vai trò này' }, 403)
+    if (!(QUYEN_TAO[toi.vai_tro] ?? []).includes(b.vai_tro)) return tra({ loi: 'Không có quyền tạo vai trò này' }, 403)
     const sdt = chuanSdt(b.so_dien_thoai)
     const ten = b.ten_dang_nhap?.trim().toLowerCase() || null
     if (!sdt && !ten) return tra({ loi: 'Cần tên đăng nhập hoặc số điện thoại' }, 400)
@@ -57,7 +60,7 @@ Deno.serve(async (req) => {
 
   if (b.hanh_dong === 'dat_lai') {
     const { data: tk } = await sb.from('tai_khoan').select('id, vai_tro, so_dien_thoai').eq('id', b.id).single()
-    if (!tk || !duocPhep.includes(tk.vai_tro)) return tra({ loi: 'Không có quyền đặt lại tài khoản này' }, 403)
+    if (!tk || !(QUYEN_DAT_LAI[toi.vai_tro] ?? []).includes(tk.vai_tro)) return tra({ loi: 'Không có quyền đặt lại tài khoản này' }, 403)
     const matKhau = b.mat_khau || tk.so_dien_thoai
     if (!matKhau || matKhau.length < 6) return tra({ loi: 'Tài khoản không có số điện thoại, hãy nhập mật khẩu mới' }, 400)
     const { error } = await sb.auth.admin.updateUserById(tk.id, { password: matKhau })

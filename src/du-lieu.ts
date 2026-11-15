@@ -1,7 +1,7 @@
 // Nạp mọi thứ tab Học phí và file Excel cần cho một tháng. Quy mô một trung tâm (vài trăm học sinh)
 // nên tải hết về rồi tính trên máy cho gọn.
 // ponytail: tải toàn bộ goi_hoc/phieu_thu; khi lên hàng chục nghìn phiếu thì chuyển sang view tổng hợp trong Postgres.
-import { congThang, tongHopHocSinh, type Goi, type PhieuThu, type Thang, type TongHopThang } from './hoc-phi'
+import { congThang, hocPhiGocThang, tongHopHocSinh, type Goi, type PhieuThu, type Thang, type TongHopThang } from './hoc-phi'
 import { q, sb, type HocSinh, type Lop, type TaiKhoan } from './supabase'
 
 export interface ChiPhi { id: string; ngay: string; danh_muc: string; so_tien: number; ghi_chu: string | null }
@@ -35,8 +35,8 @@ export async function taiDuLieuThang(thang: Thang): Promise<DuLieuThang> {
     return {
       ...th, hs: h,
       soBuoi: diemDanh.filter((x) => x.hoc_sinh_id === h.id && x.trang_thai !== 'vang').length,
-      // điều chỉnh và tiền dư của gói bắt đầu tháng này, để Excel hiện riêng cột "Điều chỉnh"
-      dieuChinh: g.filter((x) => x.thang_bat_dau.startsWith(thang)).reduce((s, x) => s + x.dieu_chinh - x.tien_du_tru, 0),
+      // phần chênh giữa phải thu và học phí gốc (tiền dư trừ, điều chỉnh, phần âm tràn sang) để Excel hiện cột "Điều chỉnh"
+      dieuChinh: th.phaiThu - hocPhiGocThang(g, thang),
     }
   // học sinh ngừng học vẫn hiện nếu còn tiền liên quan tháng này
   }).filter((d) => d.hs.trang_thai === 'dang_hoc' || d.phaiThu || d.noKyTruoc || d.thucThu || d.conPhaiThu)

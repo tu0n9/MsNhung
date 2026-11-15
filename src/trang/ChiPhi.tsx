@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
-import { App, AutoComplete, Button, Card, DatePicker, Form, Input, InputNumber, Modal, Popconfirm, Space, Table } from 'antd'
+import { App, AutoComplete, Button, Card, DatePicker, Form, Input, InputNumber, Modal, Popconfirm, Select, Space, Table } from 'antd'
+import { O_TIEN } from '../giao-dien'
 import { PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { taiDuLieuThang, type ChiPhi as CP, type DuLieuThang } from '../du-lieu'
 import { vnd, type Thang } from '../hoc-phi'
 import { q, sb, useMotLan } from '../supabase'
 
-const MAC_DINH = ['Thuê phòng', 'Điện nước', 'Tài liệu', 'Sticker / quà', 'Hoàn học phí', 'Khác']
+const HOAN = 'Hoàn học phí'
+const MAC_DINH = ['Thuê phòng', 'Điện nước', 'Tài liệu', 'Sticker / quà', HOAN, 'Khác']
 
 export default function ChiPhi() {
   const { message } = App.useApp()
@@ -23,8 +25,12 @@ export default function ChiPhi() {
   }
   useEffect(() => { tai().catch((e) => message.error(e.message)) }, [thang])
 
-  const [luu, dangLuu] = useMotLan(async (v: CP & { ngay_d: dayjs.Dayjs }) => {
-    const ban = { ngay: v.ngay_d.format('YYYY-MM-DD'), danh_muc: v.danh_muc, so_tien: v.so_tien, ghi_chu: v.ghi_chu || null }
+  const [luu, dangLuu] = useMotLan(async (v: CP & { ngay_d: dayjs.Dayjs; hoc_sinh_id?: string }) => {
+    // hoàn học phí gắn với học sinh để tiền dư còn lại của em đó trừ đi khoản đã hoàn (spec vòng 3)
+    const ban = {
+      ngay: v.ngay_d.format('YYYY-MM-DD'), danh_muc: v.danh_muc, so_tien: v.so_tien, ghi_chu: v.ghi_chu || null,
+      hoc_sinh_id: v.danh_muc === HOAN ? v.hoc_sinh_id ?? null : null,
+    }
     try {
       await q(sua?.id ? sb.from('chi_phi').update(ban).eq('id', sua.id) : sb.from('chi_phi').insert(ban))
       setSua(null); tai()
@@ -66,8 +72,12 @@ export default function ChiPhi() {
           <Form.Item name="danh_muc" label="Mục (gõ tên mới để thêm mục)" rules={[{ required: true }]}>
             <AutoComplete options={danhMuc.map((x) => ({ value: x }))} filterOption={(i, o) => !!o?.value.toLowerCase().includes(i.toLowerCase())} />
           </Form.Item>
+          <Form.Item noStyle shouldUpdate={(a, b) => a.danh_muc !== b.danh_muc}>{({ getFieldValue }) => getFieldValue('danh_muc') === HOAN &&
+            <Form.Item name="hoc_sinh_id" label="Hoàn cho học sinh" rules={[{ required: true }]}>
+              <Select showSearch optionFilterProp="label" options={d.dong.map((r) => ({ value: r.hs.id, label: r.hs.ho_ten }))} />
+            </Form.Item>}</Form.Item>
           <Form.Item name="so_tien" label="Số tiền" rules={[{ required: true }]}>
-            <InputNumber<number> min={1} step={10000} style={{ width: '100%' }} formatter={(v) => `${v ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')} parser={(v) => Number(v?.replace(/\./g, '') || 0)} />
+            <InputNumber<number> {...O_TIEN} min={1} step={10000} />
           </Form.Item>
           <Form.Item name="ghi_chu" label="Ghi chú"><Input /></Form.Item>
           <Button type="primary" htmlType="submit" block loading={dangLuu}>Lưu</Button>

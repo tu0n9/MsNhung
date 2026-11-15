@@ -3,13 +3,14 @@ import { App, Avatar, Button, Card, Checkbox, DatePicker, Empty, Image, InputNum
 import { CameraOutlined, PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { MAU } from '../giao-dien'
-import { useMotLan } from '../supabase'
-import { homNay, q, sb, taiAnhLen, urlAnh, type BuoiHoc, type DiemDanh as DD, type HocSinh, type Lop, type TaiKhoan } from '../supabase'
+import { useToi } from '../App'
+import { homNay, laQuanLy, q, useMotLan, sb, taiAnhLen, urlAnh, type BuoiHoc, type DiemDanh as DD, type HocSinh, type Lop, type TaiKhoan } from '../supabase'
 
 const LOAI = { lich: 'Theo lịch', phu: 'Buổi phụ', bu: 'Buổi bù' }
 
 export default function DiemDanh() {
   const { message } = App.useApp()
+  const ql = laQuanLy(useToi().vai_tro)
   const [ngay, setNgay] = useState(homNay())
   const [lops, setLops] = useState<Lop[]>([])
   const [buois, setBuois] = useState<BuoiHoc[]>([])
@@ -39,7 +40,7 @@ export default function DiemDanh() {
     <Space direction="vertical" style={{ width: '100%' }}>
       <Space wrap>
         <DatePicker value={dayjs(ngay)} onChange={(d) => d && setNgay(d.format('YYYY-MM-DD'))} format="dddd DD/MM/YYYY" allowClear={false} />
-        <Button icon={<PlusOutlined />} onClick={() => setThemBuoi({ loai: 'phu' })}>Thêm buổi phụ / bù</Button>
+        {ql && <Button icon={<PlusOutlined />} onClick={() => setThemBuoi({ loai: 'phu' })}>Thêm buổi phụ / bù</Button>}
       </Space>
       {buois.length === 0 ? <Empty description="Hôm nay không có buổi học nào theo lịch" /> : (
         <List bordered dataSource={buois} renderItem={(b) => (
@@ -64,6 +65,7 @@ export default function DiemDanh() {
 
 function BuoiChiTiet({ buoi: b0, lop, quayLai }: { buoi: BuoiHoc; lop: Lop; quayLai: () => void }) {
   const { message } = App.useApp()
+  const ql = laQuanLy(useToi().vai_tro)
   const [buoi, setBuoi] = useState(b0)
   const [hs, setHs] = useState<HocSinh[]>([])
   const [dd, setDd] = useState<Record<string, DD>>({})
@@ -123,10 +125,11 @@ function BuoiChiTiet({ buoi: b0, lop, quayLai }: { buoi: BuoiHoc; lop: Lop; quay
       <Space wrap>
         <Button onClick={quayLai}>← Quay lại</Button>
         <b>{lop.ten} · {dayjs(buoi.ngay).format('dddd DD/MM/YYYY')}</b>
-        <span>Lớp nghỉ <Switch checked={buoi.lop_nghi} onChange={async (v) => {
+        {/* chỉ giáo viên: buổi lớp nghỉ sinh tiền dư (database cũng chặn trợ giảng) */}
+        {ql && <span>Lớp nghỉ <Switch checked={buoi.lop_nghi} onChange={async (v) => {
           try { await q(sb.from('buoi_hoc').update({ lop_nghi: v }).eq('id', buoi.id)); setBuoi({ ...buoi, lop_nghi: v }) }
           catch (e) { message.error((e as Error).message) }
-        }} /></span>
+        }} /></span>}
       </Space>
 
       {!buoi.lop_nghi && <>

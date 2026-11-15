@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { demBuoiDuKien, phaiThuTheoThang, tienDu, tongHopHocSinh, type Goi } from './hoc-phi'
+import {
+  conNoGoi, demBuoiDuKien, demNghiPhu, duConLai, hocPhiGocThang, phaiThuTheoThang, tienDu, tongGoi, tongHopHocSinh,
+  trangThaiThang, type BuoiDacBiet, type Goi,
+} from './hoc-phi'
 
 const goi = (g: Partial<Goi>): Goi => ({
   id: 'g1', hoc_sinh_id: 'hs', thang_bat_dau: '2026-04-01', so_thang: 1, don_gia: 100_000,
@@ -22,7 +25,7 @@ describe('gói 3 tháng đóng một lần', () => {
 
   it('tháng 5 đã đủ nhờ đóng trước', () => {
     expect(tongHopHocSinh([g], phieu, '2026-05')).toEqual(
-      { phaiThu: 1_200_000, noKyTruoc: 0, daThu: 1_200_000, conPhaiThu: 0, thucThu: 0 })
+      { phaiThu: 1_200_000, noKyTruoc: 0, daThu: 1_200_000, conPhaiThu: 0, thucThu: 0, dongTruoc: 1_200_000 })
   })
   it('tháng 4: thực thu cả gói nhưng đã thu chỉ tính phần tháng 4', () => {
     const th = tongHopHocSinh([g], phieu, '2026-04')
@@ -44,7 +47,7 @@ describe('thu nhiều đợt và trả nợ cũ', () => {
   })
   it('tháng 5: nợ kỳ trước 400k, thu nợ trong tháng, hết nợ', () => {
     expect(tongHopHocSinh([g], phieu, '2026-05')).toEqual(
-      { phaiThu: 0, noKyTruoc: 400_000, daThu: 400_000, conPhaiThu: 0, thucThu: 400_000 })
+      { phaiThu: 0, noKyTruoc: 400_000, daThu: 400_000, conPhaiThu: 0, thucThu: 400_000, dongTruoc: 0 })
   })
 })
 
@@ -62,5 +65,49 @@ describe('tiền dư (ví dụ trong yêu cầu)', () => {
   it('điều chỉnh âm lớn hơn tháng đầu thì tràn sang tháng sau', () => {
     const g = goi({ so_thang: 2, dieu_chinh: -1_500_000, buoi_du_kien: { '2026-04': 12, '2026-05': 12 } })
     expect(phaiThuTheoThang(g)).toEqual({ '2026-04': 0, '2026-05': 900_000 })
+  })
+})
+
+describe('sau review: tiền dư, học phí gốc, đóng trước', () => {
+  const buoi = (ngay: string, lopNghi = false, loai: BuoiDacBiet['loai'] = 'lich'): BuoiDacBiet => ({ ngay, loai, lop_nghi: lopNghi })
+
+  it('demNghiPhu chỉ đếm trong khoảng gói và từ ngày vào học', () => {
+    const g = goi({ thang_bat_dau: '2026-04-01', so_thang: 1 })
+    const ds = [buoi('2026-03-30', true), buoi('2026-04-02', true), buoi('2026-04-20', true), buoi('2026-04-25', false, 'phu'), buoi('2026-05-01', true)]
+    expect(demNghiPhu(g, ds, '2026-04-01')).toEqual({ nghi: 2, phu: 1 })
+    expect(demNghiPhu(g, ds, '2026-04-10')).toEqual({ nghi: 1, phu: 1 })
+  })
+
+  it('duConLai: buổi nghỉ đánh dấu muộn vẫn được tính; khoản đã trừ hoặc đã hoàn không tính lại', () => {
+    const g1 = goi({ id: 'a', thang_bat_dau: '2026-01-01', so_thang: 3, buoi_du_kien: { '2026-01': 12, '2026-02': 12, '2026-03': 12 } })
+    const ds = [buoi('2026-02-10', true), buoi('2026-03-10', true)]
+    expect(duConLai([g1], ds, '2026-01-01', 0, '2026-04')).toBe(200_000)
+    // gói 4-6 trừ 100k (lúc tạo mới biết 1 buổi nghỉ), buổi thứ hai đánh dấu sau đó → còn 100k chưa dùng
+    const g2 = goi({ id: 'b', thang_bat_dau: '2026-04-01', so_thang: 3, tien_du_tru: 100_000, buoi_du_kien: { '2026-04': 12, '2026-05': 12, '2026-06': 12 } })
+    expect(duConLai([g1, g2], ds, '2026-01-01', 0, '2026-07')).toBe(100_000)
+    expect(duConLai([g1, g2], ds, '2026-01-01', 100_000, '2026-07')).toBe(0)
+    // gói chưa kết thúc thì dư chưa chốt
+    expect(duConLai([g1], ds, '2026-01-01', 0, '2026-03')).toBe(0)
+  })
+
+  it('học phí gốc + điều chỉnh = phải thu, kể cả khi trừ dư lớn hơn tháng đầu (lỗi cột Excel cũ)', () => {
+    const g = goi({ so_thang: 2, tien_du_tru: 1_500_000, buoi_du_kien: { '2026-04': 12, '2026-05': 12 } })
+    expect(phaiThuTheoThang(g)).toEqual({ '2026-04': 0, '2026-05': 900_000 })
+    expect(hocPhiGocThang([g], '2026-04')).toBe(1_200_000)
+    expect(hocPhiGocThang([g], '2026-05')).toBe(1_200_000)
+    // cột Điều chỉnh = phải thu − học phí gốc: -1.200.000 tháng 4, -300.000 tháng 5; tổng bằng đúng -1.500.000
+    const dc = ['2026-04', '2026-05'].map((t) => tongHopHocSinh([g], [], t).phaiThu - hocPhiGocThang([g], t))
+    expect(dc).toEqual([-1_200_000, -300_000])
+  })
+
+  it('trạng thái "đóng trước" khi tháng được trả từ tiền đóng trước khi tháng bắt đầu', () => {
+    const g = goi({ so_thang: 3, buoi_du_kien: { '2026-04': 12, '2026-05': 12, '2026-06': 12 } })
+    const du = [{ goi_id: 'g1', so_tien: 3_600_000, ngay_thu: '2026-04-05' }]
+    expect(trangThaiThang(tongHopHocSinh([g], du, '2026-04'))).toBe('du')
+    expect(trangThaiThang(tongHopHocSinh([g], du, '2026-05'))).toBe('dong_truoc')
+    const thieu = [{ ...du[0], so_tien: 1_000_000 }]
+    expect(trangThaiThang(tongHopHocSinh([g], thieu, '2026-04'))).toBe('con_no')
+    expect(tongGoi(g)).toBe(3_600_000)
+    expect(conNoGoi(g, thieu)).toBe(2_600_000)
   })
 })

@@ -21,3 +21,10 @@ export const THEME: ThemeConfig = {
     Card: { headerFontSize: 15 },
   },
 }
+
+/** Ô nhập tiền: số nguyên VND (precision 0), hiện dấu chấm nghìn. Dùng `{...O_TIEN}` cho mọi InputNumber tiền. */
+export const O_TIEN = {
+  min: 0, step: 50000, precision: 0, style: { width: '100%' },
+  formatter: (s?: number | string) => `${s ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.'),
+  parser: (s?: string) => Number(s?.replace(/\./g, '') || 0),
+}

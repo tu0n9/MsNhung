@@ -53,6 +53,34 @@ ok("phụ huynh: không sửa được điểm danh", SV("GET", "/rest/v1/diem_d
 ok("phụ huynh: không gọi được hàm tạo tài khoản",
    goi("POST", "/functions/v1/tai-khoan", P, {"hanh_dong": "tao", "vai_tro": "tro_giang", "ho_ten": "x", "ten_dang_nhap": "x"})[0] == 403)
 
+# --- các lỗ do review pha R tìm ra (migration sua_sau_review) ---
+_, ds_hs = SV("GET", "/rest/v1/hoc_sinh?select=id&ho_ten=like.TEST%20Nguy*B*An")
+hs_id = ds_hs[0]["id"]
+_, ds_goi = SV("GET", f"/rest/v1/goi_hoc?select=thang_bat_dau,so_thang&hoc_sinh_id=eq.{hs_id}")
+g0 = ds_goi[0]  # gói 3 tháng từ 11/2026 do all.py tạo
+c, r = goi("POST", "/rest/v1/goi_hoc", A, {"hoc_sinh_id": hs_id, "thang_bat_dau": "2026-12-01", "so_thang": 1, "don_gia": 100000, "buoi_du_kien": {"2026-12": 1}})
+ok(f"gói chồng tháng bị database từ chối (gói có sẵn {g0['thang_bat_dau']} x{g0['so_thang']})", c == 400 and "gói" in json.dumps(r, ensure_ascii=False))
+_, buoi11 = SV("GET", "/rest/v1/buoi_hoc?select=id,lop_nghi&ngay=eq.2026-11-15&limit=1")
+c, r = goi("PATCH", f"/rest/v1/buoi_hoc?id=eq.{buoi11[0]['id']}", T, {"lop_nghi": True}, prefer="return=representation")
+ok("trợ giảng không đánh được \"Lớp nghỉ\" (0 dòng đổi)", r == [] and SV("GET", f"/rest/v1/buoi_hoc?select=lop_nghi&id=eq.{buoi11[0]['id']}")[1][0]["lop_nghi"] is False)
+ok("trợ giảng không thêm được buổi phụ", goi("POST", "/rest/v1/buoi_hoc", T, {"lop_id": None, "ngay": "2026-11-16", "loai": "phu"})[0] >= 400)
+_, anh = SV("GET", "/rest/v1/anh_buoi?select=id,duong_dan&limit=1")
+if anh:
+    c, r = goi("DELETE", f"/rest/v1/anh_buoi?id=eq.{anh[0]['id']}", T, prefer="return=representation")
+    ok("trợ giảng không xoá được ảnh lớp (0 dòng)", r == [] and len(SV("GET", f"/rest/v1/anh_buoi?select=id&id=eq.{anh[0]['id']}")[1]) == 1)
+    req = urllib.request.Request(f"{U}/storage/v1/object/anh/{anh[0]['duong_dan']}", method="DELETE", headers={"apikey": K, "Authorization": "Bearer " + T})
+    try:
+        urllib.request.urlopen(req)
+    except urllib.error.HTTPError:
+        pass
+    c2 = urllib.request.urlopen(urllib.request.Request(f"{U}/storage/v1/object/authenticated/anh/{anh[0]['duong_dan']}", headers={"apikey": S, "Authorization": "Bearer " + S})).status
+    ok("trợ giảng không xoá được file ảnh trong Storage", c2 == 200)
+# đặt lại mật khẩu phụ huynh về số điện thoại, rồi thử bỏ cờ "bắt đổi" mà không đổi mật khẩu
+_, ph = SV("GET", "/rest/v1/tai_khoan?select=id&so_dien_thoai=eq.0922000002")
+goi("POST", "/functions/v1/tai-khoan", A, {"hanh_dong": "dat_lai", "id": ph[0]["id"]})
+P2 = tok("0922000002", "0922000002")
+ok("không bỏ được cờ bắt đổi mật khẩu khi mật khẩu vẫn là số điện thoại", goi("POST", "/rest/v1/rpc/da_doi_mat_khau", P2, {})[0] == 400)
+
 _, khoa_truoc = SV("GET", "/rest/v1/khoa_so?select=khoa_den")
 try:
     ok("chốt sổ tháng 11", goi("POST", "/rest/v1/rpc/chot_so", A, {"thang": "2026-11-01"})[0] == 204)

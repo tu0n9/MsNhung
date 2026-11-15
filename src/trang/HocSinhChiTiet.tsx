@@ -2,19 +2,16 @@ import { useEffect, useMemo, useState } from 'react'
 import { App, Avatar, Button, Card, DatePicker, Descriptions, Form, Input, InputNumber, List, Modal, Popconfirm, Radio, Select, Space, Statistic, Table, Tag } from 'antd'
 import dayjs from 'dayjs'
 import { useToi } from '../App'
+import { O_TIEN } from '../giao-dien'
 import { goiTaiKhoan, laQuanLy, q, sb, useMotLan, urlAnh, type BuoiHoc, type HocSinh, type Lop } from '../supabase'
-import { congThang, demBuoiDuKien, phaiThuTheoThang, tienDu, tinNhanPhuHuynh, tongHopHocSinh, vnd, type Goi, type PhieuThu, type Thang } from '../hoc-phi'
+import {
+  conNoGoi, daDongGoi, demBuoiDuKien, duConLai, thangHetGoi, tienDuGoi, tinNhanPhuHuynh, tongGoi, tongHopHocSinh, vnd,
+  type Goi, type PhieuThu, type Thang,
+} from '../hoc-phi'
 
 type Phieu = PhieuThu & { id: string; hinh_thuc: string; ghi_chu: string | null }
 const TRANG_THAI = { co_mat: ['Có mặt', 'green'], vang: ['Vắng', 'red'], hoc_bu: ['Học bù', 'blue'] } as const
-
-/** Số buổi lớp nghỉ và buổi phụ trong khoảng của gói, để tính tiền dư. */
-export function demNghiPhu(g: Goi, buoiDacBiet: BuoiHoc[], ngayVao: string) {
-  const tu = [g.thang_bat_dau, ngayVao].sort()[1]
-  const den = `${congThang(g.thang_bat_dau.slice(0, 7), g.so_thang)}-01`
-  const trong = buoiDacBiet.filter((b) => b.ngay >= tu && b.ngay < den)
-  return { nghi: trong.filter((b) => b.loai === 'lich' && b.lop_nghi).length, phu: trong.filter((b) => b.loai === 'phu' && !b.lop_nghi).length }
-}
+const tenGoi = (g: Goi) => `${g.so_thang} tháng từ ${g.thang_bat_dau.slice(5, 7)}/${g.thang_bat_dau.slice(0, 4)}`
 
 export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSinh; lop: Lop; quayLai?: () => void; chiXem?: boolean }) {
   const { message } = App.useApp()
@@ -29,14 +26,18 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
   const [thuTien, setThuTien] = useState(false)
   const [anh, setAnh] = useState<{ duong_dan: string; ngay: string }[]>([])
   const [urlA, setUrlA] = useState<Record<string, string>>({})
+  const [daHoan, setDaHoan] = useState(0)
 
   const tai = async () => {
-    const [d, g, b] = await Promise.all([
+    const [d, g, b, h] = await Promise.all([
       q(sb.from('diem_danh').select('trang_thai, sticker, buoi_hoc(*)').eq('hoc_sinh_id', hs.id)),
       q(sb.from('goi_hoc').select('*').eq('hoc_sinh_id', hs.id).order('thang_bat_dau')),
       q(sb.from('buoi_hoc').select('*').eq('lop_id', hs.lop_id).or('lop_nghi.eq.true,loai.eq.phu')),
+      // khoản đã hoàn tiền dư cho em này (chỉ giáo viên đọc được chi_phi; người khác nhận về rỗng)
+      q(sb.from('chi_phi').select('so_tien').eq('hoc_sinh_id', hs.id).eq('danh_muc', 'Hoàn học phí')),
     ])
     setDd(d as never); setGoi(g as never); setBuoiDb(b as BuoiHoc[])
+    setDaHoan((h as { so_tien: number }[]).reduce((s, x) => s + x.so_tien, 0))
     const ids = (g as Goi[]).map((x) => x.id)
     setPhieu(ids.length ? await q(sb.from('phieu_thu').select('*').in('goi_id', ids).order('ngay_thu')) as Phieu[] : [])
     if (hs.avatar) setAvatar((await urlAnh([hs.avatar]))[hs.avatar])
@@ -105,15 +106,18 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
         </Space>}
 
         <Table size="small" style={{ marginTop: 12 }} rowKey="id" pagination={false} dataSource={goi} scroll={{ x: true }} columns={[
-          { title: 'Gói', render: (_, g) => `${g.so_thang} tháng từ ${g.thang_bat_dau.slice(5, 7)}/${g.thang_bat_dau.slice(0, 4)}` },
+          { title: 'Gói', render: (_, g) => tenGoi(g) },
           { title: 'Buổi', render: (_, g) => Object.values(g.buoi_du_kien).reduce((s, x) => s + x, 0) },
-          { title: 'Phải thu', render: (_, g) => vnd(Object.values(phaiThuTheoThang(g)).reduce((s, x) => s + x, 0)) },
-          { title: 'Đã đóng', render: (_, g) => vnd(phieu.filter((p) => p.goi_id === g.id).reduce((s, p) => s + p.so_tien, 0)) },
-          { title: 'Tiền dư', render: (_, g) => { const n = demNghiPhu(g, buoiDb, hs.ngay_vao); return vnd(tienDu(g, n.nghi, n.phu)) } },
+          { title: 'Phải thu', render: (_, g) => vnd(tongGoi(g)) },
+          { title: 'Đã đóng', render: (_, g) => vnd(daDongGoi(g, phieu)) },
+          { title: 'Dư phát sinh', render: (_, g) => vnd(tienDuGoi(g, buoiDb, hs.ngay_vao)) },
           ...(ql ? [{ title: '', render: (_: unknown, g: Goi) => <Popconfirm title="Xoá gói (chỉ khi chưa có phiếu thu)?" onConfirm={async () => {
             const { error } = await sb.from('goi_hoc').delete().eq('id', g.id); if (error) message.error(error.message); else tai()
           }}><a style={{ color: 'red' }}>Xoá</a></Popconfirm> }] : []),
         ]} />
+        {goi.length > 0 && <div style={{ marginTop: 6, fontSize: 13 }}>
+          Tiền dư còn lại chưa trừ / chưa hoàn: <b>{vnd(duConLai(goi, buoiDb, hs.ngay_vao, daHoan, '9999-12'))}</b>
+        </div>}
 
         <Table size="small" style={{ marginTop: 12 }} rowKey="id" pagination={false} dataSource={phieu} scroll={{ x: true }}
           title={() => 'Các lần thu'} columns={[
@@ -132,25 +136,29 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
         <Button>Đặt lại mật khẩu tài khoản phụ huynh</Button>
       </Popconfirm>}
 
-      {thuTien && <ThuTien hs={hs} lop={lop} goi={goi} phieu={phieu} buoiDb={buoiDb} dong={() => { setThuTien(false); tai() }} />}
+      {thuTien && <ThuTien hs={hs} lop={lop} goi={goi} phieu={phieu} buoiDb={buoiDb} daHoan={daHoan} dong={() => { setThuTien(false); tai() }} />}
     </Space>
   )
 }
 
-function ThuTien({ hs, lop, goi, phieu, buoiDb, dong }: { hs: HocSinh; lop: Lop; goi: Goi[]; phieu: Phieu[]; buoiDb: BuoiHoc[]; dong: () => void }) {
+function ThuTien({ hs, lop, goi, phieu, buoiDb, daHoan, dong }: {
+  hs: HocSinh; lop: Lop; goi: Goi[]; phieu: Phieu[]; buoiDb: BuoiHoc[]; daHoan: number; dong: () => void
+}) {
   const { message } = App.useApp()
   const [form] = Form.useForm()
-  const conNo = (g: Goi) => Object.values(phaiThuTheoThang(g)).reduce((s, x) => s + x, 0) - phieu.filter((p) => p.goi_id === g.id).reduce((s, p) => s + p.so_tien, 0)
-  const dangNo = goi.filter((g) => conNo(g) > 0)
+  const dangNo = goi.filter((g) => conNoGoi(g, phieu) > 0)
   const cuoi = goi[goi.length - 1]
-  const duGoiTruoc = cuoi ? (() => { const n = demNghiPhu(cuoi, buoiDb, hs.ngay_vao); return tienDu(cuoi, n.nghi, n.phu) })() : 0
-  const thangKe = cuoi ? congThang(cuoi.thang_bat_dau.slice(0, 7), cuoi.so_thang) : dayjs(hs.ngay_vao).format('YYYY-MM')
+  const thangKe = cuoi ? thangHetGoi(cuoi) : dayjs(hs.ngay_vao).format('YYYY-MM')
+  const duCon = duConLai(goi, buoiDb, hs.ngay_vao, daHoan, thangKe)
 
   const v = Form.useWatch([], form) ?? {}
   const donGia = v.don_gia ?? hs.don_gia_rieng ?? lop.don_gia
   const thangBd: Thang = v.thang?.format?.('YYYY-MM') ?? thangKe
   const buoi = demBuoiDuKien(lop.lich, thangBd, v.so_thang ?? 1, hs.ngay_vao > `${thangBd}-01` ? hs.ngay_vao : undefined)
-  const tongGoiMoi = Object.values(buoi).reduce((s, x) => s + x, 0) * donGia - (v.tien_du_tru ?? 0) + (v.dieu_chinh ?? 0)
+  const tongGoiMoi = tongGoi({
+    id: '', hoc_sinh_id: hs.id, thang_bat_dau: `${thangBd}-01`, so_thang: v.so_thang ?? 1, don_gia: donGia,
+    buoi_du_kien: buoi, tien_du_tru: v.tien_du_tru ?? 0, dieu_chinh: v.dieu_chinh ?? 0,
+  })
 
   const [luu, dangLuu] = useMotLan(async () => {
     const x = await form.validateFields()
@@ -170,21 +178,21 @@ function ThuTien({ hs, lop, goi, phieu, buoiDb, dong }: { hs: HocSinh; lop: Lop;
     } catch (e) { message.error((e as Error).message) }
   })
 
-  const tien = { min: 0, step: 50000, style: { width: '100%' }, formatter: (s?: number | string) => `${s ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.'), parser: (s?: string) => Number(s?.replace(/\./g, '') || 0) }
+  const tien = O_TIEN
   return (
     <Modal open title={`Thu tiền: ${hs.ho_ten}`} onCancel={dong} onOk={() => luu()} okText="Lưu" confirmLoading={dangLuu}>
       <Form form={form} layout="vertical" initialValues={{
         loai: dangNo.length ? 'no' : 'moi', goi_id: dangNo[0]?.id, so_thang: 1, thang: dayjs(thangKe),
-        tien_du_tru: duGoiTruoc, ngay_thu: dayjs(), hinh_thuc: 'tien_mat',
+        tien_du_tru: duCon, ngay_thu: dayjs(), hinh_thuc: 'tien_mat',
       }}>
         <Form.Item name="loai"><Radio.Group optionType="button" options={[{ value: 'moi', label: 'Đóng gói mới' }, { value: 'no', label: 'Trả gói đang nợ', disabled: !dangNo.length }]} /></Form.Item>
         {v.loai === 'no' ? (
-          <Form.Item name="goi_id" label="Gói"><Select options={dangNo.map((g) => ({ value: g.id, label: `${g.so_thang} tháng từ ${g.thang_bat_dau.slice(5, 7)}/${g.thang_bat_dau.slice(0, 4)} · còn nợ ${vnd(conNo(g))}` }))} /></Form.Item>
+          <Form.Item name="goi_id" label="Gói"><Select options={dangNo.map((g) => ({ value: g.id, label: `${tenGoi(g)} · còn nợ ${vnd(conNoGoi(g, phieu))}` }))} /></Form.Item>
         ) : <>
           <Form.Item name="so_thang" label="Số tháng"><Radio.Group optionType="button" options={[1, 2, 3].map((n) => ({ value: n, label: `${n} tháng` }))} /></Form.Item>
           <Form.Item name="thang" label="Từ tháng"><DatePicker picker="month" format="MM/YYYY" allowClear={false} /></Form.Item>
           <Form.Item name="don_gia" label={`Đơn giá/buổi (mặc định ${vnd(hs.don_gia_rieng ?? lop.don_gia)})`}><InputNumber {...tien} placeholder={`${donGia}`} /></Form.Item>
-          <Form.Item name="tien_du_tru" label="Trừ tiền dư gói trước"><InputNumber {...tien} /></Form.Item>
+          <Form.Item name="tien_du_tru" label={`Trừ tiền dư (còn lại ${vnd(duCon)})`}><InputNumber {...tien} max={duCon} /></Form.Item>
           <Form.Item name="dieu_chinh" label="Điều chỉnh (giảm thì nhập số âm)"><InputNumber {...tien} min={undefined} /></Form.Item>
           {!!v.dieu_chinh && <Form.Item name="ly_do" label="Lý do điều chỉnh" rules={[{ required: true }]}><Input /></Form.Item>}
           <p>Buổi dự kiến: {Object.entries(buoi).map(([t, n]) => `T${t.slice(5)}: ${n}`).join(', ')} → <b>Tổng gói: {vnd(tongGoiMoi)}</b></p>

@@ -5,9 +5,10 @@ import { useNavigate } from 'react-router-dom'
 import { useToi } from '../App'
 import { goiTaiKhoan, laQuanLy, q, sb, useMotLan, type TaiKhoan as TK, type VaiTro } from '../supabase'
 import { vnd } from '../hoc-phi'
+import { O_TIEN } from '../giao-dien'
 
 const TEN_VAI: Record<VaiTro, string> = { admin: 'Quản trị', giao_vien: 'Giáo viên', tro_giang: 'Trợ giảng', phu_huynh: 'Phụ huynh' }
-// trùng bảng QUYEN trong supabase/functions/tai-khoan; Edge Function mới là chốt chặn thật, đây chỉ để ẩn nút
+// khớp QUYEN_DAT_LAI trong supabase/functions/tai-khoan; Edge Function và RLS mới là chốt chặn thật, đây chỉ để ẩn nút
 const DUOC_QUAN_LY: Record<VaiTro, VaiTro[]> = { admin: ['giao_vien', 'tro_giang', 'phu_huynh'], giao_vien: ['tro_giang', 'phu_huynh'], tro_giang: ['phu_huynh'], phu_huynh: [] }
 
 export default function TaiKhoan() {
@@ -41,7 +42,7 @@ export default function TaiKhoan() {
         { title: 'Đăng nhập', render: (_, r) => [r.ten_dang_nhap, r.so_dien_thoai].filter(Boolean).join(' / ') },
         { title: 'Vai trò', render: (_, r) => <Tag>{TEN_VAI[r.vai_tro]}</Tag> },
         { title: 'Đơn giá/buổi', render: (_, r) => r.vai_tro === 'tro_giang' && (laQuanLy(toi.vai_tro)
-          ? <InputNumber size="small" min={0} step={10000} defaultValue={r.don_gia_buoi} onBlur={(e) => sua(r.id, { don_gia_buoi: Number(e.target.value.replace(/\D/g, '')) })} />
+          ? <InputNumber size="small" min={0} precision={0} step={10000} defaultValue={r.don_gia_buoi} onBlur={(e) => sua(r.id, { don_gia_buoi: Number(e.target.value.replace(/\D/g, '')) })} />
           : vnd(r.don_gia_buoi)) },
         { title: 'Hoạt động', render: (_, r) => <Switch size="small" checked={r.hoat_dong} disabled={!quanLy.includes(r.vai_tro) || toi.vai_tro === 'tro_giang'}
           onChange={(v) => sua(r.id, { hoat_dong: v })} /> },
@@ -57,7 +58,7 @@ export default function TaiKhoan() {
           <Form.Item name="so_dien_thoai" label="Số điện thoại"><Input inputMode="tel" /></Form.Item>
           <Form.Item name="mat_khau" label="Mật khẩu ban đầu (để trống = số điện thoại)"><Input.Password /></Form.Item>
           <Form.Item noStyle shouldUpdate>{({ getFieldValue }) => getFieldValue('vai_tro') === 'tro_giang' &&
-            <Form.Item name="don_gia_buoi" label="Đơn giá một buổi"><InputNumber min={0} step={10000} style={{ width: '100%' }} /></Form.Item>}</Form.Item>
+            <Form.Item name="don_gia_buoi" label="Đơn giá một buổi"><InputNumber<number> {...O_TIEN} step={10000} /></Form.Item>}</Form.Item>
           <Button type="primary" htmlType="submit" block loading={dangTao}>Tạo</Button>
         </Form>
       </Modal>

@@ -6,6 +6,7 @@ import dayjs from 'dayjs'
 import { useToi } from '../App'
 import { goiTaiKhoan, laQuanLy, q, sb, useMotLan, taiAnhLen, THU, urlAnh, type HocSinh, type Lop } from '../supabase'
 import { vnd } from '../hoc-phi'
+import { O_TIEN } from '../giao-dien'
 import HocSinhChiTiet from './HocSinhChiTiet'
 
 export default function LopHoc() {
@@ -108,7 +109,7 @@ export default function LopHoc() {
         <Form layout="vertical" initialValues={suaLop ?? {}} onFinish={luuLop}>
           <Form.Item name="ten" label="Tên lớp" rules={[{ required: true }]}><Input /></Form.Item>
           <Form.Item name="don_gia" label="Đơn giá một buổi (đ)" rules={[{ required: true }]}>
-            <InputNumber<number> min={0} step={10000} style={{ width: '100%' }} formatter={(v) => `${v}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')} parser={(v) => Number(v?.replace(/\./g, ''))} />
+            <InputNumber<number> {...O_TIEN} step={10000} />
           </Form.Item>
           <Form.Item name="lich" label="Lịch học trong tuần"><Checkbox.Group options={[1, 2, 3, 4, 5, 6, 0].map((t) => ({ value: t, label: THU[t] }))} /></Form.Item>
           <Form.Item name="hoat_dong" label="Đang mở" valuePropName="checked"><Checkbox /></Form.Item>
@@ -126,8 +127,8 @@ export default function LopHoc() {
           <Form.Item name="ten_phu_huynh" label="Tên phụ huynh"><Input /></Form.Item>
           <Form.Item name="sdt_phu_huynh" label="SĐT phụ huynh (tạo tài khoản phụ huynh, mật khẩu đầu = SĐT)"><Input inputMode="tel" /></Form.Item>
           <Form.Item name="ngay_vao_d" label="Ngày vào học" rules={[{ required: true }]}><DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} /></Form.Item>
-          <Form.Item name="don_gia_rieng" label="Đơn giá riêng (để trống = theo lớp)"><InputNumber min={0} step={10000} style={{ width: '100%' }} /></Form.Item>
-          <Form.Item name="sticker_dau_ky" label="Sticker đã có từ trước (sổ giấy)"><InputNumber<number> min={0} style={{ width: '100%' }} /></Form.Item>
+          <Form.Item name="don_gia_rieng" label="Đơn giá riêng (để trống = theo lớp)"><InputNumber<number> {...O_TIEN} step={10000} /></Form.Item>
+          <Form.Item name="sticker_dau_ky" label="Sticker đã có từ trước (sổ giấy)"><InputNumber<number> min={0} precision={0} style={{ width: '100%' }} /></Form.Item>
           <Form.Item name="ghi_chu" label="Ghi chú"><Input.TextArea rows={2} /></Form.Item>
           <Button type="primary" htmlType="submit" block loading={dangLuuHs}>Lưu</Button>
         </Form>
