@@ -1,0 +1,39 @@
+# Sao lưu database hằng đêm vào nhánh `sao-luu` của chính repo riêng tư này (người dùng chọn 2026-11-15).
+# Gói Free của Supabase không có backup tự động; lịch sử git của nhánh giữ các bản cũ.
+# Cần secret SUPABASE_DB_URL (chuỗi kết nối pooler, cổng 5432) trong Settings > Secrets and variables > Actions.
+name: sao-luu
+on:
+  schedule:
+    - cron: '0 18 * * *'  # 01:00 giờ Việt Nam
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sao-luu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Lấy nhánh sao-luu (tạo mới nếu chưa có)
+        run: |
+          git init -q sl && cd sl
+          git remote add origin "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git"
+          if git fetch -q origin sao-luu; then git checkout -q -b sao-luu FETCH_HEAD; else git checkout -q --orphan sao-luu; fi
+      - name: Dump
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          cd sl
+          supabase db dump --db-url "$DB" -f roles.sql --role-only
+          supabase db dump --db-url "$DB" -f schema.sql
+          supabase db dump --db-url "$DB" -f data.sql --use-copy --data-only
+      - name: Commit
+        run: |
+          cd sl
+          git config user.name "sao-luu-bot" && git config user.email "sao-luu@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Sao lưu $(date -u +%F)" || echo "Không có thay đổi"
+          git push -q origin sao-luu
