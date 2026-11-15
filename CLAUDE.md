@@ -33,6 +33,9 @@ Sao lưu database: GitHub Actions `sao-luu` 01:00 giờ VN → nhánh `sao-luu`.
 - Push `main` → Vercel **chỉ build lại frontend**. Migration và Edge Function **không** tự lên: đổi
   `supabase/migrations/` thì `db push`, đổi `supabase/functions/` thì `functions deploy` (lệnh ở bảng trên).
   Thứ tự an toàn: đẩy migration trước, push frontend dùng cột/hàm mới sau.
+- Vercel (gói Hobby) **chặn deploy** nếu email commit không khớp tài khoản GitHub `tu0n9`. Repo này đặt riêng
+  `git config user.email 267404147+tu0n9@users.noreply.github.com` (email chung của máy là email công ty, bị chặn).
+  Clone ở máy khác thì đặt lại dòng này trước khi commit.
 - Bản dev trên máy và bản thật dùng **chung một database**: dữ liệu thử nhập ở máy hiện luôn trên app thật.
 - Kiểm giao diện bằng Playwright Chromium ở khung 412px (giáo viên dùng điện thoại).
 
