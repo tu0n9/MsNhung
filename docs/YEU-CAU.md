@@ -141,6 +141,8 @@ Sau review pha R (2026-11-15):
 - **Chỉ giáo viên** đánh "Lớp nghỉ" và thêm buổi phụ / bù (buổi lớp nghỉ sinh tiền dư).
 - Trợ giảng đọc được đơn giá lớp qua API là **chấp nhận được** (giao diện đã ẩn); trợ giảng thấy đơn giá của chính mình.
 - Video hướng dẫn: nhiều video ngắn theo từng việc, có giọng đọc tiếng Việt (Microsoft HoaiMy qua `edge-tts`).
+  Video để trên máy (`docs/huong-dan/*.mp4`, không đưa vào git); người dùng tự gửi cho cô Nhung. Quay lại bằng
+  `python -I -X utf8 tests/video/chuong.py [số video]` (cần dev server 127.0.0.1:5180).
 
 ## Câu hỏi còn mở
 
