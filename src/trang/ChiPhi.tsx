@@ -4,7 +4,7 @@ import { PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { taiDuLieuThang, type ChiPhi as CP, type DuLieuThang } from '../du-lieu'
 import { vnd, type Thang } from '../hoc-phi'
-import { q, sb } from '../supabase'
+import { q, sb, useMotLan } from '../supabase'
 
 const MAC_DINH = ['Thuê phòng', 'Điện nước', 'Tài liệu', 'Sticker / quà', 'Hoàn học phí', 'Khác']
 
@@ -23,13 +23,13 @@ export default function ChiPhi() {
   }
   useEffect(() => { tai().catch((e) => message.error(e.message)) }, [thang])
 
-  const luu = async (v: CP & { ngay_d: dayjs.Dayjs }) => {
+  const [luu, dangLuu] = useMotLan(async (v: CP & { ngay_d: dayjs.Dayjs }) => {
     const ban = { ngay: v.ngay_d.format('YYYY-MM-DD'), danh_muc: v.danh_muc, so_tien: v.so_tien, ghi_chu: v.ghi_chu || null }
     try {
       await q(sua?.id ? sb.from('chi_phi').update(ban).eq('id', sua.id) : sb.from('chi_phi').insert(ban))
       setSua(null); tai()
     } catch (e) { message.error((e as Error).message) }
-  }
+  })
   if (!d) return null
   const luong = d.luongTg.reduce((s, x) => s + x.thanhTien, 0)
 
@@ -70,7 +70,7 @@ export default function ChiPhi() {
             <InputNumber<number> min={1} step={10000} style={{ width: '100%' }} formatter={(v) => `${v ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.')} parser={(v) => Number(v?.replace(/\./g, '') || 0)} />
           </Form.Item>
           <Form.Item name="ghi_chu" label="Ghi chú"><Input /></Form.Item>
-          <Button type="primary" htmlType="submit" block>Lưu</Button>
+          <Button type="primary" htmlType="submit" block loading={dangLuu}>Lưu</Button>
         </Form>
       </Modal>
     </Space>

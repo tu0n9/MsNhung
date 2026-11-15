@@ -3,7 +3,7 @@ import { App, Button, Form, Input, InputNumber, Modal, Popconfirm, Select, Space
 import { PlusOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { useToi } from '../App'
-import { goiTaiKhoan, laQuanLy, q, sb, type TaiKhoan as TK, type VaiTro } from '../supabase'
+import { goiTaiKhoan, laQuanLy, q, sb, useMotLan, type TaiKhoan as TK, type VaiTro } from '../supabase'
 import { vnd } from '../hoc-phi'
 
 const TEN_VAI: Record<VaiTro, string> = { admin: 'Quản trị', giao_vien: 'Giáo viên', tro_giang: 'Trợ giảng', phu_huynh: 'Phụ huynh' }
@@ -22,10 +22,10 @@ export default function TaiKhoan() {
   const tai = () => q(sb.from('tai_khoan').select('*').order('vai_tro').order('ho_ten')).then((x) => setDs(x as TK[])).catch((e) => message.error(e.message))
   useEffect(() => { tai() }, [])
 
-  const taoMoi = async (v: Record<string, unknown>) => {
+  const [taoMoi, dangTao] = useMotLan(async (v: Record<string, unknown>) => {
     try { await goiTaiKhoan({ hanh_dong: 'tao', ...v }); message.success('Đã tạo. Mật khẩu đầu là số điện thoại (hoặc mật khẩu đã nhập)'); setTao(false); tai() }
     catch (e) { message.error((e as Error).message) }
-  }
+  })
   const datLai = (id: string) => goiTaiKhoan({ hanh_dong: 'dat_lai', id }).then(() => message.success('Đã đặt lại mật khẩu về số điện thoại')).catch((e) => message.error(e.message))
   const sua = (id: string, ban: Partial<TK>) => q(sb.from('tai_khoan').update(ban).eq('id', id)).then(tai).catch((e) => message.error(e.message))
 
@@ -58,7 +58,7 @@ export default function TaiKhoan() {
           <Form.Item name="mat_khau" label="Mật khẩu ban đầu (để trống = số điện thoại)"><Input.Password /></Form.Item>
           <Form.Item noStyle shouldUpdate>{({ getFieldValue }) => getFieldValue('vai_tro') === 'tro_giang' &&
             <Form.Item name="don_gia_buoi" label="Đơn giá một buổi"><InputNumber min={0} step={10000} style={{ width: '100%' }} /></Form.Item>}</Form.Item>
-          <Button type="primary" htmlType="submit" block>Tạo</Button>
+          <Button type="primary" htmlType="submit" block loading={dangTao}>Tạo</Button>
         </Form>
       </Modal>
     </Space>

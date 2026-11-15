@@ -4,7 +4,7 @@ import { App, Avatar, Button, Checkbox, Collapse, DatePicker, Form, Input, Input
 import { PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useToi } from '../App'
-import { goiTaiKhoan, laQuanLy, q, sb, taiAnhLen, THU, urlAnh, type HocSinh, type Lop } from '../supabase'
+import { goiTaiKhoan, laQuanLy, q, sb, useMotLan, taiAnhLen, THU, urlAnh, type HocSinh, type Lop } from '../supabase'
 import { vnd } from '../hoc-phi'
 import HocSinhChiTiet from './HocSinhChiTiet'
 
@@ -28,15 +28,15 @@ export default function LopHoc() {
   }
   useEffect(() => { tai().catch((e) => message.error(e.message)) }, [])
 
-  const luuLop = async (v: Lop) => {
+  const [luuLop, dangLuuLop] = useMotLan(async (v: Lop) => {
     try {
       const ban = { ten: v.ten, don_gia: v.don_gia, lich: v.lich ?? [], hoat_dong: v.hoat_dong ?? true }
       await q(suaLop?.id ? sb.from('lop').update(ban).eq('id', suaLop.id) : sb.from('lop').insert(ban))
       setSuaLop(null); tai()
     } catch (e) { message.error((e as Error).message) }
-  }
+  })
 
-  const luuHs = async (v: HocSinh & { ngay_vao_d: dayjs.Dayjs; anh?: File }) => {
+  const [luuHs, dangLuuHs] = useMotLan(async (v: HocSinh & { ngay_vao_d: dayjs.Dayjs; anh?: File }) => {
     try {
       let phu_huynh_id = suaHs?.phu_huynh_id ?? null
       const sdt = v.sdt_phu_huynh?.replace(/\D/g, '') || null
@@ -58,7 +58,7 @@ export default function LopHoc() {
       }
       setSuaHs(null); tai()
     } catch (e) { message.error((e as Error).message) }
-  }
+  })
 
   const doiTrangThai = async (h: HocSinh) => {
     await q(sb.from('hoc_sinh').update({ trang_thai: h.trang_thai === 'ngung' ? 'dang_hoc' : 'ngung' }).eq('id', h.id))
@@ -112,7 +112,7 @@ export default function LopHoc() {
           </Form.Item>
           <Form.Item name="lich" label="Lịch học trong tuần"><Checkbox.Group options={[1, 2, 3, 4, 5, 6, 0].map((t) => ({ value: t, label: THU[t] }))} /></Form.Item>
           <Form.Item name="hoat_dong" label="Đang mở" valuePropName="checked"><Checkbox /></Form.Item>
-          <Button type="primary" htmlType="submit" block>Lưu</Button>
+          <Button type="primary" htmlType="submit" block loading={dangLuuLop}>Lưu</Button>
         </Form>
       </Modal>
 
@@ -129,7 +129,7 @@ export default function LopHoc() {
           <Form.Item name="don_gia_rieng" label="Đơn giá riêng (để trống = theo lớp)"><InputNumber min={0} step={10000} style={{ width: '100%' }} /></Form.Item>
           <Form.Item name="sticker_dau_ky" label="Sticker đã có từ trước (sổ giấy)"><InputNumber<number> min={0} style={{ width: '100%' }} /></Form.Item>
           <Form.Item name="ghi_chu" label="Ghi chú"><Input.TextArea rows={2} /></Form.Item>
-          <Button type="primary" htmlType="submit" block>Lưu</Button>
+          <Button type="primary" htmlType="submit" block loading={dangLuuHs}>Lưu</Button>
         </Form>
       </Modal>
     </Space>

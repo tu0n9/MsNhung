@@ -34,9 +34,16 @@ export default function ImportExcel() {
 
   const chonFile = async (f: File) => {
     try {
-      const { lopTho, hsTho } = await docFile(await f.arrayBuffer())
+      // tải lại dữ liệu đang có ngay lúc kiểm: nếu dùng bản nạp lúc mở trang mà chưa về kịp (hoặc đã cũ),
+      // mọi dòng bị coi là "Mới" và bấm Nhập sẽ tạo trùng
+      const [{ lopTho, hsTho }, l, h] = await Promise.all([
+        docFile(await f.arrayBuffer()),
+        q(sb.from('lop').select('*').order('ten')),
+        q(sb.from('hoc_sinh').select('*')),
+      ])
+      setLopCo(l as Lop[]); setHsCo(h as HocSinh[])
       if (!lopTho.length && !hsTho.length) return message.warning('File không có dòng nào để nhập')
-      setTenFile(f.name); setLoc('tat_ca'); setKq(kiemTra(lopTho, hsTho, lopCo, hsCo, homNay()))
+      setTenFile(f.name); setLoc('tat_ca'); setKq(kiemTra(lopTho, hsTho, l as Lop[], h as HocSinh[], homNay()))
     } catch (e) { message.error((e as Error).message) }
   }
 

@@ -20,7 +20,8 @@ Sao lưu database: GitHub Actions `sao-luu` 01:00 giờ VN → nhánh `sao-luu`.
 | Việc | Lệnh |
 |------|------|
 | Chạy dev | `npm run dev` |
-| Test | `npm test` |
+| Test (unit) | `npm test` |
+| Test toàn bộ | `npm run test:all`: unit + tsc + build + E2E Chromium 412px + kiểm RLS/khoá sổ qua API. Cần dev server `npx vite --host 127.0.0.1 --port 5180`. Chỉ tạo dữ liệu "TEST …", tự dọn và so số dòng với lúc đầu |
 | Build | `npm run build` |
 | Đẩy migration | `set -a; . ./.env; set +a; npx supabase db push --db-url "$SUPABASE_DB_URL"` |
 | Deploy Edge Function | `SUPABASE_ACCESS_TOKEN=… npx supabase functions deploy tai-khoan --project-ref yfwgavfznjnjwpvjacjf --use-api` |

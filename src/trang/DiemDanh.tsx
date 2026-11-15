@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { App, Avatar, Button, Card, Checkbox, DatePicker, Empty, Image, InputNumber, List, Modal, Segmented, Select, Space, Switch, Tag, Upload } from 'antd'
 import { CameraOutlined, PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { MAU } from '../giao-dien'
+import { useMotLan } from '../supabase'
 import { homNay, q, sb, taiAnhLen, urlAnh, type BuoiHoc, type DiemDanh as DD, type HocSinh, type Lop, type TaiKhoan } from '../supabase'
 
 const LOAI = { lich: 'Theo lịch', phu: 'Buổi phụ', bu: 'Buổi bù' }
@@ -25,6 +26,12 @@ export default function DiemDanh() {
   }
   useEffect(() => { tai().catch((e) => message.error(e.message)) }, [ngay])
 
+  const [luuBuoi, dangLuuBuoi] = useMotLan(async () => {
+    try {
+      await q(sb.from('buoi_hoc').insert({ lop_id: themBuoi!.lop_id, ngay, loai: themBuoi!.loai }))
+      setThemBuoi(null); tai()
+    } catch (e) { message.error((e as Error).message) }
+  })
   const tenLop = (id: string) => lops.find((l) => l.id === id)?.ten ?? ''
   if (mo) return <BuoiChiTiet buoi={mo} lop={lops.find((l) => l.id === mo.lop_id)!} quayLai={() => { setMo(null); tai() }} />
 
@@ -42,12 +49,8 @@ export default function DiemDanh() {
           </List.Item>
         )} />
       )}
-      <Modal open={!!themBuoi} title="Thêm buổi" onCancel={() => setThemBuoi(null)} onOk={async () => {
-        try {
-          await q(sb.from('buoi_hoc').insert({ lop_id: themBuoi!.lop_id, ngay, loai: themBuoi!.loai }))
-          setThemBuoi(null); tai()
-        } catch (e) { message.error((e as Error).message) }
-      }} okButtonProps={{ disabled: !themBuoi?.lop_id }}>
+      <Modal open={!!themBuoi} title="Thêm buổi" onCancel={() => setThemBuoi(null)} onOk={() => luuBuoi()} confirmLoading={dangLuuBuoi}
+        okButtonProps={{ disabled: !themBuoi?.lop_id }}>
         <Space direction="vertical" style={{ width: '100%' }}>
           <Segmented value={themBuoi?.loai} onChange={(v) => setThemBuoi({ ...themBuoi!, loai: v as 'phu' | 'bu' })}
             options={[{ value: 'phu', label: 'Buổi phụ (bù cho lớp nghỉ)' }, { value: 'bu', label: 'Buổi bù riêng' }]} />
@@ -64,7 +67,9 @@ function BuoiChiTiet({ buoi: b0, lop, quayLai }: { buoi: BuoiHoc; lop: Lop; quay
   const [buoi, setBuoi] = useState(b0)
   const [hs, setHs] = useState<HocSinh[]>([])
   const [dd, setDd] = useState<Record<string, DD>>({})
-  const [stickerTong, setStickerTong] = useState<Record<string, number>>({})
+  // sticker đã có + các buổi KHÁC; tổng hiện = số này + sticker buổi đang chấm. Không cộng dồn từng lần chấm vì
+  // chấm trước khi số này tải xong sẽ cộng vào số 0 tạm thời (tổng sai).
+  const [stickerKhac, setStickerKhac] = useState<Record<string, number>>({})
   const [tgs, setTgs] = useState<TaiKhoan[]>([])
   const [tgCo, setTgCo] = useState<string[]>([])
   const [anh, setAnh] = useState<{ id: string; duong_dan: string }[]>([])
@@ -89,22 +94,25 @@ function BuoiChiTiet({ buoi: b0, lop, quayLai }: { buoi: BuoiHoc; lop: Lop; quay
     setAnh(a as { id: string; duong_dan: string }[])
     const ids = ds.map((h) => h.id)
     if (ids.length) {
-      const st = await q(sb.from('diem_danh').select('hoc_sinh_id, sticker').in('hoc_sinh_id', ids))
-      const tong: Record<string, number> = Object.fromEntries(ds.map((h) => [h.id, h.sticker_dau_ky ?? 0]))
-      for (const x of st as { hoc_sinh_id: string; sticker: number }[]) tong[x.hoc_sinh_id] = (tong[x.hoc_sinh_id] ?? 0) + x.sticker
-      setStickerTong(tong)
+      const st = await q(sb.from('diem_danh').select('hoc_sinh_id, sticker').in('hoc_sinh_id', ids).neq('buoi_id', buoi.id))
+      const khac: Record<string, number> = Object.fromEntries(ds.map((h) => [h.id, h.sticker_dau_ky ?? 0]))
+      for (const x of st as { hoc_sinh_id: string; sticker: number }[]) khac[x.hoc_sinh_id] = (khac[x.hoc_sinh_id] ?? 0) + x.sticker
+      setStickerKhac(khac)
     }
     setUrl(await urlAnh([...ds.map((h) => h.avatar!).filter(Boolean), ...(a as { duong_dan: string }[]).map((x) => x.duong_dan)]))
   }
   useEffect(() => { tai().catch((e) => message.error(e.message)) }, [])
 
+  // đọc bản mới nhất qua ref: bấm "Vắng" rồi gõ sticker liền tay thì lần lưu sau vẫn thấy "Vắng", không ghi đè thành "Có mặt"
+  const ddRef = useRef(dd)
+  ddRef.current = dd
   const luu = async (hsId: string, thayDoi: Partial<DD>) => {
-    const cu = dd[hsId] ?? { buoi_id: buoi.id, hoc_sinh_id: hsId, trang_thai: 'co_mat', sticker: 0 }
+    const cu = ddRef.current[hsId] ?? { buoi_id: buoi.id, hoc_sinh_id: hsId, trang_thai: 'co_mat', sticker: 0 }
     const moi = { ...cu, ...thayDoi } as DD
-    setDd({ ...dd, [hsId]: moi })
+    ddRef.current = { ...ddRef.current, [hsId]: moi }
+    setDd(ddRef.current)
     try {
       await q(sb.from('diem_danh').upsert(moi))
-      if (thayDoi.sticker !== undefined) setStickerTong({ ...stickerTong, [hsId]: (stickerTong[hsId] ?? 0) + moi.sticker - cu.sticker })
     } catch (e) { message.error((e as Error).message); tai() }
   }
 
@@ -145,7 +153,7 @@ function BuoiChiTiet({ buoi: b0, lop, quayLai }: { buoi: BuoiHoc; lop: Lop; quay
               <List.Item style={{ flexWrap: 'wrap', gap: 8, background: x ? undefined : MAU.vang }}>
                 <Space>
                   <Avatar shape="square" size={56} src={h.avatar && url[h.avatar]}>{h.ho_ten.split(' ').pop()?.[0]}</Avatar>
-                  <div><b>{h.ho_ten}</b><br /><small>⭐ {stickerTong[h.id] ?? 0} sticker{laBu && ' · học bù'}</small></div>
+                  <div><b>{h.ho_ten}</b><br /><small>⭐ {(stickerKhac[h.id] ?? h.sticker_dau_ky ?? 0) + (x?.sticker ?? 0)} sticker{laBu && ' · học bù'}</small></div>
                 </Space>
                 <Space wrap>
                   <Segmented value={x?.trang_thai} onChange={(v) => luu(h.id, { trang_thai: v as DD['trang_thai'] })}

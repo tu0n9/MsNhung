@@ -1,3 +1,4 @@
+import { useRef, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
 export const sb = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)
@@ -63,3 +64,18 @@ export async function urlAnh(duongDans: string[]): Promise<Record<string, string
 
 export const THU = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
 export const homNay = () => new Date().toLocaleDateString('sv-SE') // 'YYYY-MM-DD' theo giờ máy
+
+/**
+ * Bọc hàm lưu để bấm đúp (hoặc Enter rồi bấm Lưu khi mạng chậm) chỉ chạy một lần: không có cái này, thu tiền bấm
+ * hai lần ghi hai phiếu thu, thêm học sinh bấm hai lần tạo hai em. Dùng ref vì hai lần bấm có thể đến trước khi render lại.
+ */
+export function useMotLan<A extends unknown[]>(fn: (...a: A) => Promise<unknown>) {
+  const dangRef = useRef(false)
+  const [dang, setDang] = useState(false)
+  const chay = async (...a: A) => {
+    if (dangRef.current) return
+    dangRef.current = true; setDang(true)
+    try { await fn(...a) } finally { dangRef.current = false; setDang(false) }
+  }
+  return [chay, dang] as const
+}

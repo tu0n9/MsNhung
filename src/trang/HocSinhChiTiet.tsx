@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { App, Avatar, Button, Card, DatePicker, Descriptions, Form, Input, InputNumber, List, Modal, Popconfirm, Radio, Select, Space, Statistic, Table, Tag } from 'antd'
 import dayjs from 'dayjs'
 import { useToi } from '../App'
-import { goiTaiKhoan, laQuanLy, q, sb, urlAnh, type BuoiHoc, type HocSinh, type Lop } from '../supabase'
+import { goiTaiKhoan, laQuanLy, q, sb, useMotLan, urlAnh, type BuoiHoc, type HocSinh, type Lop } from '../supabase'
 import { congThang, demBuoiDuKien, phaiThuTheoThang, tienDu, tinNhanPhuHuynh, tongHopHocSinh, vnd, type Goi, type PhieuThu, type Thang } from '../hoc-phi'
 
 type Phieu = PhieuThu & { id: string; hinh_thuc: string; ghi_chu: string | null }
@@ -152,7 +152,7 @@ function ThuTien({ hs, lop, goi, phieu, buoiDb, dong }: { hs: HocSinh; lop: Lop;
   const buoi = demBuoiDuKien(lop.lich, thangBd, v.so_thang ?? 1, hs.ngay_vao > `${thangBd}-01` ? hs.ngay_vao : undefined)
   const tongGoiMoi = Object.values(buoi).reduce((s, x) => s + x, 0) * donGia - (v.tien_du_tru ?? 0) + (v.dieu_chinh ?? 0)
 
-  const luu = async () => {
+  const [luu, dangLuu] = useMotLan(async () => {
     const x = await form.validateFields()
     try {
       let goiId = x.goi_id
@@ -168,11 +168,11 @@ function ThuTien({ hs, lop, goi, phieu, buoiDb, dong }: { hs: HocSinh; lop: Lop;
       }))
       message.success('Đã lưu'); dong()
     } catch (e) { message.error((e as Error).message) }
-  }
+  })
 
   const tien = { min: 0, step: 50000, style: { width: '100%' }, formatter: (s?: number | string) => `${s ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.'), parser: (s?: string) => Number(s?.replace(/\./g, '') || 0) }
   return (
-    <Modal open title={`Thu tiền: ${hs.ho_ten}`} onCancel={dong} onOk={luu} okText="Lưu">
+    <Modal open title={`Thu tiền: ${hs.ho_ten}`} onCancel={dong} onOk={() => luu()} okText="Lưu" confirmLoading={dangLuu}>
       <Form form={form} layout="vertical" initialValues={{
         loai: dangNo.length ? 'no' : 'moi', goi_id: dangNo[0]?.id, so_thang: 1, thang: dayjs(thangKe),
         tien_du_tru: duGoiTruoc, ngay_thu: dayjs(), hinh_thuc: 'tien_mat',
