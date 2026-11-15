@@ -81,6 +81,9 @@ goi("POST", "/functions/v1/tai-khoan", A, {"hanh_dong": "dat_lai", "id": ph[0]["
 P2 = tok("0922000002", "0922000002")
 ok("không bỏ được cờ bắt đổi mật khẩu khi mật khẩu vẫn là số điện thoại", goi("POST", "/rest/v1/rpc/da_doi_mat_khau", P2, {})[0] == 400)
 
+_, bu = SV("GET", "/rest/v1/buoi_hoc?select=id&loai=eq.bu&ngay=eq.2026-11-15")
+ok("buổi bù riêng: chọn Không đến thì không còn dòng điểm danh nào", bool(bu) and SV("GET", f"/rest/v1/diem_danh?select=hoc_sinh_id&buoi_id=eq.{bu[0]['id']}")[1] == [])
+
 _, khoa_truoc = SV("GET", "/rest/v1/khoa_so?select=khoa_den")
 try:
     ok("chốt sổ tháng 11", goi("POST", "/rest/v1/rpc/chot_so", A, {"thang": "2026-11-01"})[0] == 204)

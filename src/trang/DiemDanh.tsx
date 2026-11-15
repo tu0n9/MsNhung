@@ -108,14 +108,24 @@ function BuoiChiTiet({ buoi: b0, lop, quayLai }: { buoi: BuoiHoc; lop: Lop; quay
   // đọc bản mới nhất qua ref: bấm "Vắng" rồi gõ sticker liền tay thì lần lưu sau vẫn thấy "Vắng", không ghi đè thành "Có mặt"
   const ddRef = useRef(dd)
   ddRef.current = dd
+  // buổi bù riêng: có dòng điểm danh = đã học bù; không đến thì không có dòng nào (không sinh thêm buổi chưa bù)
+  const buoiBu = buoi.loai === 'bu'
   const luu = async (hsId: string, thayDoi: Partial<DD>) => {
-    const cu = ddRef.current[hsId] ?? { buoi_id: buoi.id, hoc_sinh_id: hsId, trang_thai: 'co_mat', sticker: 0 }
+    const cu = ddRef.current[hsId] ?? { buoi_id: buoi.id, hoc_sinh_id: hsId, trang_thai: buoiBu ? 'hoc_bu' : 'co_mat', sticker: 0 }
     const moi = { ...cu, ...thayDoi } as DD
     ddRef.current = { ...ddRef.current, [hsId]: moi }
     setDd(ddRef.current)
     try {
       await q(sb.from('diem_danh').upsert(moi))
     } catch (e) { message.error((e as Error).message); tai() }
+  }
+
+  const boDiemDanh = async (hsId: string) => {
+    const { [hsId]: _bo, ...con } = ddRef.current
+    ddRef.current = con
+    setDd(con)
+    try { await q(sb.from('diem_danh').delete().eq('buoi_id', buoi.id).eq('hoc_sinh_id', hsId)) }
+    catch (e) { message.error((e as Error).message); tai() }
   }
 
   const daLuu = (hsId: string) => !!dd[hsId]
@@ -145,23 +155,29 @@ function BuoiChiTiet({ buoi: b0, lop, quayLai }: { buoi: BuoiHoc; lop: Lop; quay
           {tgs.length === 0 && <i>Chưa có tài khoản trợ giảng</i>}
         </Card>
 
-        <Card size="small" title={`Học sinh (${Object.values(dd).filter((x) => x.trang_thai !== 'vang').length}/${hs.length} có mặt)`}
-          extra={<Button size="small" onClick={() => Promise.all(hs.filter((h) => !daLuu(h.id)).map((h) =>
+        <Card size="small" title={`Học sinh (${Object.values(dd).filter((x) => x.trang_thai !== 'vang').length}/${hs.length} ${buoiBu ? 'học bù' : 'có mặt'})`}
+          extra={!buoiBu && <Button size="small" onClick={() => Promise.all(hs.filter((h) => !daLuu(h.id)).map((h) =>
             q(sb.from('diem_danh').upsert({ buoi_id: buoi.id, hoc_sinh_id: h.id, trang_thai: 'co_mat', sticker: 0 })))).then(tai)}>
             Tất cả có mặt</Button>}>
+          {buoiBu && <p style={{ marginTop: 0, color: MAU.chuPhu, fontSize: 13 }}>Buổi bù riêng: em nào đến thì chọn "Học bù" (trừ 1 buổi chưa bù). Em không đến thì để "Không đến", không bị tính thêm buổi chưa bù.</p>}
           <List dataSource={hs} renderItem={(h) => {
             const x = dd[h.id]
             const laBu = h.lop_id !== lop.id
             return (
-              <List.Item style={{ flexWrap: 'wrap', gap: 8, background: x ? undefined : MAU.vang }}>
+              <List.Item style={{ flexWrap: 'wrap', gap: 8, background: x || buoiBu ? undefined : MAU.vang }}>
                 <Space>
                   <Avatar shape="square" size={56} src={h.avatar && url[h.avatar]}>{h.ho_ten.split(' ').pop()?.[0]}</Avatar>
                   <div><b>{h.ho_ten}</b><br /><small>⭐ {(stickerKhac[h.id] ?? h.sticker_dau_ky ?? 0) + (x?.sticker ?? 0)} sticker{laBu && ' · học bù'}</small></div>
                 </Space>
                 <Space wrap>
-                  <Segmented value={x?.trang_thai} onChange={(v) => luu(h.id, { trang_thai: v as DD['trang_thai'] })}
-                    options={laBu ? [{ value: 'hoc_bu', label: 'Học bù' }, { value: 'vang', label: 'Vắng' }]
-                      : [{ value: 'co_mat', label: 'Có mặt' }, { value: 'vang', label: 'Vắng' }]} />
+                  {buoiBu ? (
+                    <Segmented value={x ? 'hoc_bu' : 'khong'} onChange={(v) => (v === 'khong' ? boDiemDanh(h.id) : luu(h.id, { trang_thai: 'hoc_bu' }))}
+                      options={[{ value: 'hoc_bu', label: 'Học bù' }, { value: 'khong', label: 'Không đến' }]} />
+                  ) : (
+                    <Segmented value={x?.trang_thai} onChange={(v) => luu(h.id, { trang_thai: v as DD['trang_thai'] })}
+                      options={laBu ? [{ value: 'hoc_bu', label: 'Học bù' }, { value: 'vang', label: 'Vắng' }]
+                        : [{ value: 'co_mat', label: 'Có mặt' }, { value: 'vang', label: 'Vắng' }]} />
+                  )}
                   <InputNumber addonBefore="⭐" style={{ width: 110 }} value={x?.sticker ?? 0}
                     onChange={(v) => v !== null && luu(h.id, { sticker: v })} />
                 </Space>

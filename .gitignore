@@ -5,3 +5,4 @@ dist/
 !.env.example
 supabase/.temp/
 tests/e2e/out/
+tests/video/tam/

@@ -151,6 +151,16 @@ export function duConLai(goi: Goi[], buoi: BuoiDacBiet[], ngayVao: string, daHoa
   return Math.max(0, phatSinh - daTru - daHoan)
 }
 
+/**
+ * Buổi chưa học bù = vắng ở buổi thường / buổi phụ − số lần học bù (ở lớp khác hoặc buổi bù riêng).
+ * Vắng ở buổi bù riêng không tính: em không nợ buổi nào thì không phải đến (người dùng chốt 2026-11-15).
+ */
+export function demChuaBu(dd: { trang_thai: string; loai: string }[]): number {
+  const vang = dd.filter((x) => x.trang_thai === 'vang' && x.loai !== 'bu').length
+  const bu = dd.filter((x) => x.trang_thai === 'hoc_bu').length
+  return Math.max(0, vang - bu)
+}
+
 export const vnd = (n: number) => n.toLocaleString('vi-VN') + ' đ'
 
 export function tinNhanPhuHuynh(tenHs: string, thang: Thang, th: TongHopThang, soBuoi: number): string {

@@ -5,7 +5,7 @@ import { useToi } from '../App'
 import { O_TIEN } from '../giao-dien'
 import { goiTaiKhoan, laQuanLy, q, sb, useMotLan, urlAnh, type BuoiHoc, type HocSinh, type Lop } from '../supabase'
 import {
-  conNoGoi, daDongGoi, demBuoiDuKien, duConLai, thangHetGoi, tienDuGoi, tinNhanPhuHuynh, tongGoi, tongHopHocSinh, vnd,
+  conNoGoi, daDongGoi, demBuoiDuKien, demChuaBu, duConLai, thangHetGoi, tienDuGoi, tinNhanPhuHuynh, tongGoi, tongHopHocSinh, vnd,
   type Goi, type PhieuThu, type Thang,
 } from '../hoc-phi'
 
@@ -56,7 +56,7 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
 
   const soCoMat = buoiIdsCoMat.length
   const tongSticker = (hs.sticker_dau_ky ?? 0) + dd.reduce((s, x) => s + x.sticker, 0)
-  const chuaBu = dd.filter((x) => x.trang_thai === 'vang').length - dd.filter((x) => x.trang_thai === 'hoc_bu').length
+  const chuaBu = demChuaBu(dd.map((x) => ({ trang_thai: x.trang_thai, loai: x.buoi_hoc.loai })))
   const th = useMemo(() => tongHopHocSinh(goi, phieu, thang), [goi, phieu, thang])
   const tinNhan = tinNhanPhuHuynh(hs.ho_ten, thang, th, soCoMat)
 
@@ -73,7 +73,7 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
         <Space wrap size="large">
           <Statistic title="Buổi đi học tháng này" value={soCoMat} />
           <Statistic title="Tổng sticker" value={tongSticker} prefix="⭐" />
-          <Statistic title="Buổi chưa học bù" value={Math.max(chuaBu, 0)} />
+          <Statistic title="Buổi chưa học bù" value={chuaBu} />
           {(ql || chiXem) && <Statistic title="Cần nộp" value={vnd(Math.max(th.conPhaiThu, 0))} />}
         </Space>
       </Card>

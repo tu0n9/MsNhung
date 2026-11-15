@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  conNoGoi, demBuoiDuKien, demNghiPhu, duConLai, hocPhiGocThang, phaiThuTheoThang, tienDu, tongGoi, tongHopHocSinh,
+  conNoGoi, demBuoiDuKien, demChuaBu, demNghiPhu, duConLai, hocPhiGocThang, phaiThuTheoThang, tienDu, tongGoi, tongHopHocSinh,
   trangThaiThang, type BuoiDacBiet, type Goi,
 } from './hoc-phi'
 
@@ -109,5 +109,14 @@ describe('sau review: tiền dư, học phí gốc, đóng trước', () => {
     expect(trangThaiThang(tongHopHocSinh([g], thieu, '2026-04'))).toBe('con_no')
     expect(tongGoi(g)).toBe(3_600_000)
     expect(conNoGoi(g, thieu)).toBe(2_600_000)
+  })
+})
+
+describe('buổi chưa học bù (Q1)', () => {
+  it('vắng buổi thường/phụ cộng 1, học bù trừ 1; vắng buổi bù riêng không tính; không âm', () => {
+    expect(demChuaBu([{ trang_thai: 'vang', loai: 'lich' }, { trang_thai: 'vang', loai: 'phu' }])).toBe(2)
+    expect(demChuaBu([{ trang_thai: 'vang', loai: 'lich' }, { trang_thai: 'hoc_bu', loai: 'bu' }])).toBe(0)
+    expect(demChuaBu([{ trang_thai: 'vang', loai: 'bu' }])).toBe(0)
+    expect(demChuaBu([{ trang_thai: 'hoc_bu', loai: 'lich' }])).toBe(0)
   })
 })

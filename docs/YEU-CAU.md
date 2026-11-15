@@ -134,6 +134,14 @@ Giao diện và quyền trợ giảng (2026-11-15):
 - **Trợ giảng chỉ thấy tài khoản của mình và của phụ huynh**; không đọc được đơn giá trả trợ giảng (kể cả qua API).
   Danh sách trợ giảng để điểm danh lấy qua hàm `ds_tro_giang()` (chỉ tên); lương qua `luong_tro_giang()` (chỉ giáo viên).
 
+Sau review pha R (2026-11-15):
+
+- **Học bù trong buổi bù riêng:** mỗi em chỉ có "Học bù" (trừ 1 buổi chưa bù) hoặc "Không đến" (không ghi gì, không
+  sinh thêm buổi chưa bù). Buổi thường và buổi phụ giữ như cũ: vắng cộng 1 buổi chưa bù.
+- **Chỉ giáo viên** đánh "Lớp nghỉ" và thêm buổi phụ / bù (buổi lớp nghỉ sinh tiền dư).
+- Trợ giảng đọc được đơn giá lớp qua API là **chấp nhận được** (giao diện đã ẩn); trợ giảng thấy đơn giá của chính mình.
+- Video hướng dẫn: nhiều video ngắn theo từng việc, có giọng đọc tiếng Việt (Microsoft HoaiMy qua `edge-tts`).
+
 ## Câu hỏi còn mở
 
 Không còn.

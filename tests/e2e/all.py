@@ -104,6 +104,26 @@ with sync_playwright() as pw:
         p.screenshot(path=os.path.join(OUT, "a-diem-danh.png"), full_page=True)
     buoc("điểm danh: trợ giảng, có mặt, sticker (tổng 8 = 5 + 3), ảnh lớp", b_diem_danh)
 
+    def b_buoi_bu():
+        p.get_by_role("button", name="← Quay lại").click()
+        p.get_by_role("button", name="Thêm buổi phụ / bù").click()
+        m = p.locator(".ant-modal")
+        m.get_by_text("Buổi bù riêng").click()
+        m.locator(".ant-select").click()
+        p.locator(".ant-select-dropdown:visible .ant-select-item-option", has_text="TEST Lớp Starters").click()
+        m.get_by_role("button", name=re.compile("^(OK|Đồng ý)$")).click()
+        p.locator(".ant-list-item", has_text="Buổi bù").get_by_role("button", name="Điểm danh").click()
+        row = p.locator(".ant-list-item", has_text="TEST Nguyễn Bảo An")
+        expect(row.get_by_text("Không đến")).to_be_visible(timeout=10000)
+        assert row.get_by_text("Có mặt", exact=True).count() == 0 and row.get_by_text("Vắng", exact=True).count() == 0
+        expect(p.get_by_role("button", name="Tất cả có mặt")).to_have_count(0)
+        row.get_by_text("Học bù", exact=True).click()
+        p.wait_for_timeout(1200)
+        row.get_by_text("Không đến", exact=True).click()
+        p.wait_for_timeout(1200)
+        p.get_by_role("button", name="← Quay lại").click()
+    buoc("buổi bù riêng: chỉ có Học bù / Không đến, không có nút Tất cả có mặt", b_buoi_bu)
+
     def b_thu_tien():
         nav("Lớp")
         p.get_by_text("TEST Nguyễn Bảo An").click()
