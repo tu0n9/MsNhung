@@ -53,6 +53,55 @@ Vòng 1 (2026-11-15):
   lương trợ giảng. Trang Excel thứ 7 là "Trợ giảng": số buổi, đơn giá, thành tiền.
 - **Git:** app nhỏ, commit thẳng vào `main`.
 
+Vòng 2 (2026-11-15). Chỗ nào khác vòng 1 thì vòng 2 thắng:
+
+- **Stack:** React + Vite + Ant Design; Supabase (Postgres, Auth, Storage, RLS cho phân quyền); Excel sinh trên
+  trình duyệt bằng `exceljs`; host tĩnh (Vercel/Cloudflare Pages). Không có backend riêng. Ảnh nén về khoảng 1600px
+  trước khi tải lên.
+- **Tài khoản học sinh = tài khoản phụ huynh, chỉ xem:** buổi học, sticker, học phí, nợ của con mình. Đăng nhập bằng
+  số điện thoại phụ huynh, mật khẩu ban đầu là số điện thoại, tự đổi được. Giáo viên và trợ giảng đổi/đặt lại mật khẩu
+  học sinh trong trang quản lý; giáo viên đặt lại được tài khoản trợ giảng.
+- **Bỏ chữ ký tay của học sinh** (thay quyết định vòng 1). Minh chứng buổi học là ảnh do giáo viên hoặc trợ giảng chụp
+  và đăng lên.
+- **Lịch học:** mỗi lớp có lịch tuần cố định, app tự sinh buổi trong tháng; giáo viên đánh dấu buổi lớp nghỉ hoặc thêm
+  buổi phụ. Buổi dự kiến = số buổi theo lịch.
+- **Mọi gói (1, 2, 3 tháng) đều là khoá học đóng trước, đủ tiền** (thay mục "Học phí" vòng 1: không tính theo buổi
+  thực học nữa). Học phí gói = buổi dự kiến × đơn giá. Học sinh nghỉ không bị trừ tiền; học bù ở buổi khác, buổi bù
+  không tính tiền (coi như đổi lịch). Không học bù cũng không trừ tiền.
+- **Học bù:** ngồi vào buổi của lớp khác hoặc buổi bù riêng do giáo viên tạo.
+- **Hai chỉ số tiền:** "Đã thu" = tiền thu *cho* tháng đó; "Thực thu trong tháng" = tiền có *ngày thu* trong tháng.
+  Chênh lệch thu chi = thực thu − tổng chi (theo dòng tiền).
+- **Chốt sổ:** khoá điểm danh, phiếu thu, chi phí của tháng; nợ cuối kỳ ghi cố định làm nợ kỳ trước của tháng sau.
+  Chỉ giáo viên mở khoá được, phải ghi lý do; chốt lại thì app tính lại.
+- **Học sinh nghỉ hẳn:** trạng thái "Ngừng học", ẩn khỏi điểm danh, giữ lịch sử và công nợ. Chỉ xoá hẳn được học sinh
+  chưa có dữ liệu.
+- **Chi phí:** danh mục cố định, giáo viên thêm mục được (lương trợ giảng do app tự sinh); mỗi khoản có ngày, số tiền,
+  ghi chú; tính theo ngày chi.
+
+Vòng 3 (2026-11-15):
+
+- **Tài khoản phụ huynh:** mỗi số điện thoại một tài khoản, thấy tất cả các con dùng số đó. Lần đăng nhập đầu bắt buộc
+  đổi mật khẩu; đặt lại mật khẩu thì quay về mật khẩu = số điện thoại và lại bắt đổi.
+- **Buổi chưa bù khi hết gói:** chuyển sang gói sau, không hạn. App hiện "còn N buổi chưa bù".
+- **Phân bổ gói theo tháng:** khi thu, chọn gói (1/2/3 tháng) + tháng bắt đầu. Phải thu từng tháng = buổi dự kiến
+  tháng đó × đơn giá; tiền đã đóng phân bổ theo đó, tháng đóng trước hiện "Đã đủ (đóng trước)".
+- **Tiền dư** (buổi lớp nghỉ) trừ vào gói kế tiếp. Học sinh nghỉ hẳn còn dư: app hiện số dư; giáo viên quyết hoàn,
+  hoàn thì ghi khoản chi "Hoàn học phí" gắn với học sinh.
+- **Vào học giữa chừng:** gói đầu tính từ buổi đầu vào học; phải thu tháng đầu = buổi dự kiến còn lại × đơn giá.
+- **Đổi đơn giá:** giá chốt lúc đóng gói; giá mới áp dụng từ gói kế tiếp.
+- **Ảnh minh chứng:** giáo viên hoặc trợ giảng chụp.
+
+Vòng 4 (2026-11-15):
+
+- **Ảnh minh chứng là ảnh cả lớp** theo buổi, nhiều ảnh; không chụp riêng từng em.
+- **Sao lưu:** GitHub Actions hằng đêm dump database vào một repo riêng tư; thêm nút "Sao lưu toàn bộ" trong app, và
+  app nhắc tải bản sao lưu mỗi lần chốt sổ tháng.
+- **Trạng thái điểm danh:** Có mặt / Vắng (+1 buổi chưa bù) / Học bù (học sinh bù vào đúng buổi được đánh dấu, −1
+  buổi chưa bù). Không phân biệt vắng có phép hay không.
+- **Quyền sửa:** trợ giảng sửa được điểm danh và sticker mọi buổi của tháng chưa chốt, giống giáo viên. Tháng đã chốt
+  thì chỉ giáo viên mở khoá.
+
 ## Câu hỏi còn mở
 
-(Ghi dần theo từng vòng grill.)
+- Phụ huynh có xem được ảnh lớp của những buổi con mình có mặt không? Đang theo đề xuất: **có**. Người dùng chưa
+  trả lời rõ.
