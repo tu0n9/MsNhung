@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  conNoGoi, demBuoiDuKien, demChuaBu, demNghiPhu, duConLai, goiCuaThang, hocPhiGocThang, tenGoi, tinhTrangGoi, tinNhanGiaHan, vnd, phaiThuTheoThang, tienDu, tongGoi, tongHopHocSinh,
+  conNoGoi, demBuoiDuKien, demChuaBu, demNghiPhu, duConLai, goiCuaThang, hocPhiGocThang, tenGoi, tinhTrangGoi, tinNhanGiaHan, vnd,
+  type PhieuThu, phaiThuTheoThang, tienDu, tongGoi, tongHopHocSinh,
   trangThaiThang, type BuoiDacBiet, type Goi,
 } from './hoc-phi'
 
@@ -162,5 +163,56 @@ describe('tinhTrangGoi, tinNhanGiaHan', () => {
     const c = tinNhanGiaHan('An', tinhTrangGoi([], L, '2026-10-05', '2026-11-16'), 13, 150_000)
     expect(c).not.toContain('gói học')
     expect(c).toContain('đóng học phí')
+  })
+})
+
+// Các ví dụ số trong docs/HUONG-DAN-SU-DUNG.md mục 5 (lớp T2-T4-T6, 120.000 đ/buổi, 13 buổi mỗi tháng 11, 12, 1).
+// Sửa cách tính tiền mà làm lệch tài liệu thì test này báo.
+describe('ví dụ trong hướng dẫn sử dụng', () => {
+  const ba = goi({ thang_bat_dau: '2026-11-01', so_thang: 3, don_gia: 120_000, buoi_du_kien: { '2026-11': 13, '2026-12': 13, '2027-01': 13 } })
+  const mot = goi({ thang_bat_dau: '2026-11-01', don_gia: 120_000, buoi_du_kien: { '2026-11': 13 } })
+  const thu = (so_tien: number, ngay_thu: string, goi_id = 'g1'): PhieuThu => ({ goi_id, so_tien, ngay_thu })
+
+  it('5.4 gói 1 tháng = 1.560.000', () => expect(tongGoi(mot)).toBe(1_560_000))
+
+  it('5.5 gói 3 tháng đóng nhiều đợt: tiền dồn tháng đầu trước', () => {
+    expect(tongGoi(ba)).toBe(4_680_000)
+    const p = [thu(2_000_000, '2026-11-05')]
+    expect(tongHopHocSinh([ba], p, '2026-11').conPhaiThu).toBe(0)
+    expect(tongHopHocSinh([ba], p, '2026-12')).toMatchObject({ phaiThu: 1_560_000, conPhaiThu: 1_120_000 })
+    const p2 = [...p, thu(2_680_000, '2026-12-10')]
+    expect(trangThaiThang(tongHopHocSinh([ba], p2, '2026-12'))).toBe('du')
+    expect(trangThaiThang(tongHopHocSinh([ba], p2, '2027-01'))).toBe('dong_truoc')
+  })
+
+  it('5.6 đóng hết một lần: thực thu nằm ở tháng đóng', () => {
+    const p = [thu(4_680_000, '2026-11-01')]
+    expect(tongHopHocSinh([ba], p, '2026-11').thucThu).toBe(4_680_000)
+    expect(tongHopHocSinh([ba], p, '2026-12').thucThu).toBe(0)
+    expect(trangThaiThang(tongHopHocSinh([ba], p, '2026-12'))).toBe('dong_truoc')
+  })
+
+  it('5.7 lớp nghỉ 2, buổi phụ 1: dư 120.000, gói tháng 12 còn 1.440.000', () => {
+    expect(tienDu(mot, 2, 1)).toBe(120_000)
+    expect(tongGoi(goi({ thang_bat_dau: '2026-12-01', don_gia: 120_000, buoi_du_kien: { '2026-12': 13 }, tien_du_tru: 120_000 }))).toBe(1_440_000)
+  })
+
+  it('5.9 vào học 18/11: tháng 11 còn 6 buổi', () => {
+    expect(demBuoiDuKien([1, 3, 5], '2026-11', 1, '2026-11-18')).toEqual({ '2026-11': 6 })
+  })
+
+  it('5.11 giảm nhiều hơn tháng đầu thì phần thừa trừ sang tháng sau', () => {
+    expect(tongGoi({ ...mot, dieu_chinh: -100_000 })).toBe(1_460_000)
+    expect(phaiThuTheoThang({ ...ba, dieu_chinh: -2_000_000 })).toEqual({ '2026-11': 0, '2026-12': 1_120_000, '2027-01': 1_560_000 })
+  })
+
+  it('5.13 đóng thừa 100.000: nợ kỳ trước tháng sau là -100.000', () => {
+    expect(tongHopHocSinh([mot], [thu(1_660_000, '2026-11-03')], '2026-12').noKyTruoc).toBe(-100_000)
+  })
+
+  it('5.16 trả nợ tháng 11 vào 05/12: tháng 11 vẫn còn nợ, tháng 12 tính vào đã thu', () => {
+    const p = [thu(1_560_000, '2026-12-05')]
+    expect(tongHopHocSinh([mot], p, '2026-11').conPhaiThu).toBe(1_560_000)
+    expect(tongHopHocSinh([mot], p, '2026-12')).toMatchObject({ noKyTruoc: 1_560_000, daThu: 1_560_000, conPhaiThu: 0, thucThu: 1_560_000 })
   })
 })
