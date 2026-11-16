@@ -1,2 +1,2 @@
-/* số tiền, số buổi xếp thẳng cột như sổ */
-body { font-variant-numeric: tabular-nums; }
+/* bỏ lề mặc định của trình duyệt (nền tối lộ viền 8px quanh màn). Số tiền, số buổi xếp thẳng cột như sổ */
+body { margin: 0; background: var(--nen); font-variant-numeric: tabular-nums; }

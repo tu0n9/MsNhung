@@ -1,10 +1,10 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Button, Grid, Layout, Menu, Spin } from 'antd'
-import { BankOutlined, CheckSquareOutlined, DollarOutlined, TeamOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons'
+import { BankOutlined, CheckSquareOutlined, DollarOutlined, MoonOutlined, SunOutlined, TeamOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons'
 import type { Session } from '@supabase/supabase-js'
 import { laQuanLy, q, sb, type TaiKhoan } from './supabase'
-import { MAU } from './giao-dien'
+import { CHU_SO, MAU, useCheDo } from './giao-dien'
 import DangNhap from './trang/DangNhap'
 import DoiMatKhau from './trang/DoiMatKhau'
 import DiemDanh from './trang/DiemDanh'
@@ -23,6 +23,7 @@ export default function App() {
   const [phien, setPhien] = useState<Session | null | undefined>(undefined)
   const [toi, setToi] = useState<TaiKhoan | null>(null)
   const nav = useNavigate()
+  const { cheDo, doi } = useCheDo()
   const loc = useLocation()
   const manHinh = Grid.useBreakpoint()
 
@@ -57,12 +58,14 @@ export default function App() {
   return (
     <NguoiDung.Provider value={toi}>
       <Layout style={{ minHeight: '100vh' }}>
-        <Layout.Header style={{ display: 'flex', alignItems: 'center', padding: '0 12px', gap: 8 }}>
+        <Layout.Header style={{ display: 'flex', alignItems: 'center', padding: '0 12px', gap: 8, borderBottom: `1px solid ${MAU.vien}` }}>
           <img src="/icon-192.png" alt="" width={32} height={32} style={{ borderRadius: 6 }} />
-          <b style={{ color: '#fff', whiteSpace: 'nowrap' }}>Ms.Nhung</b>
-          {dienThoai ? <span style={{ flex: 1 }} /> : <Menu theme="dark" mode="horizontal" selectedKeys={[loc.pathname === '/import' ? '/lop' : loc.pathname]} items={menu}
+          <b style={{ color: MAU.chinh, whiteSpace: 'nowrap', fontFamily: CHU_SO, fontSize: 18 }}>Ms.Nhung</b>
+          {dienThoai ? <span style={{ flex: 1 }} /> : <Menu theme={cheDo === 'toi' ? 'dark' : 'light'} mode="horizontal" selectedKeys={[loc.pathname === '/import' ? '/lop' : loc.pathname]} items={menu}
             onClick={(e) => nav(e.key)} style={{ flex: 1, minWidth: 0 }} />}
           {/* thanh dưới đã đủ 5 mục, thêm mục thứ 6 thì chật trên điện thoại; phụ huynh có liên kết riêng ở trang Con tôi */}
+          <Button shape="circle" icon={cheDo === 'toi' ? <SunOutlined /> : <MoonOutlined />} onClick={doi}
+            aria-label={cheDo === 'toi' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'} />
           {toi.vai_tro !== 'phu_huynh' && <Button size="small" onClick={() => nav('/huong-dan')}>Hướng dẫn</Button>}
           <Button size="small" onClick={() => sb.auth.signOut()}>Thoát</Button>
         </Layout.Header>
@@ -86,7 +89,7 @@ export default function App() {
           </Routes>
         </Layout.Content>
         {dienThoai && menu.length > 1 && (
-          <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', background: '#fff', borderTop: `1px solid ${MAU.vien}`, zIndex: 10 }}>
+          <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', background: MAU.dau, borderTop: `1px solid ${MAU.vien}`, zIndex: 10 }}>
             {menu.map((m) => (
               <button key={m.key} onClick={() => nav(m.key)} style={{
                 flex: 1, border: 0, background: 'none', padding: '8px 0 10px', fontSize: 11,

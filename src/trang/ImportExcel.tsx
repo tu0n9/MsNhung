@@ -60,7 +60,7 @@ export default function ImportExcel() {
   }
 
   const buoc = ketQua || tienDo ? 4 : kq ? 3 : 2
-  const chan = { position: 'sticky' as const, bottom: dienThoai ? 60 : 0, background: '#fff', padding: '10px 0', borderTop: `1px solid ${MAU.vien}` }
+  const chan = { position: 'sticky' as const, bottom: dienThoai ? 60 : 0, background: MAU.nen, padding: '10px 0', borderTop: `1px solid ${MAU.vien}` }
 
   return (
     <Space direction="vertical" style={{ width: '100%', maxWidth: 720 }} size={12}>
@@ -123,7 +123,7 @@ export default function ImportExcel() {
           </Card>
 
           {loi.length > 0 && (
-            <div role="alert" style={{ padding: 12, border: `1px solid ${MAU.do}33`, background: MAU.doNhat, borderRadius: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div role="alert" style={{ padding: 12, border: `1px solid ${MAU.doNhat}`, background: MAU.doNhat, borderRadius: 6, display: 'flex', flexDirection: 'column', gap: 6 }}>
               <b style={{ color: MAU.do }}>{loi.length} dòng cần sửa, sẽ không được nhập</b>
               {loi.slice(0, 8).map((d) => (
                 <a key={idDong(d)} href={`#${idDong(d)}`} onClick={(e) => { e.preventDefault(); setLoc('tat_ca'); setTimeout(() => document.getElementById(idDong(d))?.scrollIntoView({ block: 'center' })) }}>
@@ -139,7 +139,7 @@ export default function ImportExcel() {
             { value: 'da_co', label: `Đã có ${dem('da_co')}` }, { value: 'moi', label: `Mới ${dem('moi')}` },
           ]} />
 
-          <List bordered style={{ background: '#fff' }} dataSource={dong.filter((d) => loc === 'tat_ca' || d.trangThai === loc)} renderItem={(d) => (
+          <List bordered style={{ background: MAU.mat }} dataSource={dong.filter((d) => loc === 'tat_ca' || d.trangThai === loc)} renderItem={(d) => (
             <List.Item id={idDong(d)} style={{ alignItems: 'flex-start', background: d.trangThai === 'loi' ? MAU.doNhat : undefined }}>
               <span style={{ width: 40, flexShrink: 0, fontSize: 12, color: MAU.chuMo }}>{d.loai === 'lop' ? 'Lớp' : d.so}</span>
               <div style={{ flexGrow: 1, minWidth: 0 }}>

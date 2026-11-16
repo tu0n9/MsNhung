@@ -150,7 +150,7 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
 }
 
 const O: Record<TrangThaiO, { ten: string; style: React.CSSProperties }> = {
-  co_mat: { ten: 'Có mặt', style: { background: MAU.chinhNhat, color: MAU.chinh, fontWeight: 600 } },
+  co_mat: { ten: 'Có mặt', style: { background: MAU.totNhat, color: MAU.tot, fontWeight: 600 } },
   vang: { ten: 'Vắng', style: { background: MAU.doNhat, color: MAU.do, fontWeight: 600 } },
   hoc_bu: { ten: 'Học bù', style: { background: MAU.xanhNhat, color: MAU.xanh, fontWeight: 600 } },
   lop_nghi: { ten: 'Lớp nghỉ', style: { background: MAU.xam, color: MAU.chuMo, textDecoration: 'line-through' } },

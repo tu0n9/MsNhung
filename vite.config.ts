@@ -11,8 +11,8 @@ export default defineConfig({
         name: 'Anh ngữ Ms.Nhung',
         short_name: 'Ms.Nhung',
         lang: 'vi',
-        theme_color: '#0f7a5c',
-        background_color: '#ffffff',
+        theme_color: '#0A0908',
+        background_color: '#0A0908',
         display: 'standalone',
         icons: [
           { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },

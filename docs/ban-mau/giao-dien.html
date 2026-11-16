@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bản mẫu giao diện Ms Nhung</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Lexend:wght@400;500;600;700&family=Nunito:wght@500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* Bản mẫu tĩnh, không nối dữ liệu thật. Ba hướng dùng chung một bộ màn hình, khác nhau ở token và vài luật bố cục. */
+* { box-sizing: border-box; }
+body { margin: 0; background: #DEDEDB; color: #1D1D1F; font-family: 'Be Vietnam Pro', system-ui, sans-serif; }
+.trang { max-width: 1420px; margin: 0 auto; padding: 32px 16px 64px; }
+.trang > h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: -0.02em; }
+.trang > p { margin: 0 0 36px; color: #4A4A50; max-width: 70ch; line-height: 1.55; }
+.huong { margin-bottom: 64px; }
+.huong h2 { margin: 0 0 4px; font-size: 22px; }
+.huong > p { margin: 0 0 20px; color: #4A4A50; max-width: 75ch; line-height: 1.55; }
+.hang { display: flex; gap: 32px; overflow-x: auto; padding: 4px 4px 16px; }
+figure { margin: 0; flex: 0 0 412px; }
+figcaption { margin-top: 10px; font-size: 13px; color: #4A4A50; text-align: center; }
+
+/* ---------- khung điện thoại ---------- */
+.dt {
+  width: 412px; height: 880px; border-radius: 30px; overflow: hidden; position: relative;
+  display: flex; flex-direction: column;
+  background: var(--bg); color: var(--ink); font-family: var(--font);
+  box-shadow: 0 1px 0 rgba(0,0,0,.06), 0 24px 48px -20px rgba(20,20,30,.35);
+}
+.dt button { font: inherit; color: inherit; cursor: pointer; }
+.dt button:focus-visible, .dt input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.noi { flex: 1; overflow-y: auto; padding: 14px 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+
+/* đầu trang */
+.dau { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--head-bg); color: var(--head-ink); }
+.dau img { width: 34px; height: 34px; border-radius: 8px; }
+.dau .ten { font-family: var(--display); font-weight: 700; font-size: 18px; letter-spacing: .01em; }
+.dau .cach { flex: 1; }
+.nut-vien { background: transparent; border: 1px solid var(--head-line); color: var(--head-ink) !important; border-radius: 999px; padding: 6px 14px; font-size: 13px; min-height: 36px; }
+
+/* điều hướng dưới */
+.duoi { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-top: 1px solid var(--line); background: var(--nav-bg); }
+.duoi a { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0 10px; font-size: 11px; color: var(--muted); text-decoration: none; min-height: 56px; }
+.duoi a.on { color: var(--accent-text); font-weight: 700; }
+.duoi svg { width: 22px; height: 22px; }
+svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* khối chung */
+.the { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; }
+.the-dau { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 14px; }
+.the-dau b { font-size: 15px; }
+.mo { color: var(--muted); font-size: 12.5px; }
+.cach { flex: 1; }
+.chon-ngay { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.chon-ngay b { font-size: 15px; }
+.tron { width: 40px; height: 40px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; }
+.tron svg { width: 18px; height: 18px; }
+
+/* ca học */
+.ca { border-radius: var(--r); padding: 16px; background: var(--ca-bg); color: var(--ca-ink); }
+.ca-gio { font-family: var(--display); font-size: 30px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.1; }
+.ca-ten { margin-top: 6px; font-weight: 600; font-size: 15px; }
+.ca-phu { margin-top: 2px; font-size: 12.5px; opacity: .8; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line); background: var(--surface2); border-radius: 999px; padding: 8px 14px; font-size: 13.5px; min-height: 40px; display: inline-flex; align-items: center; gap: 6px; }
+.chip.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent) !important; font-weight: 600; }
+.chip .so { font-size: 12px; opacity: .75; }
+.nut-chinh { width: 100%; min-height: 48px; border: 0; border-radius: var(--r-nut); background: var(--accent); color: var(--on-accent) !important; font-weight: 700; font-size: 15px; }
+
+.cong-tac { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+.cong-tac i { width: 34px; height: 20px; border-radius: 999px; background: var(--line); position: relative; }
+.cong-tac i::after { content: ""; position: absolute; left: 3px; top: 3px; width: 14px; height: 14px; border-radius: 999px; background: var(--surface); }
+
+/* dòng học sinh */
+.hs { display: grid; grid-template-columns: 44px 1fr; gap: 4px 10px; padding: 10px 0; border-top: 1px solid var(--line); }
+.hs:first-of-type { border-top: 0; }
+.hs.chua { background: var(--warn-bg); margin: 0 -14px; padding: 10px 14px; }
+.av { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-weight: 700; font-size: 14px; background: var(--av-bg); color: var(--av-ink); }
+.hs-ten { align-self: center; font-weight: 600; font-size: 14.5px; line-height: 1.3; }
+.hs-ten small { display: flex; align-items: center; gap: 4px; font-weight: 500; font-size: 12px; color: var(--muted); }
+.hs-ten small svg { width: 13px; height: 13px; color: var(--gold); fill: var(--gold); stroke: var(--gold); }
+.hs-tt { grid-column: 2; display: flex; gap: 8px; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--r-nut); overflow: hidden; }
+.seg button { border: 0; background: var(--surface); padding: 0 14px; min-height: 40px; font-size: 13.5px; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.ok { background: var(--ok-bg); color: var(--ok) !important; font-weight: 700; }
+.seg button.bad { background: var(--bad-bg); color: var(--bad) !important; font-weight: 700; }
+.so-dem { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: var(--r-nut); margin-left: auto; }
+.so-dem button { border: 0; background: transparent; width: 36px; min-height: 40px; font-size: 18px; }
+.so-dem span { min-width: 22px; text-align: center; font-weight: 700; color: var(--gold); }
+.them-hs { margin-top: 6px; width: 100%; min-height: 40px; border: 1px dashed var(--line); background: transparent; border-radius: var(--r-nut); color: var(--muted) !important; font-size: 13px; }
+
+.anh { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.o-anh { aspect-ratio: 1; border-radius: calc(var(--r) - 4px); background: var(--anh-bg); display: grid; place-items: center; font-size: 11px; color: var(--muted); text-align: center; padding: 4px; }
+.o-them { aspect-ratio: 1; border-radius: calc(var(--r) - 4px); border: 1.5px dashed var(--line); background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 12px; color: var(--muted) !important; }
+.o-them svg { width: 22px; height: 22px; }
+
+/* học phí */
+.tong-so { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.tong-so .lon { font-family: var(--display); font-size: 32px; font-weight: 700; color: var(--bad); letter-spacing: -0.01em; }
+.luoi2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.luoi2 div { font-size: 12px; color: var(--muted); }
+.luoi2 b { display: block; margin-top: 2px; font-size: 15px; color: var(--ink); }
+.luoi2 b.xanh { color: var(--ok); }
+.nhom { font-size: 12.5px; font-weight: 700; color: var(--muted); margin: 4px 2px -6px; }
+.gh { padding: 12px 0; border-top: 1px solid var(--line); }
+.gh:first-of-type { border-top: 0; padding-top: 2px; }
+.gh-dau { display: flex; align-items: center; gap: 8px; }
+.gh-dau b { font-size: 14.5px; flex: 1; }
+.nhan { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.nhan.sap { background: var(--warn-bg); color: var(--warn); }
+.nhan.het { background: var(--bad-bg); color: var(--bad); }
+.gh .mo { margin-top: 2px; }
+.gh-nut { display: flex; gap: 8px; margin-top: 8px; }
+.nut-phu { min-height: 38px; padding: 0 12px; border: 1px solid var(--line); background: var(--surface2); border-radius: var(--r-nut); font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+.nut-phu svg { width: 16px; height: 16px; }
+
+/* phụ huynh */
+.con { display: flex; gap: 14px; align-items: center; }
+.con .av { width: 64px; height: 64px; border-radius: 18px; font-size: 20px; }
+.con b { font-family: var(--display); font-size: 21px; display: block; }
+.goi { border-radius: var(--r); padding: 14px; background: var(--warn-bg); border: 1px solid var(--warn-line); }
+.goi-dau { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.goi-dau b { font-size: 14.5px; }
+.goi-dau span { font-family: var(--display); font-weight: 700; font-size: 22px; color: var(--warn); white-space: nowrap; }
+.goi p { margin: 6px 0 0; font-size: 12.5px; color: var(--muted); }
+.so-lieu { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.so-lieu div { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 10px; font-size: 11.5px; color: var(--muted); }
+.so-lieu b { display: flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 22px; color: var(--ink); font-family: var(--display); }
+.so-lieu b svg { width: 18px; height: 18px; fill: var(--gold); stroke: var(--gold); }
+.lich { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px; text-align: center; }
+.lich .t { font-size: 11px; font-weight: 700; color: var(--muted); padding-bottom: 2px; }
+.lich .n { position: relative; aspect-ratio: 1; display: grid; place-items: center; font-size: 13px; border-radius: 10px; border: 1px solid transparent; }
+.lich .n.mo-nhat { color: var(--muted); opacity: .45; }
+.lich .n.ok { background: var(--ok-bg); color: var(--ok); font-weight: 700; }
+.lich .n.vang { background: var(--bad-bg); color: var(--bad); font-weight: 700; }
+.lich .n.bu { background: var(--bu-bg); color: var(--bu); font-weight: 700; }
+.lich .n.bu::after { content: "bù"; position: absolute; top: 1px; right: 4px; font-size: 9px; }
+.lich .n.toi { border-color: var(--line); }
+.lich .n.nay { border: 2px solid var(--ink); font-weight: 700; }
+.chu-giai { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 10px; font-size: 11.5px; color: var(--muted); }
+.chu-giai span { display: inline-flex; align-items: center; gap: 5px; }
+.chu-giai i { width: 12px; height: 12px; border-radius: 4px; }
+.tab-con { display: flex; gap: 6px; }
+
+/* ===== Hướng A: Sổ vàng ===== */
+.A {
+  --bg: #121110; --surface: #1C1A17; --surface2: #24211D; --line: #34302A; --ink: #F2EDE3; --muted: #A79F90;
+  --accent: #D4AF5A; --accent-text: #D4AF5A; --on-accent: #17120A; --gold: #D4AF5A;
+  --ok: #8BD0A9; --ok-bg: rgba(139,208,169,.13); --bad: #EE8E78; --bad-bg: rgba(238,142,120,.13);
+  --warn: #E5BF63; --warn-bg: rgba(212,175,90,.10); --warn-line: rgba(212,175,90,.35); --bu: #96BBEE; --bu-bg: rgba(150,187,238,.14);
+  --av-bg: #2B2721; --av-ink: #D4AF5A; --anh-bg: #262320;
+  --head-bg: #0A0908; --head-ink: #F2EDE3; --head-line: #3A352D; --nav-bg: #0F0E0D;
+  --ca-bg: linear-gradient(135deg, #2A2418, #1C1A17); --ca-ink: #F2EDE3;
+  --r: 14px; --r-nut: 10px; --font: 'Be Vietnam Pro', sans-serif; --display: 'Playfair Display', serif;
+}
+.A .ca { border: 1px solid rgba(212,175,90,.35); }
+.A { font-variant-numeric: lining-nums tabular-nums; }
+.A .ca-gio { color: #D4AF5A; }
+.A .tong-so .lon { color: #EE8E78; }
+
+/* ===== Hướng B: Mực & vàng ===== */
+.B {
+  --bg: #F4F4F2; --surface: #FFFFFF; --surface2: #F7F7F5; --line: #E1E1DE; --ink: #16161A; --muted: #5B5B64;
+  --accent: #16161A; --accent-text: #16161A; --on-accent: #FFFFFF; --gold: #A47A16;
+  --ok: #1D7A4E; --ok-bg: #E3F2EA; --bad: #B4381F; --bad-bg: #FBE8E3;
+  --warn: #8A6410; --warn-bg: #F6EDD5; --warn-line: #E6D3A2; --bu: #2557A6; --bu-bg: #E4ECF8;
+  --av-bg: #EDEDEA; --av-ink: #16161A; --anh-bg: #ECECE9;
+  --head-bg: #FFFFFF; --head-ink: #16161A; --head-line: #D6D6D2; --nav-bg: #FFFFFF;
+  --ca-bg: #16161A; --ca-ink: #FFFFFF;
+  --r: 10px; --r-nut: 8px; --font: 'Lexend', sans-serif; --display: 'Lexend', sans-serif;
+}
+/* B không dùng thẻ: nhóm bằng nền trắng liền và đường kẻ mảnh */
+.B .noi { padding: 0 0 20px; gap: 0; }
+.B .noi > * { margin: 0; }
+.B .noi > .chon-ngay, .B .noi > .chips, .B .noi > .nut-chinh, .B .noi > .con, .B .noi > .so-lieu { margin: 14px 16px 0; }
+.B .noi > .nut-chinh { width: auto; }
+.B .noi > .ca, .B .noi > .goi { margin: 14px 16px 0; }
+.B .noi > .the, .B .noi > .nhom { margin-top: 14px; }
+.B .the { border-radius: 0; border-left: 0; border-right: 0; padding: 14px 16px; }
+.B .nhom { padding: 0 16px; margin-bottom: -8px; }
+.B .hs.chua { margin: 0 -16px; padding: 10px 16px; }
+.B .dau { border-bottom: 1px solid var(--line); }
+.B .ca-gio { font-weight: 600; }
+.B .ca-ten { color: #E7C772; }
+.B .tong-so .lon { font-weight: 600; }
+.B .so-lieu b, .B .goi-dau span, .B .con b { font-weight: 600; }
+.B .lich .n { border-radius: 6px; }
+
+/* ===== Hướng C: Xanh lớp học ===== */
+.C {
+  --bg: #E9F0ED; --surface: #FFFFFF; --surface2: #F3F7F5; --line: #D5E1DC; --ink: #10231D; --muted: #4B5E58;
+  --accent: #0F5C47; --accent-text: #0F5C47; --on-accent: #FFFFFF; --gold: #C08A12;
+  --ok: #0F7A4E; --ok-bg: #DDF3E8; --bad: #C13B22; --bad-bg: #FDE6E0;
+  --warn: #8A5D00; --warn-bg: #FFF3D6; --warn-line: #F1D58E; --bu: #1F5FB8; --bu-bg: #E2ECFB;
+  --av-bg: #DCEBE5; --av-ink: #0F5C47; --anh-bg: #E3ECE8;
+  --head-bg: #0F5C47; --head-ink: #FFFFFF; --head-line: rgba(255,255,255,.4); --nav-bg: #FFFFFF;
+  --ca-bg: #FFF3D6; --ca-ink: #3E2C00;
+  --r: 20px; --r-nut: 14px; --font: 'Nunito', sans-serif; --display: 'Nunito', sans-serif;
+}
+.C .the { border: 0; box-shadow: 0 1px 2px rgba(15,92,71,.08), 0 6px 18px -10px rgba(15,92,71,.25); }
+.C .ca { border: 2px solid #F1D58E; }
+.C .ca-gio { font-weight: 800; color: #0F5C47; }
+.C .dau .ten, .C .con b, .C .so-lieu b { font-weight: 800; }
+.C .seg button, .C .chip { min-height: 44px; }
+.C .seg { border-width: 2px; }
+.C .av { border-radius: 999px; }
+.C .lich .n { border-radius: 999px; }
+.C .duoi a.on { background: #E3F0EB; border-radius: 14px; margin: 4px; }
+
+@media (prefers-reduced-motion: no-preference) { .dt { transition: transform .3s cubic-bezier(.16,1,.3,1); } .dt:hover { transform: translateY(-2px); } }
+</style>
+</head>
+<body>
+<main class="trang">
+  <h1>Bản mẫu giao diện Ms Nhung English</h1>
+  <p>Mỗi hướng vẽ lại ba màn: điểm danh một ca có 2 lớp gộp, học phí tháng đang lọc các em sắp hết gói, và màn phụ huynh xem con. Khung rộng 412px, bằng màn điện thoại giáo viên đang dùng. Tên và số tiền là dữ liệu mẫu.</p>
+  <div id="cac-huong"></div>
+</main>
+
+<script>
+// Bản mẫu tĩnh: dựng 3 màn cho mỗi hướng từ cùng một khuôn, khác nhau bằng lớp màu .A / .B / .C.
+const LOGO = '../../public/icon-192.png'
+const I = {
+  diem: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3.5"/><path d="M8 12.2l2.8 2.8L16.2 9"/></svg>',
+  lop: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c1.8.8 3 2.6 3.5 5.2"/></svg>',
+  tien: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M14.6 9.3c-.5-1-1.5-1.6-2.6-1.6-1.5 0-2.7.8-2.7 2.1 0 3 5.4 1.6 5.4 4.4 0 1.3-1.2 2.1-2.7 2.1-1.2 0-2.2-.6-2.7-1.6M12 6v1.7M12 16.3V18"/></svg>',
+  vi: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M16 14.5h2"/></svg>',
+  tk: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9.5L12 4l9 5.5M5 10.5v7.5M9.5 10.5v7.5M14.5 10.5v7.5M19 10.5v7.5M3 20h18"/></svg>',
+  sao: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z"/></svg>',
+  may: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  chep: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>',
+  chat: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+  trai: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
+  phai: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>',
+}
+
+const dau = (phai = '<button class="nut-vien">Hướng dẫn</button><button class="nut-vien">Thoát</button>') =>
+  `<header class="dau"><img src="${LOGO}" alt="Logo Ms Nhung English"><span class="ten">Ms.Nhung</span><span class="cach"></span>${phai}</header>`
+
+const duoi = (dang) => `<nav class="duoi" aria-label="Điều hướng chính">${[
+  ['Điểm danh', I.diem], ['Lớp', I.lop], ['Học phí', I.tien], ['Chi phí', I.vi], ['Tài khoản', I.tk],
+].map(([t, i]) => `<a href="#" class="${t === dang ? 'on' : ''}"${t === dang ? ' aria-current="page"' : ''}>${i}${t}</a>`).join('')}</nav>`
+
+const hs = (ten, viet, sticker, tt, soSao) => `
+  <div class="hs${tt ? '' : ' chua'}">
+    <div class="av" aria-hidden="true">${viet}</div>
+    <div class="hs-ten">${ten}<small>${I.sao}${sticker} sticker${tt ? '' : ' · chưa điểm danh'}</small></div>
+    <div class="hs-tt">
+      <div class="seg" role="group" aria-label="Trạng thái ${ten}">
+        <button class="${tt === 'co' ? 'ok' : ''}" aria-pressed="${tt === 'co'}">Có mặt</button>
+        <button class="${tt === 'vang' ? 'bad' : ''}" aria-pressed="${tt === 'vang'}">Vắng</button>
+      </div>
+      <div class="so-dem" aria-label="Sticker buổi này"><button aria-label="Bớt sticker">−</button><span>${soSao}</span><button aria-label="Thêm sticker">+</button></div>
+    </div>
+  </div>`
+
+const lopTrongCa = (ten, dem, ds) => `
+  <section class="the">
+    <div class="the-dau"><b>${ten}</b><span class="mo">${dem}</span><span class="cach"></span>
+      <span class="cong-tac">Lớp nghỉ <i aria-hidden="true"></i></span></div>
+    ${ds.join('')}
+    <button class="them-hs">+ Thêm học sinh lớp khác học bù</button>
+  </section>`
+
+function manDiemDanh() {
+  return `${dau()}
+  <div class="noi">
+    <div class="chon-ngay">
+      <button class="tron" aria-label="Ngày trước">${I.trai}</button>
+      <b>Thứ Hai, 16/11/2026</b>
+      <button class="tron" aria-label="Ngày sau">${I.phai}</button>
+    </div>
+    <div class="ca">
+      <div class="ca-gio">14:00 - 16:00</div>
+      <div class="ca-ten">Starters 1 + Movers 2</div>
+      <div class="ca-phu">Hai lớp học gộp, trợ giảng tính 1 ca</div>
+    </div>
+    <section class="the">
+      <div class="the-dau"><b>Trợ giảng có mặt</b></div>
+      <div class="chips"><button class="chip on" aria-pressed="true">Cô Thảo</button><button class="chip" aria-pressed="false">Thầy Quang</button></div>
+    </section>
+    <button class="nut-chinh">Tất cả có mặt (cả ca)</button>
+    ${lopTrongCa('Starters 1', '2/3 có mặt', [
+      hs('Nguyễn Minh Anh', 'MA', 24, 'co', 2),
+      hs('Trần Gia Huy', 'GH', 17, 'vang', 0),
+      hs('Lê Bảo Ngọc', 'BN', 31, '', 0),
+    ])}
+    ${lopTrongCa('Movers 2', '2/2 có mặt', [
+      hs('Phạm Đức Anh', 'ĐA', 12, 'co', 1),
+      hs('Vũ Khánh Linh', 'KL', 40, 'co', 3),
+    ])}
+    <section class="the">
+      <div class="the-dau"><b>Ảnh lớp</b><span class="mo">phụ huynh cả 2 lớp đều xem được</span></div>
+      <div class="anh">
+        <div class="o-anh">Ảnh lớp 1</div><div class="o-anh">Ảnh lớp 2</div>
+        <button class="o-them">${I.may}Chụp ảnh</button>
+      </div>
+    </section>
+  </div>
+  ${duoi('Điểm danh')}`
+}
+
+const giaHan = (ten, nhan, loai, ph) => `
+  <div class="gh">
+    <div class="gh-dau"><b>${ten}</b><span class="nhan ${loai}">${nhan}</span></div>
+    <div class="mo">${ph}</div>
+    <div class="gh-nut"><button class="nut-phu">${I.chep}Sao chép tin nhắn</button><button class="nut-phu">${I.chat}Mở Zalo</button></div>
+  </div>`
+
+function manHocPhi() {
+  return `${dau()}
+  <div class="noi">
+    <div class="chon-ngay">
+      <button class="tron" aria-label="Tháng trước">${I.trai}</button>
+      <b>Tháng 11/2026</b>
+      <button class="tron" aria-label="Tháng sau">${I.phai}</button>
+    </div>
+    <section class="the">
+      <div class="tong-so"><span class="mo">Còn phải thu</span><span class="lon">8.740.000 đ</span></div>
+      <div class="luoi2">
+        <div>Phải thu<b>29.470.000 đ</b></div>
+        <div>Đã thu<b>22.560.000 đ</b></div>
+        <div>Tổng chi<b>5.730.000 đ</b></div>
+        <div>Chênh lệch thu chi<b class="xanh">16.830.000 đ</b></div>
+      </div>
+    </section>
+    <div class="chips" role="group" aria-label="Lọc học sinh">
+      <button class="chip" aria-pressed="false">Tất cả</button>
+      <button class="chip" aria-pressed="false">Còn nợ <span class="so">12</span></button>
+      <button class="chip" aria-pressed="false">Đã đủ</button>
+      <button class="chip on" aria-pressed="true">Sắp hết gói <span class="so">4</span></button>
+    </div>
+    <div class="nhom">Starters 1</div>
+    <section class="the">
+      ${giaHan('Nguyễn Minh Anh', 'Còn 2 buổi · hết 20/11', 'sap', 'Chị Hằng · 0912 487 305')}
+      ${giaHan('Lê Bảo Ngọc', 'Chưa có gói', 'het', 'Anh Tuấn · 0903 615 240')}
+    </section>
+    <div class="nhom">Movers 2</div>
+    <section class="the">
+      ${giaHan('Vũ Khánh Linh', 'Còn 4 buổi · hết 26/11', 'sap', 'Chị Linh · 0987 220 413')}
+      ${giaHan('Phạm Đức Anh', 'Hết gói 12/11', 'het', 'Chị Thu · 0938 104 772')}
+    </section>
+  </div>
+  ${duoi('Học phí')}`
+}
+
+// Tháng 11/2026 bắt đầu Chủ nhật; lớp học T2-T4-T6; xem như hôm nay là thứ Hai 23/11
+function lichThang() {
+  const tt = { 2: 'ok', 4: 'ok', 6: 'vang', 7: 'bu', 9: 'ok', 11: 'ok', 13: 'ok', 16: 'ok', 18: 'ok', 20: 'ok' }
+  const coLich = [2, 4, 6, 9, 11, 13, 16, 18, 20, 23, 25, 27, 30]
+  const o = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((t) => `<div class="t">${t}</div>`)
+  for (let i = 0; i < 6; i++) o.push('<div></div>')
+  for (let d = 1; d <= 30; d++) {
+    const lop = tt[d] ?? (d === 23 ? 'nay' : coLich.includes(d) ? 'toi' : 'mo-nhat')
+    o.push(`<div class="n ${lop}">${d}</div>`)
+  }
+  return `<div class="lich" role="grid" aria-label="Điểm danh tháng 11/2026">${o.join('')}</div>
+  <div class="chu-giai">
+    <span><i style="background:var(--ok-bg);border:1px solid var(--ok)"></i>Có mặt</span>
+    <span><i style="background:var(--bad-bg);border:1px solid var(--bad)"></i>Vắng</span>
+    <span><i style="background:var(--bu-bg);border:1px solid var(--bu)"></i>Học bù</span>
+    <span><i style="border:2px solid var(--ink)"></i>Hôm nay</span>
+  </div>`
+}
+
+function manPhuHuynh() {
+  return `${dau('<button class="nut-vien">Thoát</button>')}
+  <div class="noi">
+    <div class="chips tab-con" role="tablist"><button class="chip on" role="tab" aria-selected="true">Minh Anh</button><button class="chip" role="tab" aria-selected="false">Gia Huy</button></div>
+    <div class="con">
+      <div class="av" aria-hidden="true">MA</div>
+      <div><b>Nguyễn Minh Anh</b><span class="mo">Starters 1 · T2-T4-T6 17:30 - 19:00</span></div>
+    </div>
+    <div class="goi">
+      <div class="goi-dau"><b>Gói 1 tháng · 11/2026</b><span>còn 4 buổi</span></div>
+      <p>Buổi cuối của gói là 30/11. Trung tâm sẽ nhắn học phí tháng 12 qua Zalo.</p>
+    </div>
+    <div class="so-lieu">
+      <div>Đi học tháng này<b>9</b></div>
+      <div>Sticker<b>${I.sao}32</b></div>
+      <div>Chưa học bù<b>0</b></div>
+    </div>
+    <section class="the">
+      <div class="the-dau"><b>Điểm danh tháng 11</b></div>
+      ${lichThang()}
+    </section>
+    <section class="the">
+      <div class="the-dau"><b>Ảnh lớp</b><span class="mo">các buổi con có mặt</span></div>
+      <div class="anh"><div class="o-anh">Ảnh 20/11</div><div class="o-anh">Ảnh 18/11</div><div class="o-anh">Ảnh 16/11</div></div>
+    </section>
+    <section class="the">
+      <div class="the-dau"><b>Học phí tháng 11</b><span class="cach"></span><span class="nhan sap" style="background:var(--ok-bg);color:var(--ok)">Đã đủ</span></div>
+      <div class="luoi2" style="margin-top:0;padding-top:0;border-top:0">
+        <div>Học phí<b>1.560.000 đ</b></div>
+        <div>Cần nộp<b>0 đ</b></div>
+      </div>
+    </section>
+  </div>`
+}
+
+const HUONG = [
+  ['A', 'A. Sổ vàng', 'Nền tối, chữ vàng kim lấy từ logo. Giờ ca và số tiền dùng Playfair Display cho gần nét chữ trong logo, phần còn lại dùng Be Vietnam Pro. Hướng này giống thương hiệu nhất, nhưng ra ngoài nắng thì khó đọc hơn nền sáng.'],
+  ['B', 'B. Mực & vàng', 'Nền sáng, chữ đen như sổ ghi chép; màu vàng chỉ dành cho sticker và cảnh báo gói. Các nhóm ngăn nhau bằng đường kẻ mảnh thay cho khung thẻ, nên mỗi màn chứa được nhiều nội dung hơn. Chữ dùng Lexend, đọc rõ trên điện thoại.'],
+  ['C', 'C. Xanh lớp học', 'Giữ màu xanh đang dùng để giáo viên khỏi phải làm quen lại, thêm vàng cho ô ca học và sticker. Thẻ bo tròn, nút cao 44px cho dễ bấm, chữ Nunito tròn nét, hợp với phụ huynh và học sinh nhỏ.'],
+]
+document.getElementById('cac-huong').innerHTML = HUONG.map(([k, ten, mo]) => `
+  <section class="huong">
+    <h2>${ten}</h2>
+    <p>${mo}</p>
+    <div class="hang">
+      <figure><div class="dt ${k}">${manDiemDanh()}</div><figcaption>Điểm danh một ca 2 lớp gộp</figcaption></figure>
+      <figure><div class="dt ${k}">${manHocPhi()}</div><figcaption>Học phí, lọc "Sắp hết gói"</figcaption></figure>
+      <figure><div class="dt ${k}">${manPhuHuynh()}</div><figcaption>Phụ huynh xem con</figcaption></figure>
+    </div>
+  </section>`).join('')
+</script>
+</body>
+</html>

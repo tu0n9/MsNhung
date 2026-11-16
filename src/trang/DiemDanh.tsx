@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { App, Avatar, Button, Card, Checkbox, DatePicker, Empty, Image, Input, InputNumber, List, Modal, Radio, Segmented, Select, Space, Switch, Tag, Upload } from 'antd'
 import { CameraOutlined, PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
-import { MAU } from '../giao-dien'
+import { CHU_SO, MAU } from '../giao-dien'
 import { cong2Gio, gioBuoi, nhomBuoi } from '../gio-hoc'
 import { homNay, q, useMotLan, sb, taiAnhLen, urlAnh, type BuoiHoc, type DiemDanh as DD, type HocSinh, type Lop, type TaiKhoan } from '../supabase'
 
@@ -127,7 +127,8 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
     <Space direction="vertical" style={{ width: '100%' }}>
       <Space wrap>
         <Button onClick={quayLai}>← Quay lại</Button>
-        <b>{buois.map((b) => lopCua(b).ten).join(' + ')} · {dayjs(buois[0].ngay).format('dddd DD/MM/YYYY')}{gioBuoi(buois[0]) && ` · ${gioBuoi(buois[0])}`}</b>
+        <b>{buois.map((b) => lopCua(b).ten).join(' + ')} · {dayjs(buois[0].ngay).format('dddd DD/MM/YYYY')}</b>
+        {gioBuoi(buois[0]) && <b style={{ fontFamily: CHU_SO, fontSize: 22, color: MAU.chinh }}>{gioBuoi(buois[0])}</b>}
         {/* nhiều lớp: nút chung cho cả ca; một lớp thì nút nằm ở thẻ học sinh như trước */}
         {buois.length > 1 && dangHoc.some((b) => b.loai !== 'bu') && <Button onClick={() => setTatCaLan(tatCaLan + 1)}>Tất cả có mặt (cả ca)</Button>}
       </Space>

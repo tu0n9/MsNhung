@@ -5,7 +5,7 @@ import { taiDuLieuThang, tongCong, type DongHs, type DuLieuThang } from '../du-l
 import { demBuoiDuKien, tinhTrangGoi, tinNhanGiaHan, trangThaiThang, vnd, type Thang } from '../hoc-phi'
 import { homNay, q, sb, urlAnh, type HocSinh } from '../supabase'
 import HocSinhChiTiet from './HocSinhChiTiet'
-import { MAU } from '../giao-dien'
+import { CHU_SO, MAU } from '../giao-dien'
 
 const BANG = ['tai_khoan', 'lop', 'hoc_sinh', 'buoi_hoc', 'diem_danh', 'tro_giang_buoi', 'anh_buoi', 'goi_hoc', 'phieu_thu', 'chi_phi', 'khoa_so', 'nhat_ky_chot_so']
 
@@ -94,9 +94,9 @@ export default function HocPhi() {
       </div>}
 
       {/* phong cách 3: một khối kẻ ô như trang sổ, không tách thành nhiều thẻ */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', border: `1px solid ${MAU.vien}`, borderRadius: 6, background: '#fff' }}>
-        {([['Phải thu', t.phaiThu], ['Nợ kỳ trước', t.noKyTruoc], ['Đã thu', t.daThu], ['Thực thu trong tháng', t.thucThu, MAU.chinh],
-          ['Tổng chi', t.tongChi], ['Chênh lệch thu chi', t.chenhLech, t.chenhLech < 0 ? MAU.do : MAU.chinh]] as const).map(([ten, v, mau], i) => (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', border: `1px solid ${MAU.vien}`, borderRadius: 14, background: MAU.mat }}>
+        {([['Phải thu', t.phaiThu], ['Nợ kỳ trước', t.noKyTruoc], ['Đã thu', t.daThu], ['Thực thu trong tháng', t.thucThu, MAU.tot],
+          ['Tổng chi', t.tongChi], ['Chênh lệch thu chi', t.chenhLech, t.chenhLech < 0 ? MAU.do : MAU.tot]] as const).map(([ten, v, mau], i) => (
           <div key={ten} style={{ padding: '10px 12px', borderBottom: `1px solid ${MAU.vien}`, borderRight: i % 2 === 0 ? `1px solid ${MAU.vien}` : undefined }}>
             <div style={{ fontSize: 12, color: MAU.chuPhu }}>{ten}</div>
             <b style={{ fontSize: 17, color: mau }}>{vnd(v)}</b>
@@ -104,7 +104,7 @@ export default function HocPhi() {
         ))}
         <div style={{ gridColumn: 'span 2', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <span style={{ color: MAU.chuPhu }}>Còn phải thu</span>
-          <b style={{ fontSize: 24, color: t.conPhaiThu > 0 ? MAU.do : MAU.chinh }}>{vnd(t.conPhaiThu)}</b>
+          <b style={{ fontSize: 28, fontFamily: CHU_SO, color: t.conPhaiThu > 0 ? MAU.do : MAU.tot }}>{vnd(t.conPhaiThu)}</b>
         </div>
       </div>
 
@@ -150,7 +150,7 @@ export default function HocPhi() {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <b style={{ color: r.conPhaiThu > 0 ? MAU.do : MAU.chinh }}>{r.conPhaiThu > 0 ? vnd(r.conPhaiThu) : trangThaiThang(r) === 'dong_truoc' ? 'Đã đủ (đóng trước)' : 'Đã đủ'}</b>
+                  <b style={{ color: r.conPhaiThu > 0 ? MAU.do : MAU.tot }}>{r.conPhaiThu > 0 ? vnd(r.conPhaiThu) : trangThaiThang(r) === 'dong_truoc' ? 'Đã đủ (đóng trước)' : 'Đã đủ'}</b>
                   {r.conPhaiThu > 0 && <div style={{ fontSize: 12, color: MAU.chuPhu }}>còn nợ</div>}
                 </div>
               </button>

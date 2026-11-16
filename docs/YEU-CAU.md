@@ -127,7 +127,7 @@ Import lớp và học sinh bằng Excel (grill 2026-11-15):
 
 Giao diện và quyền trợ giảng (2026-11-15):
 
-- **Phong cách 3 "Sổ tay giáo viên"** cho cả app (mẫu: `docs/mau-giao-dien/phong-cach-toan-app.html`): đầu trang
+- ~~**Phong cách 3 "Sổ tay giáo viên"**~~ (thay bằng "Sổ vàng" ngày 2026-11-16, mục cuối) cho cả app (mẫu: `docs/mau-giao-dien/phong-cach-toan-app.html`): đầu trang
   xanh lá đậm `#0f7a5c`, font Lexend, góc gần vuông (4–6px), ít khung, phân cách bằng đường kẻ, số xếp thẳng cột,
   điểm danh dạng danh sách dày.
 - **Màn import kiểu A**: trang riêng 3 bước, tóm tắt lỗi ở đầu, lọc Lỗi / Đã có / Mới (mẫu: `import-excel.html`).
@@ -235,6 +235,18 @@ Giờ học theo thứ, lương trợ giảng theo ca, điểm danh gộp (grill
 - **Lớp đang có:** migration tự chuyển giờ dạng `17:30–19:00` cho mọi thứ trong lịch; giờ không đọc được (ví dụ
   `T7 8:00, CN 9:30`) để trống, trang Lớp cảnh báo "Chưa có giờ".
 - Thứ tự làm: cột gói Excel → báo gia hạn + ô tiền dư → giờ học + lương theo ca + điểm danh gộp.
+
+
+Giao diện "Sổ vàng" (2026-11-16):
+
+- Người dùng chọn hướng A trong `docs/ban-mau/giao-dien.html`, thay phong cách 3: **nền tối, vàng kim theo logo** Ms Nhung
+  English; nội dung Be Vietnam Pro, số lớn (giờ ca, còn phải thu) và chữ "Ms.Nhung" Playfair Display (font tự host).
+- Vàng là màu nhấn; trạng thái tốt (có mặt, đã đủ, tiền dương) màu xanh nhạt, nợ / vắng màu đỏ cam.
+- Màn đăng nhập nền đen liền với nền logo, logo lớn ở trên, ô nhập và nút vàng bên dưới.
+- **Có bản sáng và bản tối, mặc định sáng** (người dùng thấy nền tối nặng nề). Nút mặt trời / mặt trăng ở thanh trên, cho
+  mọi vai trò; lựa chọn lưu theo từng máy. Bản sáng: nền trắng, chữ gần đen, nút vàng kim chữ tối, chữ và liên kết vàng
+  đậm cho đủ tương phản. Màn đăng nhập luôn tối ở cả hai chế độ.
+- Làm thử trên máy, người dùng duyệt ảnh rồi mới đưa lên bản thật. Video hướng dẫn cũ còn màu xanh.
 
 ## Câu hỏi còn mở
 
