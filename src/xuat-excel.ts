@@ -1,6 +1,7 @@
 // Xuất sổ học phí của một tháng. Cột tính toán là công thức để giáo viên sửa số trong Excel vẫn tự cập nhật.
 import ExcelJS from 'exceljs'
 import { tongCong, type DuLieuThang } from './du-lieu'
+import { goiCuaThang, tenGoi } from './hoc-phi'
 
 const TIEN = '#,##0'
 const tenSheet = (s: string, daDung: Set<string>) => {
@@ -38,6 +39,8 @@ export async function xuatExcel(d: DuLieuThang) {
       { header: 'Điều chỉnh', key: 'dc', width: 12, tien: true }, { header: 'Nợ kỳ trước', key: 'no', width: 13, tien: true },
       { header: 'Đã thu', key: 'thu', width: 13, tien: true }, { header: 'Còn nợ', key: 'con', width: 13, tien: true },
       { header: 'Trạng thái', key: 'tt', width: 11 },
+      // cột chữ để cuối: chèn giữa sẽ lệch chữ cột E–J mà công thức dòng và sheet Tổng hợp đang trỏ tới
+      { header: 'Gói', key: 'goi', width: 24 },
     ])
     ds.forEach((r, i) => {
       const n = i + 2
@@ -46,6 +49,7 @@ export async function xuatExcel(d: DuLieuThang) {
         hp: r.phaiThu - r.dieuChinh, dc: r.dieuChinh, no: r.noKyTruoc, thu: r.daThu,
         con: { formula: `F${n}+G${n}+H${n}-I${n}`, result: r.conPhaiThu },
         tt: { formula: `IF(J${n}>0,"Còn nợ","Đã đủ")`, result: r.conPhaiThu > 0 ? 'Còn nợ' : 'Đã đủ' },
+        goi: (() => { const g = goiCuaThang(d.goi.filter((x) => x.hoc_sinh_id === r.hs.id), d.thang); return g ? tenGoi(g) : 'Chưa có gói' })(),
       })
     })
     const cuoi = ds.length + 1, dt = cuoi + 1
@@ -82,7 +86,7 @@ export async function xuatExcel(d: DuLieuThang) {
     const g = d.goi.find((x) => x.id === p.goi_id)
     const h = d.dong.find((r) => r.hs.id === g?.hoc_sinh_id)?.hs
     wsThu.addRow({ ngay: p.ngay_thu.split('-').reverse().join('/'), ten: h?.ho_ten, lop: d.lops.find((l) => l.id === h?.lop_id)?.ten,
-      goi: g && `${g.so_thang} tháng từ ${g.thang_bat_dau.slice(5, 7)}/${g.thang_bat_dau.slice(0, 4)}`, tien: p.so_tien,
+      goi: g && tenGoi(g), tien: p.so_tien,
       ht: p.hinh_thuc === 'tien_mat' ? 'Tiền mặt' : 'Chuyển khoản', gc: p.ghi_chu })
   }
   const thuCuoi = d.phieu.length + 1

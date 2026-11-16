@@ -5,13 +5,12 @@ import { useToi } from '../App'
 import { MAU, O_TIEN } from '../giao-dien'
 import { goiTaiKhoan, homNay, laQuanLy, q, sb, useMotLan, urlAnh, type BuoiHoc, type HocSinh, type Lop } from '../supabase'
 import {
-  congThang, conNoGoi, daDongGoi, demBuoiDuKien, demChuaBu, duConLai, thangHetGoi, tienDuGoi, tinNhanPhuHuynh, tongGoi, tongHopHocSinh, vnd,
+  congThang, conNoGoi, daDongGoi, demBuoiDuKien, demChuaBu, duConLai, tenGoi, thangHetGoi, tienDuGoi, tinNhanPhuHuynh, tongGoi, tongHopHocSinh, vnd,
   type Goi, type PhieuThu, type Thang,
 } from '../hoc-phi'
 import { luoiThang, type ONgay, type TrangThaiO } from '../diem-danh-thang'
 
 type Phieu = PhieuThu & { id: string; hinh_thuc: string; ghi_chu: string | null }
-const tenGoi = (g: Goi) => `${g.so_thang} tháng từ ${g.thang_bat_dau.slice(5, 7)}/${g.thang_bat_dau.slice(0, 4)}`
 
 export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSinh; lop: Lop; quayLai?: () => void; chiXem?: boolean }) {
   const { message } = App.useApp()

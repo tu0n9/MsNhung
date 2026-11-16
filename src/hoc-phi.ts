@@ -116,6 +116,18 @@ export const conNoGoi = (g: Goi, phieu: PhieuThu[]) => tongGoi(g) - daDongGoi(g,
 /** Tháng ngay sau tháng cuối của gói. */
 export const thangHetGoi = (g: Pick<Goi, 'thang_bat_dau' | 'so_thang'>): Thang => congThang(thangCua(g.thang_bat_dau), g.so_thang)
 
+type GoiNgan = Pick<Goi, 'thang_bat_dau' | 'so_thang'>
+/** "3 tháng · 04→06/2026"; gói vắt sang năm sau thì ghi đủ năm cả hai đầu. */
+export function tenGoi(g: GoiNgan): string {
+  const [y1, m1] = thangCua(g.thang_bat_dau).split('-')
+  const [y2, m2] = congThang(thangHetGoi(g), -1).split('-')
+  const khoang = g.so_thang === 1 ? `${m1}/${y1}` : y1 === y2 ? `${m1}→${m2}/${y1}` : `${m1}/${y1}→${m2}/${y2}`
+  return `${g.so_thang} tháng · ${khoang}`
+}
+/** Gói phủ tháng `thang` (trigger goi_khong_chong bảo đảm tối đa một gói). */
+export const goiCuaThang = <G extends GoiNgan>(goi: G[], thang: Thang): G | undefined =>
+  goi.find((g) => thangCua(g.thang_bat_dau) <= thang && thang < thangHetGoi(g))
+
 /** Học phí gốc của tháng (buổi × đơn giá), chưa trừ dư / điều chỉnh: cột "Học phí" của Excel; "Điều chỉnh" = phải thu − số này. */
 export function hocPhiGocThang(goi: Goi[], thang: Thang): number {
   return goi.reduce((s, g) => s + (g.buoi_du_kien[thang] ?? 0) * g.don_gia, 0)

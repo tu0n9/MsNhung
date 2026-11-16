@@ -221,9 +221,14 @@ with sync_playwright() as pw:
             p.get_by_role("button", name="Xuất Excel").click()
         f = os.path.join(OUT, "all-hoc-phi.xlsx")
         dl.value.save_as(f)
-        js = "const E=require('exceljs');const w=new E.Workbook();w.xlsx.readFile(process.argv[1]).then(()=>console.log(JSON.stringify(w.worksheets.map(x=>x.name))))"
-        ten = json.loads(subprocess.run(["node", "-e", js, f], cwd=REPO, capture_output=True, text=True, encoding="utf-8").stdout)
+        js = ("const E=require('exceljs');const w=new E.Workbook();w.xlsx.readFile(process.argv[1]).then(()=>{"
+              "const s=w.getWorksheet('TEST Lớp Starters');"
+              "console.log(JSON.stringify({ten:w.worksheets.map(x=>x.name),goi:s&&[s.getCell('L1').value,s.getCell('L2').value]}))})")
+        kq = json.loads(subprocess.run(["node", "-e", js, f], cwd=REPO, capture_output=True, text=True, encoding="utf-8").stdout)
+        ten = kq["ten"]
         assert ten[0] == "Tổng hợp" and ten[-5:] == ["Điểm danh", "Sổ thu", "Chi phí", "Công nợ", "Trợ giảng"] and "TEST Lớp Starters" in ten, ten
+        # cột Gói ở cuối sheet lớp (gói TEST 3 tháng từ tháng này)
+        assert kq["goi"][0] == "Gói" and str(kq["goi"][1]).startswith("3 tháng · "), kq["goi"]
     buoc("tab Học phí đúng số + dung lượng ảnh + Excel đủ trang đúng thứ tự", b_hoc_phi)
 
     def b_import():

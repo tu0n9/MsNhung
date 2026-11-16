@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  conNoGoi, demBuoiDuKien, demChuaBu, demNghiPhu, duConLai, hocPhiGocThang, phaiThuTheoThang, tienDu, tongGoi, tongHopHocSinh,
+  conNoGoi, demBuoiDuKien, demChuaBu, demNghiPhu, duConLai, goiCuaThang, hocPhiGocThang, tenGoi, phaiThuTheoThang, tienDu, tongGoi, tongHopHocSinh,
   trangThaiThang, type BuoiDacBiet, type Goi,
 } from './hoc-phi'
 
@@ -118,5 +118,20 @@ describe('buổi chưa học bù (Q1)', () => {
     expect(demChuaBu([{ trang_thai: 'vang', loai: 'lich' }, { trang_thai: 'hoc_bu', loai: 'bu' }])).toBe(0)
     expect(demChuaBu([{ trang_thai: 'vang', loai: 'bu' }])).toBe(0)
     expect(demChuaBu([{ trang_thai: 'hoc_bu', loai: 'lich' }])).toBe(0)
+  })
+})
+
+describe('tenGoi, goiCuaThang', () => {
+  it('ghi tên gói 1 tháng, trong năm, vắt sang năm', () => {
+    expect(tenGoi(goi({}))).toBe('1 tháng · 04/2026')
+    expect(tenGoi(goi({ so_thang: 3 }))).toBe('3 tháng · 04→06/2026')
+    expect(tenGoi(goi({ thang_bat_dau: '2026-11-01', so_thang: 3 }))).toBe('3 tháng · 11/2026→01/2027')
+  })
+  it('tìm gói phủ tháng, ngoài gói thì không có', () => {
+    const ds = [goi({ id: 'a', so_thang: 2 }), goi({ id: 'b', thang_bat_dau: '2026-06-01' })]
+    expect(goiCuaThang(ds, '2026-05')?.id).toBe('a')
+    expect(goiCuaThang(ds, '2026-06')?.id).toBe('b')
+    expect(goiCuaThang(ds, '2026-03')).toBeUndefined()
+    expect(goiCuaThang(ds, '2026-07')).toBeUndefined()
   })
 })

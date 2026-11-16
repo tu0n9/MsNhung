@@ -215,6 +215,24 @@ Quyền trợ giảng, cột gói, báo gia hạn (grill 2026-11-16):
   khoá ô và ghi rõ tiền dư chỉ sinh từ buổi lớp nghỉ của gói đã kết thúc. Tiền dư từ sổ giấy (ngoài app) nhập ở ô
   "Điều chỉnh" bằng số âm kèm lý do.
 
+Giờ học theo thứ, lương trợ giảng theo ca, điểm danh gộp (grill 2026-11-16):
+
+- **Giờ học theo từng thứ** bằng ô chọn giờ (thay ô chữ `gio`): tick thứ nào thì **bắt buộc** giờ bắt đầu–kết thúc của
+  thứ đó; kết thúc mặc định = bắt đầu + 2 tiếng (một ca 2 tiếng), sửa được. Danh sách buổi trong ngày xếp theo giờ.
+- **Mỗi buổi lưu giờ riêng** lúc sinh; buổi phụ / bù chọn giờ khi tạo (tự điền giờ của lớp nếu thứ đó có lịch). Đổi giờ
+  lớp không đổi buổi đã sinh.
+- **Lương trợ giảng tính theo ca:** số cặp (ngày, giờ bắt đầu) khác nhau mà trợ giảng có mặt × đơn giá của trợ giảng
+  (hiện là "đơn giá / ca"). Một trợ giảng không thể ở hai lớp khác giờ: cùng ngày cùng giờ bắt đầu là lớp gộp, tính 1 ca;
+  khác giờ bắt đầu thì mỗi lớp 1 ca. Màn lương và sheet Excel "Trợ giảng" đổi "buổi" thành "ca". Tính lại từ tháng 11;
+  tháng đã chốt giữ nguyên.
+- **Điểm danh gộp:** các buổi cùng ngày + cùng giờ bắt đầu tự hiện thành một dòng (`14:00 · Lớp A + Lớp B`) và một màn
+  điểm danh: học sinh chia nhóm theo lớp, "Tất cả có mặt" áp cho cả nhóm, chọn trợ giảng một lần và chụp ảnh một lần cho
+  mọi lớp trong nhóm (phụ huynh các lớp đều thấy ảnh). "Lớp nghỉ" vẫn bật riêng từng lớp. Dữ liệu vẫn tách theo lớp.
+- **Import Excel:** ô T2…CN ghi giờ dạng `08:00-09:30`; ô chỉ có "x" báo lỗi thiếu giờ.
+- **Lớp đang có:** migration tự chuyển giờ dạng `17:30–19:00` cho mọi thứ trong lịch; giờ không đọc được (ví dụ
+  `T7 8:00, CN 9:30`) để trống, trang Lớp cảnh báo "Chưa có giờ".
+- Thứ tự làm: cột gói Excel → báo gia hạn + ô tiền dư → giờ học + lương theo ca + điểm danh gộp.
+
 ## Câu hỏi còn mở
 
 Không còn.
