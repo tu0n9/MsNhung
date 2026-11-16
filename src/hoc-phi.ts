@@ -128,6 +128,37 @@ export function tenGoi(g: GoiNgan): string {
 export const goiCuaThang = <G extends GoiNgan>(goi: G[], thang: Thang): G | undefined =>
   goi.find((g) => thangCua(g.thang_bat_dau) <= thang && thang < thangHetGoi(g))
 
+/** Còn ≤ chừng này buổi theo lịch thì báo gia hạn (người dùng chốt 2026-11-16). */
+export const NGUONG_GIA_HAN = 4
+
+export interface TinhTrangGoi<G extends GoiNgan = GoiNgan> {
+  loai: 'con' | 'sap_het' | 'het' | 'chua_co'
+  goi?: G
+  conBuoi: number
+  buoiCuoi?: string // 'YYYY-MM-DD', ngày có lịch cuối cùng của gói
+  thangKe: Thang // tháng cần đóng tiếp
+}
+
+/**
+ * Gói muộn nhất của em còn bao nhiêu buổi theo lịch tuần, từ hôm nay (hoặc ngày vào học) tới hết gói. Không trừ buổi lớp
+ * nghỉ: lớp nghỉ đã thành tiền dư, ngày hết gói không đổi. Em đã đóng trước gói sau thì tính theo gói sau, không bị báo.
+ */
+export function tinhTrangGoi<G extends GoiNgan>(goi: G[], lich: number[], ngayVao: string, homNay: string): TinhTrangGoi<G> {
+  const cuoi = [...goi].sort((a, b) => a.thang_bat_dau.localeCompare(b.thang_bat_dau)).pop()
+  if (!cuoi) return { loai: 'chua_co', conBuoi: 0, thangKe: [thangCua(ngayVao), thangCua(homNay)].sort()[1] }
+  const den = `${thangHetGoi(cuoi)}-01`
+  const tu = [homNay, ngayVao].sort()[1]
+  let conBuoi = 0, buoiCuoi: string | undefined
+  for (let d = new Date(`${cuoi.thang_bat_dau}T00:00:00Z`); d.toISOString().slice(0, 10) < den; d.setUTCDate(d.getUTCDate() + 1)) {
+    const n = d.toISOString().slice(0, 10)
+    if (!lich.includes(d.getUTCDay())) continue
+    buoiCuoi = n
+    if (n >= tu) conBuoi++
+  }
+  const loai = conBuoi === 0 ? 'het' : conBuoi <= NGUONG_GIA_HAN ? 'sap_het' : 'con'
+  return { loai, goi: cuoi, conBuoi, buoiCuoi, thangKe: thangHetGoi(cuoi) }
+}
+
 /** Học phí gốc của tháng (buổi × đơn giá), chưa trừ dư / điều chỉnh: cột "Học phí" của Excel; "Điều chỉnh" = phải thu − số này. */
 export function hocPhiGocThang(goi: Goi[], thang: Thang): number {
   return goi.reduce((s, g) => s + (g.buoi_du_kien[thang] ?? 0) * g.don_gia, 0)
@@ -185,5 +216,21 @@ export function tinNhanPhuHuynh(tenHs: string, thang: Thang, th: TongHopThang, s
     `- Đã thu: ${vnd(th.daThu)}`,
     `- Số cần nộp: ${vnd(Math.max(th.conPhaiThu, 0))}`,
     'Phụ huynh vui lòng hoàn tất học phí. Cảm ơn quý phụ huynh!',
+  ].join('\n')
+}
+
+const ngayVN = (n: string) => n.split('-').reverse().join('/')
+
+/** Tin nhắn nhắc gia hạn: học phí ghi theo 1 tháng kế tiếp (người dùng chốt 2026-11-16). */
+export function tinNhanGiaHan(tenHs: string, tt: TinhTrangGoi, soBuoiKe: number, donGia: number): string {
+  const [y, m] = tt.thangKe.split('-')
+  const dau = 'Trung tâm Anh ngữ Ms.Nhung xin thông báo'
+  const goi = !tt.goi ? `${dau} học phí của em ${tenHs}.`
+    : tt.loai === 'het' ? `${dau}: gói học của em ${tenHs} (${tenGoi(tt.goi)}) đã kết thúc ngày ${ngayVN(tt.buoiCuoi ?? '')}.`
+    : `${dau}: gói học của em ${tenHs} (${tenGoi(tt.goi)}) còn ${tt.conBuoi} buổi, kết thúc ngày ${ngayVN(tt.buoiCuoi ?? '')}.`
+  return [
+    goi,
+    `Học phí tháng ${m}/${y}: ${soBuoiKe} buổi × ${vnd(donGia)} = ${vnd(soBuoiKe * donGia)}.`,
+    `Phụ huynh vui lòng ${tt.goi ? 'gia hạn' : 'đóng học phí'} để em tiếp tục học. Cảm ơn quý phụ huynh!`,
   ].join('\n')
 }

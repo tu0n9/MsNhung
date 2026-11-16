@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { App, Avatar, Button, Card, DatePicker, Input, Segmented, Space, Tag } from 'antd'
 import dayjs from 'dayjs'
 import { taiDuLieuThang, tongCong, type DongHs, type DuLieuThang } from '../du-lieu'
-import { trangThaiThang, vnd, type Thang } from '../hoc-phi'
-import { q, sb, urlAnh, type HocSinh } from '../supabase'
+import { demBuoiDuKien, tinhTrangGoi, tinNhanGiaHan, trangThaiThang, vnd, type Thang } from '../hoc-phi'
+import { homNay, q, sb, urlAnh, type HocSinh } from '../supabase'
 import HocSinhChiTiet from './HocSinhChiTiet'
 import { MAU } from '../giao-dien'
 
@@ -23,7 +23,7 @@ export default function HocPhi() {
   const { message, modal } = App.useApp()
   const [thang, setThang] = useState<Thang>(dayjs().format('YYYY-MM'))
   const [d, setD] = useState<DuLieuThang>()
-  const [loc, setLoc] = useState<'tat_ca' | 'no' | 'du'>('tat_ca')
+  const [loc, setLoc] = useState<'tat_ca' | 'no' | 'du' | 'gia_han'>('tat_ca')
   const [khoaDen, setKhoaDen] = useState<string | null>(null)
   const [xem, setXem] = useState<HocSinh | null>(null)
   const [url, setUrl] = useState<Record<string, string>>({})
@@ -44,6 +44,19 @@ export default function HocPhi() {
   const t = tongCong(d)
   const daChot = !!khoaDen && `${thang}-01` <= khoaDen
   const loc1 = (r: DongHs) => loc === 'tat_ca' || (loc === 'no' ? r.conPhaiThu > 0 : r.conPhaiThu <= 0)
+  // báo gia hạn tính theo hôm nay, không theo tháng đang chọn; em chưa có gói không hiện ở Công nợ nên phải bắt ở đây
+  const hn = homNay()
+  const giaHan = d.dong.filter((r) => r.hs.trang_thai === 'dang_hoc').flatMap((r) => {
+    const lop = d.lops.find((l) => l.id === r.hs.lop_id)
+    if (!lop) return []
+    const tt = tinhTrangGoi(d.goi.filter((g) => g.hoc_sinh_id === r.hs.id), lop.lich, r.hs.ngay_vao, hn)
+    if (tt.loai === 'con') return []
+    const donGia = r.hs.don_gia_rieng ?? lop.don_gia
+    const soBuoiKe = demBuoiDuKien(lop.lich, tt.thangKe, 1, r.hs.ngay_vao > `${tt.thangKe}-01` ? r.hs.ngay_vao : undefined)[tt.thangKe]
+    return [{ r, tt, tinNhan: tinNhanGiaHan(r.hs.ho_ten, tt, soBuoiKe, donGia) }]
+  }).sort((a, b) => a.tt.conBuoi - b.tt.conBuoi)
+  const nhanGoi = (tt: (typeof giaHan)[number]['tt']) => tt.loai === 'chua_co' ? 'Chưa có gói'
+    : tt.loai === 'het' ? `Hết gói ${tt.buoiCuoi?.slice(8)}/${tt.buoiCuoi?.slice(5, 7)}` : `Còn ${tt.conBuoi} buổi · hết ${tt.buoiCuoi?.slice(8)}/${tt.buoiCuoi?.slice(5, 7)}`
 
   const chot = () => modal.confirm({
     title: `Chốt sổ tháng ${thang.slice(5)}/${thang.slice(0, 4)}?`,
@@ -96,9 +109,30 @@ export default function HocPhi() {
       </div>
 
       <Segmented value={loc} onChange={(v) => setLoc(v as typeof loc)} options={[
-        { value: 'tat_ca', label: 'Tất cả' }, { value: 'no', label: `Còn nợ ${d.dong.filter((r) => r.conPhaiThu > 0).length}` }, { value: 'du', label: 'Đã đủ' }]} />
+        { value: 'tat_ca', label: 'Tất cả' }, { value: 'no', label: `Còn nợ ${d.dong.filter((r) => r.conPhaiThu > 0).length}` }, { value: 'du', label: 'Đã đủ' }, { value: 'gia_han', label: `Sắp hết gói ${giaHan.length}` }]} />
 
-      {d.lops.map((l) => {
+      {loc === 'gia_han' && d.lops.map((l) => {
+        const ds = giaHan.filter((x) => x.r.hs.lop_id === l.id)
+        if (!ds.length) return null
+        return (
+          <Card key={l.id} size="small" title={l.ten} styles={{ body: { padding: 0 } }}>
+            {ds.map(({ r, tt, tinNhan }) => (
+              <div key={r.hs.id} style={{ padding: '10px 12px', borderTop: `1px solid ${MAU.vien}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                  <a onClick={() => setXem(r.hs)} style={{ fontWeight: 500 }}>{r.hs.ho_ten}</a>
+                  <Tag color={tt.loai === 'sap_het' ? 'orange' : 'red'} style={{ marginInlineEnd: 0 }}>{nhanGoi(tt)}</Tag>
+                </div>
+                {r.hs.sdt_phu_huynh && <div style={{ fontSize: 12, color: MAU.chuPhu }}>{r.hs.ten_phu_huynh ? `${r.hs.ten_phu_huynh} · ` : ''}{r.hs.sdt_phu_huynh}</div>}
+                <Space wrap size="small" style={{ marginTop: 6 }}>
+                  <Button size="small" onClick={() => navigator.clipboard.writeText(tinNhan).then(() => message.success('Đã sao chép, dán vào Zalo'))}>Sao chép tin nhắn</Button>
+                  {r.hs.sdt_phu_huynh && <Button size="small" href={`https://zalo.me/${r.hs.sdt_phu_huynh}`} target="_blank">Mở Zalo</Button>}
+                </Space>
+              </div>
+            ))}
+          </Card>
+        )
+      })}
+      {loc !== 'gia_han' && d.lops.map((l) => {
         const ds = d.dong.filter((r) => r.hs.lop_id === l.id && loc1(r))
         if (!ds.length) return null
         return (

@@ -5,7 +5,7 @@ import { useToi } from '../App'
 import { MAU, O_TIEN } from '../giao-dien'
 import { goiTaiKhoan, homNay, laQuanLy, q, sb, useMotLan, urlAnh, type BuoiHoc, type HocSinh, type Lop } from '../supabase'
 import {
-  congThang, conNoGoi, daDongGoi, demBuoiDuKien, demChuaBu, duConLai, tenGoi, thangHetGoi, tienDuGoi, tinNhanPhuHuynh, tongGoi, tongHopHocSinh, vnd,
+  congThang, conNoGoi, daDongGoi, demBuoiDuKien, demChuaBu, duConLai, tenGoi, thangHetGoi, tienDuGoi, tinhTrangGoi, tinNhanPhuHuynh, tongGoi, tongHopHocSinh, vnd,
   type Goi, type PhieuThu, type Thang,
 } from '../hoc-phi'
 import { luoiThang, type ONgay, type TrangThaiO } from '../diem-danh-thang'
@@ -64,6 +64,8 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
   const chuaBu = demChuaBu(dd.map((x) => ({ trang_thai: x.trang_thai, loai: x.buoi_hoc.loai })))
   const th = useMemo(() => tongHopHocSinh(goi, phieu, thang), [goi, phieu, thang])
   const tinNhan = tinNhanPhuHuynh(hs.ho_ten, thang, th, soCoMat)
+  const tt = tinhTrangGoi(goi, lop?.lich ?? [], hs.ngay_vao, homNay())
+  const ngayNgan = (n?: string) => n ? `${n.slice(8)}/${n.slice(5, 7)}` : ''
 
   return (
     <Space direction="vertical" style={{ width: '100%' }}>
@@ -94,6 +96,10 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
       </Card>}
 
       {(ql || chiXem) && <Card size="small" title="Học phí" extra={ql && <Button type="primary" onClick={() => setThuTien(true)}>Thu tiền</Button>}>
+        {hs.trang_thai === 'dang_hoc' && <div style={{ marginBottom: 8, color: tt.loai === 'con' ? undefined : MAU.do }} data-goi-hien-tai>
+          {!tt.goi ? 'Chưa có gói' : tt.loai === 'het' ? `Gói: ${tenGoi(tt.goi)} · đã hết ngày ${ngayNgan(tt.buoiCuoi)}`
+            : `Gói: ${tenGoi(tt.goi)} · còn ${tt.conBuoi} buổi`}
+        </div>}
         <Descriptions size="small" column={{ xs: 1, sm: 2 }} items={[
           { label: 'Học phí tháng này', children: vnd(th.phaiThu) },
           { label: 'Nợ kỳ trước', children: vnd(th.noKyTruoc) },
@@ -245,7 +251,10 @@ function ThuTien({ hs, lop, goi, phieu, buoiDb, daHoan, dong }: {
           <Form.Item name="so_thang" label="Số tháng"><Radio.Group optionType="button" options={[1, 2, 3].map((n) => ({ value: n, label: `${n} tháng` }))} /></Form.Item>
           <Form.Item name="thang" label="Từ tháng"><DatePicker picker="month" format="MM/YYYY" allowClear={false} /></Form.Item>
           <Form.Item name="don_gia" label={`Đơn giá/buổi (mặc định ${vnd(hs.don_gia_rieng ?? lop.don_gia)})`}><InputNumber {...tien} placeholder={`${donGia}`} /></Form.Item>
-          <Form.Item name="tien_du_tru" label={`Trừ tiền dư (còn lại ${vnd(duCon)})`}><InputNumber {...tien} max={duCon} /></Form.Item>
+          <Form.Item name="tien_du_tru" label={`Trừ tiền dư (còn lại ${vnd(duCon)})`}
+            extra={!duCon && 'Chưa có tiền dư: tiền dư chỉ sinh từ buổi lớp nghỉ của gói đã kết thúc. Tiền dư ngoài app (sổ cũ) nhập ở ô Điều chỉnh bằng số âm.'}>
+            <InputNumber {...tien} max={duCon} disabled={!duCon} />
+          </Form.Item>
           <Form.Item name="dieu_chinh" label="Điều chỉnh (giảm thì nhập số âm)"><InputNumber {...tien} min={undefined} /></Form.Item>
           {!!v.dieu_chinh && <Form.Item name="ly_do" label="Lý do điều chỉnh" rules={[{ required: true }]}><Input /></Form.Item>}
           <p>Buổi dự kiến: {Object.entries(buoi).map(([t, n]) => `T${t.slice(5)}: ${n}`).join(', ')} → <b>Tổng gói: {vnd(tongGoiMoi)}</b></p>

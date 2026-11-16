@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  conNoGoi, demBuoiDuKien, demChuaBu, demNghiPhu, duConLai, goiCuaThang, hocPhiGocThang, tenGoi, phaiThuTheoThang, tienDu, tongGoi, tongHopHocSinh,
+  conNoGoi, demBuoiDuKien, demChuaBu, demNghiPhu, duConLai, goiCuaThang, hocPhiGocThang, tenGoi, tinhTrangGoi, tinNhanGiaHan, vnd, phaiThuTheoThang, tienDu, tongGoi, tongHopHocSinh,
   trangThaiThang, type BuoiDacBiet, type Goi,
 } from './hoc-phi'
 
@@ -133,5 +133,34 @@ describe('tenGoi, goiCuaThang', () => {
     expect(goiCuaThang(ds, '2026-06')?.id).toBe('b')
     expect(goiCuaThang(ds, '2026-03')).toBeUndefined()
     expect(goiCuaThang(ds, '2026-07')).toBeUndefined()
+  })
+})
+
+describe('tinhTrangGoi, tinNhanGiaHan', () => {
+  // lớp T2-T4-T6; tháng 11/2026 có 13 buổi, buổi cuối 30/11
+  const L = [1, 3, 5]
+  const g11 = goi({ thang_bat_dau: '2026-11-01' })
+  it('đếm buổi còn lại theo lịch từ hôm nay, ngưỡng 4', () => {
+    expect(tinhTrangGoi([g11], L, '2026-01-01', '2026-11-20')).toMatchObject({ loai: 'con', conBuoi: 5 })
+    expect(tinhTrangGoi([g11], L, '2026-01-01', '2026-11-23')).toMatchObject({ loai: 'sap_het', conBuoi: 4, buoiCuoi: '2026-11-30', thangKe: '2026-12' })
+    expect(tinhTrangGoi([g11], L, '2026-01-01', '2026-12-01')).toMatchObject({ loai: 'het', conBuoi: 0, buoiCuoi: '2026-11-30' })
+  })
+  it('vào học giữa chừng thì đếm từ ngày vào học', () => {
+    expect(tinhTrangGoi([g11], L, '2026-11-25', '2026-11-02')).toMatchObject({ loai: 'sap_het', conBuoi: 3 })
+  })
+  it('đã đóng trước gói sau thì tính theo gói sau', () => {
+    expect(tinhTrangGoi([g11, goi({ id: 'g2', thang_bat_dau: '2026-12-01' })], L, '2026-01-01', '2026-11-23')).toMatchObject({ loai: 'con' })
+  })
+  it('chưa có gói: tháng cần đóng là tháng muộn hơn giữa tháng vào học và tháng này', () => {
+    expect(tinhTrangGoi([], L, '2026-10-05', '2026-11-16')).toEqual({ loai: 'chua_co', conBuoi: 0, thangKe: '2026-11' })
+    expect(tinhTrangGoi([], L, '2026-12-03', '2026-11-16').thangKe).toBe('2026-12')
+  })
+  it('tin nhắn ghi học phí 1 tháng kế tiếp, chưa có gói thì bỏ dòng gói', () => {
+    const t = tinNhanGiaHan('An', tinhTrangGoi([g11], L, '2026-01-01', '2026-11-23'), 13, 150_000)
+    expect(t).toContain('(1 tháng · 11/2026) còn 4 buổi, kết thúc ngày 30/11/2026')
+    expect(t).toContain(`Học phí tháng 12/2026: 13 buổi × ${vnd(150_000)} = ${vnd(1_950_000)}`)
+    const c = tinNhanGiaHan('An', tinhTrangGoi([], L, '2026-10-05', '2026-11-16'), 13, 150_000)
+    expect(c).not.toContain('gói học')
+    expect(c).toContain('đóng học phí')
   })
 })

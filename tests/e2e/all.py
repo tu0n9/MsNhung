@@ -217,6 +217,11 @@ with sync_playwright() as pw:
         expect(p.locator("button", has_text="TEST Nguyễn Bảo An")).to_contain_text("1.000.000 đ")
         expect(p.locator("[data-dung-luong-anh]")).to_contain_text("MB / 1 GB")  # hàm dung_luong_anh() chạy được
         p.screenshot(path=os.path.join(OUT, "a-hoc-phi.png"), full_page=True)
+        # bộ lọc báo gia hạn: TEST An có gói 3 tháng từ tháng này nên không nằm trong danh sách
+        p.locator(".ant-segmented-item", has_text="Sắp hết gói").click()
+        expect(p.locator(".ant-card", has_text="TEST Lớp Starters")).to_have_count(0)
+        p.screenshot(path=os.path.join(OUT, "a-sap-het-goi.png"), full_page=True)
+        p.locator(".ant-segmented-item", has_text="Tất cả").click()
         with p.expect_download() as dl:
             p.get_by_role("button", name="Xuất Excel").click()
         f = os.path.join(OUT, "all-hoc-phi.xlsx")
@@ -286,6 +291,7 @@ with sync_playwright() as pw:
         # ô "chưa điểm danh" chỉ có khi phụ huynh đọc được buoi_hoc của lớp con (RLS), ô học bù khi đọc được buổi bù
         kiem_luoi()
         expect(p.get_by_text(re.compile("16:45–18:15")).first).to_be_visible()
+        expect(p.locator("[data-goi-hien-tai]").first).to_contain_text("Gói: 3 tháng · ")
         p.screenshot(path=os.path.join(OUT, "a-phu-huynh.png"), full_page=True)
         huong_dan(lambda: p.get_by_text("Xem hướng dẫn").click(), 1)
         thoat()
