@@ -1,9 +1,11 @@
 """Kiểm RLS và khoá sổ ở tầng database (không qua giao diện). Chạy sau all.py, dùng dữ liệu TEST nó tạo."""
 import json, os, sys, urllib.request, urllib.error
+from datetime import date
 
 env = dict(l.split("=", 1) for l in open(r"C:\Users\TIENTUONG\MsNhung\.env", encoding="utf-8").read().splitlines() if "=" in l and not l.startswith("#"))
 U, K, S = env["VITE_SUPABASE_URL"].strip(), env["VITE_SUPABASE_PUBLISHABLE_KEY"].strip(), env["SUPABASE_SECRET_KEY"].strip()
 KQ = []
+HN = date.today().isoformat()  # all.py điểm danh, tạo buổi bù vào hôm nay
 
 
 def goi(method, path, token=None, body=None, key=K, prefer=None):
@@ -60,10 +62,20 @@ _, ds_goi = SV("GET", f"/rest/v1/goi_hoc?select=thang_bat_dau,so_thang&hoc_sinh_
 g0 = ds_goi[0]  # gói 3 tháng từ 11/2026 do all.py tạo
 c, r = goi("POST", "/rest/v1/goi_hoc", A, {"hoc_sinh_id": hs_id, "thang_bat_dau": "2026-12-01", "so_thang": 1, "don_gia": 100000, "buoi_du_kien": {"2026-12": 1}})
 ok(f"gói chồng tháng bị database từ chối (gói có sẵn {g0['thang_bat_dau']} x{g0['so_thang']})", c == 400 and "gói" in json.dumps(r, ensure_ascii=False))
-_, buoi11 = SV("GET", "/rest/v1/buoi_hoc?select=id,lop_nghi&ngay=eq.2026-11-15&limit=1")
-c, r = goi("PATCH", f"/rest/v1/buoi_hoc?id=eq.{buoi11[0]['id']}", T, {"lop_nghi": True}, prefer="return=representation")
-ok("trợ giảng không đánh được \"Lớp nghỉ\" (0 dòng đổi)", r == [] and SV("GET", f"/rest/v1/buoi_hoc?select=lop_nghi&id=eq.{buoi11[0]['id']}")[1][0]["lop_nghi"] is False)
-ok("trợ giảng không thêm được buổi phụ", goi("POST", "/rest/v1/buoi_hoc", T, {"lop_id": None, "ngay": "2026-11-16", "loai": "phu"})[0] >= 400)
+# trợ giảng đánh "Lớp nghỉ" và thêm buổi phụ được (chốt 2026-11-16); chỉ đụng lớp TEST vì database dùng chung với bản thật
+_, lop_t = SV("GET", "/rest/v1/lop?select=id&ten=eq.TEST%20L%E1%BB%9Bp%20Starters")
+_, buoi11 = SV("GET", f"/rest/v1/buoi_hoc?select=id,lop_nghi&lop_id=eq.{lop_t[0]['id']}&ngay=eq.{HN}&loai=eq.lich")
+bid = buoi11[0]["id"]
+c, r = goi("PATCH", f"/rest/v1/buoi_hoc?id=eq.{bid}", T, {"lop_nghi": True}, prefer="return=representation")
+ok("trợ giảng đánh được \"Lớp nghỉ\"", c == 200 and len(r) == 1 and r[0]["lop_nghi"] is True)
+goi("PATCH", f"/rest/v1/buoi_hoc?id=eq.{bid}", T, {"lop_nghi": False})
+ok("trợ giảng tắt lại được \"Lớp nghỉ\"", SV("GET", f"/rest/v1/buoi_hoc?select=lop_nghi&id=eq.{bid}")[1][0]["lop_nghi"] is False)
+c, r = goi("POST", "/rest/v1/buoi_hoc", T, {"lop_id": lop_t[0]["id"], "ngay": HN, "loai": "phu"}, prefer="return=representation")
+ok("trợ giảng thêm được buổi phụ", c == 201 and len(r) == 1)
+if c == 201:
+    _, r2 = goi("DELETE", f"/rest/v1/buoi_hoc?id=eq.{r[0]['id']}", T, prefer="return=representation")
+    ok("trợ giảng không xoá được buổi (0 dòng)", r2 == [] and len(SV("GET", f"/rest/v1/buoi_hoc?select=id&id=eq.{r[0]['id']}")[1]) == 1)
+    SV("DELETE", f"/rest/v1/buoi_hoc?id=eq.{r[0]['id']}")
 _, anh = SV("GET", "/rest/v1/anh_buoi?select=id,duong_dan&limit=1")
 if anh:
     c, r = goi("DELETE", f"/rest/v1/anh_buoi?id=eq.{anh[0]['id']}", T, prefer="return=representation")
@@ -81,10 +93,13 @@ goi("POST", "/functions/v1/tai-khoan", A, {"hanh_dong": "dat_lai", "id": ph[0]["
 P2 = tok("0922000002", "0922000002")
 ok("không bỏ được cờ bắt đổi mật khẩu khi mật khẩu vẫn là số điện thoại", goi("POST", "/rest/v1/rpc/da_doi_mat_khau", P2, {})[0] == 400)
 
-_, bu = SV("GET", "/rest/v1/buoi_hoc?select=id&loai=eq.bu&ngay=eq.2026-11-15")
+_, bu = SV("GET", f"/rest/v1/buoi_hoc?select=id&loai=eq.bu&ngay=eq.{HN}")
 ok("buổi bù riêng: chọn Không đến thì không còn dòng điểm danh nào", bool(bu) and SV("GET", f"/rest/v1/diem_danh?select=hoc_sinh_id&buoi_id=eq.{bu[0]['id']}")[1] == [])
 
 _, khoa_truoc = SV("GET", "/rest/v1/khoa_so?select=khoa_den")
+# chỉ xoá nhật ký do test ghi: lọc theo id, không theo tháng (người dùng có thể đã chốt / mở khoá thật tháng 11)
+_, nk = SV("GET", "/rest/v1/nhat_ky_chot_so?select=id&order=id.desc&limit=1")
+nk_cuoi = nk[0]["id"] if nk else 0
 try:
     ok("chốt sổ tháng 11", goi("POST", "/rest/v1/rpc/chot_so", A, {"thang": "2026-11-01"})[0] == 204)
     ok("khoá: không thêm chi phí tháng 11", goi("POST", "/rest/v1/chi_phi", A, {"ngay": "2026-11-20", "danh_muc": "x", "so_tien": 1, "ghi_chu": "TEST e2e"})[0] == 400)
@@ -102,8 +117,7 @@ try:
 finally:
     # trả khoá sổ về như trước test, xoá nhật ký do test ghi
     SV("PATCH", "/rest/v1/khoa_so?id=eq.true", {"khoa_den": khoa_truoc[0]["khoa_den"]})
-    SV("DELETE", "/rest/v1/nhat_ky_chot_so?ly_do=is.null&thang=eq.2026-11-01")
-    SV("DELETE", "/rest/v1/nhat_ky_chot_so?ly_do=eq.TEST")
+    SV("DELETE", f"/rest/v1/nhat_ky_chot_so?id=gt.{nk_cuoi}")
     ok("khoá sổ đã trả về như trước", SV("GET", "/rest/v1/khoa_so?select=khoa_den")[1] == khoa_truoc)
 
 # xoá hẳn lớp TEST Lớp Starters (có học sinh, điểm danh, gói, phiếu thu, trợ giảng, ảnh): phải sạch ở mọi bảng

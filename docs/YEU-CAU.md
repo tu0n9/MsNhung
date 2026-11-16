@@ -138,7 +138,8 @@ Sau review pha R (2026-11-15):
 
 - **Học bù trong buổi bù riêng:** mỗi em chỉ có "Học bù" (trừ 1 buổi chưa bù) hoặc "Không đến" (không ghi gì, không
   sinh thêm buổi chưa bù). Buổi thường và buổi phụ giữ như cũ: vắng cộng 1 buổi chưa bù.
-- **Chỉ giáo viên** đánh "Lớp nghỉ" và thêm buổi phụ / bù (buổi lớp nghỉ sinh tiền dư).
+- ~~**Chỉ giáo viên** đánh "Lớp nghỉ" và thêm buổi phụ / bù (buổi lớp nghỉ sinh tiền dư).~~ (thay ở mục
+  "Quyền trợ giảng, cột gói, báo gia hạn" bên dưới).
 - Trợ giảng đọc được đơn giá lớp qua API là **chấp nhận được** (giao diện đã ẩn); trợ giảng thấy đơn giá của chính mình.
 - Video hướng dẫn: nhiều video ngắn theo từng việc, có giọng đọc tiếng Việt (Microsoft HoaiMy qua `edge-tts`).
   ~~Video để trên máy, không đưa vào git~~ (thay ở mục "Video hướng dẫn trong app" bên dưới). Quay lại bằng
@@ -196,6 +197,23 @@ Dữ liệu demo và làm sạch (2026-11-15):
   `0356998740` là phụ huynh của hai anh em trong demo). Thêm bên cạnh dữ liệu đang có, không xoá gì.
 - **Làm sạch như app mới** (`npm run lam-moi`, chỉ chạy khi người dùng cần): xoá mọi dữ liệu và ảnh, mở khoá sổ,
   **giữ mọi tài khoản**; bắt gõ `XOA HET`, tải bản sao lưu JSON về `sao-luu-may/` trước khi xoá. Chạy trên máy có `.env`.
+
+Quyền trợ giảng, cột gói, báo gia hạn (grill 2026-11-16):
+
+- **Trợ giảng đánh được "Lớp nghỉ" và thêm buổi phụ / bù** như giáo viên, ở mọi buổi của tháng chưa chốt sổ (thay
+  quyết định "chỉ giáo viên" ngày 2026-11-15). Không ghi lại ai đánh.
+- **Excel, sheet từng lớp có cột "Gói"** dạng `3 tháng · 04→06/2026` (gói phủ tháng đang xuất); không có gói thì
+  "Chưa có gói". Chỉ là cột chữ, công thức tiền không đổi; sheet Công nợ giữ nguyên.
+- **Danh sách "Sắp hết gói"** trên trang Học phí, chỉ giáo viên thấy. Gồm học sinh đang học (bỏ em ngừng học) mà:
+  còn ≤ 4 buổi theo lịch tuần từ hôm nay tới cuối gói (không trừ buổi lớp nghỉ, vì lớp nghỉ đã thành tiền dư); hoặc gói
+  cũ đã hết mà chưa có gói tiếp; hoặc **chưa từng có gói** (nhãn "Chưa có gói"; các em này không hiện ở Công nợ vì phải
+  thu = 0).
+- Mỗi dòng có SĐT phụ huynh và nút copy tin nhắn nhắc gia hạn: gói hiện tại, còn N buổi, ngày buổi cuối, học phí
+  **1 tháng kế tiếp** = buổi theo lịch × đơn giá của em. Em chưa có gói thì bỏ phần gói cũ.
+- **Phụ huynh luôn thấy** dòng "Gói: 3 tháng · 04→06/2026 · còn N buổi", chữ đỏ khi còn ≤ 4 buổi hoặc đã hết.
+- **Ô "Trừ tiền dư"** khi đóng gói mới vẫn tự điền và không cho vượt tiền dư app tính được. Khi tiền dư bằng 0 thì
+  khoá ô và ghi rõ tiền dư chỉ sinh từ buổi lớp nghỉ của gói đã kết thúc. Tiền dư từ sổ giấy (ngoài app) nhập ở ô
+  "Điều chỉnh" bằng số âm kèm lý do.
 
 ## Câu hỏi còn mở
 
