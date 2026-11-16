@@ -58,6 +58,7 @@ export default function App() {
     <NguoiDung.Provider value={toi}>
       <Layout style={{ minHeight: '100vh' }}>
         <Layout.Header style={{ display: 'flex', alignItems: 'center', padding: '0 12px', gap: 8 }}>
+          <img src="/icon-192.png" alt="" width={32} height={32} style={{ borderRadius: 6 }} />
           <b style={{ color: '#fff', whiteSpace: 'nowrap' }}>Ms.Nhung</b>
           {dienThoai ? <span style={{ flex: 1 }} /> : <Menu theme="dark" mode="horizontal" selectedKeys={[loc.pathname === '/import' ? '/lop' : loc.pathname]} items={menu}
             onClick={(e) => nav(e.key)} style={{ flex: 1, minWidth: 0 }} />}

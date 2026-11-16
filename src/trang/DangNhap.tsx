@@ -20,7 +20,7 @@ export default function DangNhap() {
 
   return (
     <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 16, background: MAU.chinhNhat }}>
-      <Card title="Anh ngữ Ms.Nhung" style={{ width: '100%', maxWidth: 360 }}>
+      <Card style={{ width: '100%', maxWidth: 360 }} cover={<img src="/logo.jpg" alt="Ms Nhung English" />}>
         <Form layout="vertical" onFinish={dangNhap}>
           <Form.Item name="dinh_danh" label="Tên đăng nhập hoặc số điện thoại" rules={[{ required: true }]}>
             <Input autoComplete="username" autoCapitalize="none" />
