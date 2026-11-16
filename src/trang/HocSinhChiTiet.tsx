@@ -161,12 +161,15 @@ const O: Record<TrangThaiO, { ten: string; style: React.CSSProperties }> = {
 const LOAI_BUOI = { lich: '', phu: 'Buổi phụ: ', bu: 'Buổi bù: ' }
 
 function LuoiThang({ o, lopId }: { o: (ONgay | null)[]; lopId: string }) {
-  const [chon, setChon] = useState(() => o.find((x) => x?.hom_nay) ?? null)
+  // giữ ngày được chọn, không giữ bản dữ liệu của ngày: lưới dựng lần đầu khi buổi chưa tải xong, giữ bản cũ thì hôm nay
+  // hiện "Không có buổi học" dù ô đã tô màu
+  const [chonNgay, setChonNgay] = useState(() => o.find((x) => x?.hom_nay)?.ngay)
+  const chon = o.find((x) => x?.ngay === chonNgay) ?? null
   return <>
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
       {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((t) => <span key={t} style={{ textAlign: 'center', fontSize: 11, fontWeight: 600, color: MAU.chuPhu }}>{t}</span>)}
       {o.map((x, i) => x === null ? <span key={i} /> : (
-        <button key={x.ngay} type="button" data-ngay={x.ngay} data-trang-thai={x.trang_thai} onClick={() => setChon(x)}
+        <button key={x.ngay} type="button" data-ngay={x.ngay} data-trang-thai={x.trang_thai} onClick={() => setChonNgay(x.ngay)}
           aria-label={`${dayjs(x.ngay).format('DD/MM')}: ${O[x.trang_thai].ten}`} aria-pressed={chon?.ngay === x.ngay}
           style={{
             position: 'relative', height: 40, border: '2px solid transparent', borderRadius: 4, background: 'none', font: 'inherit',

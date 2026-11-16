@@ -16,12 +16,14 @@ RA = os.path.join(REPO, "public", "huong-dan")  # Vercel phát thẳng trong app
 TAM = os.path.join(REPO, "tests", "video", "tam")
 URL = "http://127.0.0.1:5180/"
 KHUNG = {"width": 412, "height": 860}
+# video ra nhanh hơn lúc quay (người dùng chốt 2026-11-16): hình và tiếng cùng tăng nên lời vẫn khớp thao tác
+TOC_DO = 1.25
 
 CHU_THICH = """(t) => { let d = document.getElementById('chu-thich');
   if (!d) { d = document.createElement('div'); d.id = 'chu-thich'; document.body.appendChild(d);
     Object.assign(d.style, { position: 'fixed', left: '8px', right: '8px', top: '60px', zIndex: 99999, padding: '10px 12px',
-      background: 'rgba(15,122,92,.95)', color: '#fff', borderRadius: '6px', fontSize: '15px', lineHeight: '1.45',
-      fontFamily: '"Lexend Variable", sans-serif', boxShadow: '0 4px 14px rgba(0,0,0,.3)', pointerEvents: 'none' }) }
+      background: 'rgba(210,60,105,.95)', color: '#fff', borderRadius: '12px', fontSize: '15px', lineHeight: '1.45',
+      fontFamily: '"Be Vietnam Pro", sans-serif', boxShadow: '0 4px 14px rgba(0,0,0,.3)', pointerEvents: 'none' }) }
   d.textContent = t; d.style.display = t ? 'block' : 'none' }"""
 VIEN = """(el) => { el.style.outline = '3px solid #f5a623'; el.style.outlineOffset = '2px'; setTimeout(() => { el.style.outline = '' }, 1500) }"""
 
@@ -40,10 +42,13 @@ def _doc_mot(text, out, so_lan):
         if r.returncode == 0 and os.path.getsize(out + ".tam") > 1000:
             os.replace(out + ".tam", out)
             return True
-        time.sleep(1.5 * (lan + 1))
+        time.sleep(min(12, 2 * (lan + 1)))  # dịch vụ giọng đọc hay chập chờn: chờ lâu dần rồi thử lại
     return False
 
 
+# ponytail: giọng đọc tạo ngay trong lúc quay, nên khi dịch vụ chập chờn phải thử lại thì video có đoạn đứng hình.
+# Cách xử lý: quay lại lần nữa (mọi câu đã nằm trong bộ đệm tam/giong nên không chờ). Muốn tránh hẳn thì đọc trước
+# toàn bộ câu của kịch bản rồi mới mở trình duyệt.
 def doc(cau, file):
     """Đọc câu ra mp3. Dịch vụ giọng đọc trực tuyến hay không trả tiếng (NoAudioReceived), câu dài càng dễ hỏng:
     thử cả câu vài lần, không được thì cắt theo dấu câu, đọc từng đoạn rồi nối lại. Câu đã đọc được lưu đệm theo nội dung."""
@@ -52,12 +57,12 @@ def doc(cau, file):
     os.makedirs(os.path.dirname(dem), exist_ok=True)
     if not os.path.exists(dem):
         doc_ra = cau.replace(":", ".")  # dấu hai chấm hay làm dịch vụ từ chối; phụ đề vẫn giữ nguyên câu gốc
-        if not _doc_mot(doc_ra, dem, 4):
+        if not _doc_mot(doc_ra, dem, 6):
             doan = [d for d in re.split(r"(?<=[.,?!])\s+", doc_ra) if d.strip()]
             tep = []
             for i, d in enumerate(doan):
                 f = f"{dem}.{i}.mp3"
-                if not _doc_mot(d, f, 8):
+                if not _doc_mot(d, f, 15):
                     raise RuntimeError(f"không đọc được đoạn: {d}")
                 tep.append(f)
             vao = sum((["-i", f] for f in tep), [])
@@ -82,7 +87,8 @@ class Quay:
     def __enter__(self):
         self.pw = sync_playwright().start()
         self.b = self.pw.chromium.launch(slow_mo=120)
-        self.ctx = self.b.new_context(viewport=KHUNG, record_video_dir=self.thu_muc, record_video_size=KHUNG, accept_downloads=True,
+        # locale vi-VN: ô giờ hiện kiểu 24 giờ như điện thoại tiếng Việt, không phải 08:00 AM
+        self.ctx = self.b.new_context(viewport=KHUNG, record_video_dir=self.thu_muc, record_video_size=KHUNG, accept_downloads=True, locale="vi-VN",
                                       permissions=["clipboard-read", "clipboard-write"])
         self.p = self.ctx.new_page()
         self.t0 = time.time()
@@ -153,8 +159,9 @@ class Quay:
             ms = int(giay * 1000)
             loc.append(f"[{i + 1}:a]adelay={ms}|{ms}[a{i}]")
         tron = "".join(f"[a{i}]" for i in range(len(self.am)))
-        loc.append(f"{tron}amix=inputs={len(self.am)}:normalize=0[am]")
-        cmd = [FFMPEG, "-y", *vao, "-filter_complex", ";".join(loc), "-map", "0:v", "-map", "[am]",
+        loc.append(f"{tron}amix=inputs={len(self.am)}:normalize=0,atempo={TOC_DO}[am]")
+        loc.append(f"[0:v]setpts=PTS/{TOC_DO}[vv]")
+        cmd = [FFMPEG, "-y", *vao, "-filter_complex", ";".join(loc), "-map", "[vv]", "-map", "[am]",
                "-c:v", "libx264", "-pix_fmt", "yuv420p", "-preset", "veryfast", "-crf", "24", "-r", "25",
                "-c:a", "aac", "-b:a", "96k", "-metadata", f"title={self.tieu_de}", dich]
         r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="ignore")

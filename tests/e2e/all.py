@@ -169,8 +169,10 @@ with sync_playwright() as pw:
         expect(o("kia")).to_have_attribute("data-trang-thai", "hoc_bu")
         if NG["truoc"] >= HN.replace(day=1).isoformat():
             expect(o("truoc")).to_have_attribute("data-trang-thai", "chua_diem_danh")
-        o("kia").click()
         ct = p.locator("[data-chi-tiet-ngay]")
+        # hôm nay được chọn sẵn: dòng chi tiết phải theo dữ liệu đã tải, không kẹt ở "Không có buổi học"
+        expect(ct).to_contain_text("Có mặt")
+        o("kia").click()
         expect(ct).to_contain_text("Buổi bù: Học bù")
         expect(ct).to_contain_text("Có mặt")
 
