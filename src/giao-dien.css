@@ -1,2 +1,15 @@
 /* bỏ lề mặc định của trình duyệt (nền tối lộ viền 8px quanh màn). Số tiền, số buổi xếp thẳng cột như sổ */
 body { margin: 0; background: var(--nen); font-variant-numeric: tabular-nums; }
+
+/* Bản sáng kiểu "kính mờ" hồng (người dùng chọn 2026-11-16 theo ảnh mẫu): nền chuyển hồng phấn sang tím hồng,
+   thẻ và thanh trên / dưới trắng trong mờ nhìn xuyên nền, bóng hồng nhẹ */
+html[data-che-do=sang] body { min-height: 100vh; background: linear-gradient(135deg, #FBD5DF 0%, #FBE7EE 42%, #EEDDF7 100%) fixed; }
+html[data-che-do=sang] .ant-layout { background: transparent; }
+html[data-che-do=sang] .ant-card,
+html[data-che-do=sang] .ant-layout-header,
+html[data-che-do=sang] .thanh-duoi { -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%); }
+html[data-che-do=sang] .ant-card { border-color: rgba(255,255,255,.75); box-shadow: 0 12px 32px -20px rgba(176,60,100,.45); }
+/* máy bật giảm hiệu ứng trong suốt: thẻ trắng đặc cho dễ đọc */
+@media (prefers-reduced-transparency: reduce) {
+  html[data-che-do=sang] .ant-card, html[data-che-do=sang] .ant-layout-header, html[data-che-do=sang] .thanh-duoi { background: #fff; }
+}

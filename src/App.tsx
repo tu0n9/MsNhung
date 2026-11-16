@@ -59,7 +59,7 @@ export default function App() {
     <NguoiDung.Provider value={toi}>
       <Layout style={{ minHeight: '100vh' }}>
         <Layout.Header style={{ display: 'flex', alignItems: 'center', padding: '0 12px', gap: 8, borderBottom: `1px solid ${MAU.vien}` }}>
-          <img src="/icon-192.png" alt="" width={32} height={32} style={{ borderRadius: 6 }} />
+          <img src="/logo-hinh.png" alt="" height={34} style={{ width: 'auto' }} />
           <b style={{ color: MAU.chinh, whiteSpace: 'nowrap', fontFamily: CHU_SO, fontSize: 18 }}>Ms.Nhung</b>
           {dienThoai ? <span style={{ flex: 1 }} /> : <Menu theme={cheDo === 'toi' ? 'dark' : 'light'} mode="horizontal" selectedKeys={[loc.pathname === '/import' ? '/lop' : loc.pathname]} items={menu}
             onClick={(e) => nav(e.key)} style={{ flex: 1, minWidth: 0 }} />}
@@ -89,7 +89,7 @@ export default function App() {
           </Routes>
         </Layout.Content>
         {dienThoai && menu.length > 1 && (
-          <nav style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', background: MAU.dau, borderTop: `1px solid ${MAU.vien}`, zIndex: 10 }}>
+          <nav className="thanh-duoi" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', background: MAU.dau, borderTop: `1px solid ${MAU.vien}`, zIndex: 10 }}>
             {menu.map((m) => (
               <button key={m.key} onClick={() => nav(m.key)} style={{
                 flex: 1, border: 0, background: 'none', padding: '8px 0 10px', fontSize: 11,

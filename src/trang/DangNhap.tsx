@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import { App, Button, ConfigProvider, Form, Input } from 'antd'
+import { App, Button, Form, Input } from 'antd'
 import { sb } from '../supabase'
-import { MAU, theme } from '../giao-dien'
 
 export default function DangNhap() {
   const { message } = App.useApp()
@@ -19,20 +18,18 @@ export default function DangNhap() {
   }
 
   return (
-    // luôn tối ở cả hai chế độ: nền đen trùng nền logo nên logo liền vào màn, không thành một khung ảnh
-    <ConfigProvider theme={theme('toi')}>
-    <div data-che-do="toi" style={{ minHeight: '100dvh', background: '#000', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 20px 40px' }}>
-      <img src="/logo.jpg" alt="Ms Nhung English" style={{ width: '100%', maxWidth: 380, marginTop: '3vh' }} />
+    // logo đã tách nền (trong suốt), nền lấy từ body (chuyển màu ở bản sáng) như các màn khác
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 20px 40px' }}>
+      <img src="/logo-day-du.png" alt="Ms Nhung English" style={{ width: '100%', maxWidth: 380, marginTop: '3vh' }} />
       <Form layout="vertical" onFinish={dangNhap} style={{ width: '100%', maxWidth: 360, marginTop: 8 }}>
         <Form.Item name="dinh_danh" label="Tên đăng nhập hoặc số điện thoại" rules={[{ required: true }]}>
-          <Input size="large" autoComplete="username" autoCapitalize="none" style={{ background: MAU.mat }} />
+          <Input size="large" autoComplete="username" autoCapitalize="none" />
         </Form.Item>
         <Form.Item name="mat_khau" label="Mật khẩu" rules={[{ required: true }]}>
-          <Input.Password size="large" autoComplete="current-password" style={{ background: MAU.mat }} />
+          <Input.Password size="large" autoComplete="current-password" />
         </Form.Item>
         <Button type="primary" htmlType="submit" block size="large" loading={dang} style={{ marginTop: 8, fontWeight: 700 }}>Đăng nhập</Button>
       </Form>
     </div>
-    </ConfigProvider>
   )
 }

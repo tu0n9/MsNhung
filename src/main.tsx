@@ -28,7 +28,7 @@ function Goc() {
   const [cheDo, setCheDo] = useState(docCheDo)
   useEffect(() => {
     document.documentElement.dataset.cheDo = cheDo
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', BANG_MAU[cheDo].dau)
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', BANG_MAU[cheDo].trinhDuyet)
     try { localStorage.setItem(KHOA, cheDo) } catch { /* không lưu được thì lần sau về mặc định */ }
   }, [cheDo])
   return (

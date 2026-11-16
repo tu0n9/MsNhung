@@ -246,6 +246,14 @@ Giao diện "Sổ vàng" (2026-11-16):
 - **Có bản sáng và bản tối, mặc định sáng** (người dùng thấy nền tối nặng nề). Nút mặt trời / mặt trăng ở thanh trên, cho
   mọi vai trò; lựa chọn lưu theo từng máy. Bản sáng: nền trắng, chữ gần đen, nút vàng kim chữ tối, chữ và liên kết vàng
   đậm cho đủ tương phản. Màn đăng nhập luôn tối ở cả hai chế độ.
+- **Đổi sang hồng kim** (2026-11-16, người dùng chọn trong 3 kiểu ở `docs/ban-mau/logo-hong/`): logo đổi phần vàng kim
+  sang hồng ánh kim, nền đen giữ nguyên; màu nhấn của app đổi theo (sáng: nút `#E3A1AB`, chữ `#A8485A`; tối: `#E8A4AE`).
+  Ở bản tối, nợ / vắng màu cam thay đỏ cam để không lẫn với hồng nhấn.
+- **Logo tách nền đen** (trong suốt) cho thanh trên và màn đăng nhập; màn đăng nhập theo chế độ sáng / tối như các màn
+  khác (thay quy định "đăng nhập luôn tối"). Icon cài ra màn hình chính vẫn nền đen, vì máy tự tô kín phần trong suốt.
+- **Bản sáng kiểu kính mờ hồng** (theo ảnh mẫu người dùng gửi, chủ đạo hồng): nền chuyển hồng phấn sang tím hồng, thẻ
+  và thanh trên / dưới trắng trong mờ, bo góc lớn, nút và tab dạng viên thuốc; nút chính và tab đang chọn hồng đậm
+  `#D23C69` chữ trắng, chữ / liên kết hồng `#B8325C`. Máy bật giảm trong suốt thì thẻ trắng đặc. Bản tối giữ nguyên.
 - Làm thử trên máy, người dùng duyệt ảnh rồi mới đưa lên bản thật. Video hướng dẫn cũ còn màu xanh.
 
 ## Câu hỏi còn mở

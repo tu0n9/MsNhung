@@ -1,24 +1,29 @@
-// Giao diện "Sổ vàng" (docs/YEU-CAU.md, mẫu docs/ban-mau/giao-dien.html): vàng kim theo logo, có bản sáng (mặc định)
+// Giao diện "Sổ vàng" (docs/YEU-CAU.md, mẫu docs/ban-mau/giao-dien.html), nay hồng kim theo logo, có bản sáng (mặc định)
 // và bản tối. Màu dùng ngoài theme của Ant Design (nền dòng, chữ số tiền) lấy từ MAU để đổi một chỗ là đổi cả app.
 import { createContext, useContext } from 'react'
 import { theme as antTheme, type ThemeConfig } from 'antd'
 
 export type CheDo = 'sang' | 'toi'
 
-// chinh là màu nhấn (vàng); "tốt" (có mặt, đã đủ, tiền dương) dùng tot để không lẫn với màu nhấn.
-// nut là nền nút chính; ở bản sáng chữ vàng phải đậm hơn nền nút mới đủ tương phản trên nền trắng.
+// chinh là màu nhấn (hồng kim); "tốt" (có mặt, đã đủ, tiền dương) dùng tot để không lẫn với màu nhấn.
+// nut là nền nút chính; ở bản sáng chữ hồng phải đậm hơn nền nút mới đủ tương phản trên nền trắng.
 export const BANG_MAU = {
+  // bản sáng kiểu "kính mờ": nền chuyển hồng sang tím hồng (giao-dien.css), thẻ và thanh trắng trong mờ, nút / tab đang
+  // chọn hồng đậm chữ trắng. nen là màu đặc dùng cho chỗ cần che nội dung phía sau (thanh dính ở màn import)
   sang: {
-    chinh: '#8A6410', chinhDam: '#F3E6C4', chinhNhat: '#F7EED7', nut: '#C9A13F',
+    chinh: '#B8325C', chinhDam: '#F7D4DE', chinhNhat: '#FCE8EE', nut: '#D23C69',
     tot: '#1D7A4E', totNhat: '#E3F2EA', do: '#B4381F', doNhat: '#FBE8E3', vang: '#FBF1D9', vangDam: '#C9A13F',
-    xanh: '#2557A6', xanhNhat: '#E4ECF8', xam: '#ECECE9',
-    chu: '#1B1A17', chuPhu: '#57534B', chuMo: '#6F6A61', vien: '#E3E1DB', nen: '#F4F4F2', mat: '#FFFFFF', dau: '#FFFFFF',
+    xanh: '#2557A6', xanhNhat: '#E4ECF8', xam: '#F3E6EB',
+    chu: '#1D191A', chuPhu: '#584E53', chuMo: '#6E6368', vien: 'rgba(196,120,148,.22)', nen: '#FBEAF0',
+    mat: 'rgba(255,255,255,.66)', dau: 'rgba(255,255,255,.6)', trinhDuyet: '#FBD5DF',
   },
+  // nợ / vắng ở bản tối là cam: đỏ cam gần trùng hồng nhấn, dễ lẫn "nợ" với "nút"
   toi: {
-    chinh: '#D4AF5A', chinhDam: '#2A2418', chinhNhat: 'rgba(212,175,90,.12)', nut: '#D4AF5A',
-    tot: '#8BD0A9', totNhat: 'rgba(139,208,169,.14)', do: '#EE8E78', doNhat: 'rgba(238,142,120,.14)',
-    vang: 'rgba(212,175,90,.10)', vangDam: '#D4AF5A', xanh: '#96BBEE', xanhNhat: 'rgba(150,187,238,.14)', xam: '#2A2723',
-    chu: '#F2EDE3', chuPhu: '#A79F90', chuMo: '#8A8273', vien: '#34302A', nen: '#121110', mat: '#1C1A17', dau: '#0A0908',
+    chinh: '#E8A4AE', chinhDam: '#2E1E22', chinhNhat: 'rgba(232,164,174,.12)', nut: '#E8A4AE',
+    tot: '#8BD0A9', totNhat: 'rgba(139,208,169,.14)', do: '#F4A261', doNhat: 'rgba(244,162,97,.14)',
+    vang: 'rgba(229,191,99,.10)', vangDam: '#E5BF63', xanh: '#96BBEE', xanhNhat: 'rgba(150,187,238,.14)', xam: '#2C2629',
+    chu: '#F4ECEE', chuPhu: '#AC9EA3', chuMo: '#8E8086', vien: '#382F33', nen: '#141113', mat: '#1E1A1C', dau: '#0B090A',
+    trinhDuyet: '#0B090A',
   },
 }
 type TenMau = keyof typeof BANG_MAU.sang
@@ -44,22 +49,23 @@ export function theme(cheDo: CheDo): ThemeConfig {
       colorPrimary: m.nut, colorLink: m.chinh, colorInfo: m.nut, colorSuccess: m.tot, colorError: m.do,
       colorWarning: toi ? '#E5BF63' : '#9A6B00',
       colorText: m.chu, colorTextSecondary: m.chuPhu, colorTextTertiary: m.chuMo,
-      colorBorder: toi ? '#3F3A32' : '#D6D3CB', colorBorderSecondary: m.vien,
-      colorBgBase: toi ? m.nen : '#FFFFFF', colorBgLayout: m.nen, colorBgContainer: m.mat, colorBgElevated: toi ? '#24211D' : '#FFFFFF',
+      colorBorder: toi ? '#433A3E' : '#E8CFD6', colorBorderSecondary: m.vien,
+      colorBgBase: toi ? m.nen : '#FFFFFF', colorBgLayout: toi ? m.nen : 'rgba(255,255,255,.5)', colorBgContainer: m.mat, colorBgElevated: toi ? '#262024' : '#FFFFFF',
       fontFamily: "'Be Vietnam Pro', -apple-system, 'Segoe UI', Roboto, sans-serif",
-      borderRadius: 10, borderRadiusLG: 14, borderRadiusSM: 6,
+      borderRadius: 12, borderRadiusLG: toi ? 14 : 22, borderRadiusSM: 8,
     },
     components: {
-      // chữ trắng trên nút vàng không đủ tương phản: dùng chữ gần đen ở cả hai chế độ
-      Button: { primaryColor: '#17120A' },
-      Layout: { headerBg: m.dau, headerHeight: 56, headerPadding: '0 12px', bodyBg: m.nen },
+      // nút dạng viên thuốc; bản tối nút hồng nhạt nên chữ gần đen, bản sáng nút hồng đậm chữ trắng (~4.7:1)
+      Button: { primaryColor: toi ? '#17120A' : '#FFFFFF', borderRadius: 999, borderRadiusLG: 999, borderRadiusSM: 999 },
+      Layout: { headerBg: m.dau, headerHeight: 56, headerPadding: '0 12px', bodyBg: toi ? m.nen : 'transparent' },
       Menu: {
         darkItemBg: m.dau, darkItemSelectedBg: m.chinhDam, darkItemSelectedColor: m.chinh, darkPopupBg: m.dau,
         itemBg: m.dau, itemSelectedBg: m.chinhDam, itemSelectedColor: m.chinh, horizontalItemSelectedColor: m.chinh,
       },
       Card: { headerFontSize: 15 },
-      Segmented: { itemSelectedBg: m.chinhDam, itemSelectedColor: m.chinh },
-      Radio: { buttonSolidCheckedColor: '#17120A' },
+      Segmented: toi ? { itemSelectedBg: m.chinhDam, itemSelectedColor: m.chinh }
+        : { itemSelectedBg: m.nut, itemSelectedColor: '#FFFFFF', trackBg: 'rgba(255,255,255,.55)', borderRadius: 999, borderRadiusSM: 999, borderRadiusXS: 999 },
+      Radio: { buttonSolidCheckedColor: toi ? '#17120A' : '#FFFFFF' },
     },
   }
 }
