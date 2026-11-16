@@ -6,6 +6,7 @@ import { DownloadOutlined, FileExcelOutlined } from '@ant-design/icons'
 import { docFile, kiemTra, taiDanhSachLoi, taiFileMau, type KqHs, type KqLop } from '../import-excel'
 import { nhapDuLieu, type KetQuaNhap, type TienDo } from '../nhap-du-lieu'
 import { homNay, q, sb, THU, type HocSinh, type Lop } from '../supabase'
+import { moTaLich } from '../gio-hoc'
 import { vnd } from '../hoc-phi'
 import { MAU } from '../giao-dien'
 
@@ -144,7 +145,7 @@ export default function ImportExcel() {
               <div style={{ flexGrow: 1, minWidth: 0 }}>
                 {d.loai === 'lop' ? <>
                   <b>{d.ten || '(chưa có tên)'}</b>
-                  <div style={{ fontSize: 12, color: MAU.chuPhu }}>{vnd(d.don_gia)}/buổi, {d.lich.map((t) => THU[t]).join(' ') || 'chưa có lịch'}</div>
+                  <div style={{ fontSize: 12, color: MAU.chuPhu }}>{vnd(d.don_gia)}/buổi, {d.lich.length ? moTaLich(d) : 'chưa có lịch'}</div>
                 </> : <>
                   <b>{d.ho_ten || '(chưa có tên)'}</b>
                   <div style={{ fontSize: 12, color: MAU.chuPhu }}>

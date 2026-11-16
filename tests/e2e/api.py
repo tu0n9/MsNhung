@@ -76,6 +76,36 @@ if c == 201:
     _, r2 = goi("DELETE", f"/rest/v1/buoi_hoc?id=eq.{r[0]['id']}", T, prefer="return=representation")
     ok("trợ giảng không xoá được buổi (0 dòng)", r2 == [] and len(SV("GET", f"/rest/v1/buoi_hoc?select=id&id=eq.{r[0]['id']}")[1]) == 1)
     SV("DELETE", f"/rest/v1/buoi_hoc?id=eq.{r[0]['id']}")
+
+# lương theo ca (chốt 2026-11-16): buổi cùng ngày + cùng giờ bắt đầu là một ca, khác giờ thì thêm ca
+_, tl = SV("GET", "/rest/v1/tai_khoan?select=id&ten_dang_nhap=eq.testlan")
+tg_id = tl[0]["id"]
+_, bl = SV("GET", f"/rest/v1/buoi_hoc?select=bat_dau,ket_thuc&id=eq.{bid}")
+y, m = int(HN[:4]), int(HN[5:7])
+khoang = {"tu": f"{y}-{m:02d}-01", "den": f"{y + m // 12}-{m % 12 + 1:02d}-01"}
+so_ca = lambda: next((x["so_buoi"] for x in goi("POST", "/rest/v1/rpc/luong_tro_giang", A, khoang)[1] if x["tro_giang_id"] == tg_id), 0)
+goi("POST", "/rest/v1/tro_giang_buoi", S, {"buoi_id": bid, "tro_giang_id": tg_id}, key=S, prefer="resolution=ignore-duplicates")
+ca0 = so_ca()
+them_buoi = lambda bd, kt: goi("POST", "/rest/v1/buoi_hoc", S, {"lop_id": lop_t[0]["id"], "ngay": HN, "loai": "phu", "bat_dau": bd, "ket_thuc": kt},
+                               key=S, prefer="return=representation")[1][0]["id"]
+b_cung = them_buoi(bl[0]["bat_dau"], bl[0]["ket_thuc"])
+b_khac = them_buoi("05:00", "06:00")
+try:
+    SV("POST", "/rest/v1/tro_giang_buoi", {"buoi_id": b_cung, "tro_giang_id": tg_id})
+    ok(f"lương: thêm lớp gộp cùng giờ {bl[0]['bat_dau']} không thêm ca ({ca0} ca)", bl[0]["bat_dau"] is not None and so_ca() == ca0)
+    SV("POST", "/rest/v1/tro_giang_buoi", {"buoi_id": b_khac, "tro_giang_id": tg_id})
+    ok("lương: buổi khác giờ thêm 1 ca", so_ca() == ca0 + 1)
+finally:
+    SV("DELETE", f"/rest/v1/tro_giang_buoi?buoi_id=in.({b_cung},{b_khac})")
+    SV("DELETE", f"/rest/v1/buoi_hoc?id=in.({b_cung},{b_khac})")
+
+# ảnh lớp gộp được chép sang từng buổi: trợ giảng phải chép được file
+_, anh_t = SV("GET", f"/rest/v1/anh_buoi?select=duong_dan&buoi_id=eq.{bid}&limit=1")
+if anh_t:
+    dich = f"buoi/{bid}/test-chep.jpg"
+    c, _ = goi("POST", "/storage/v1/object/copy", T, {"bucketId": "anh", "sourceKey": anh_t[0]["duong_dan"], "destinationKey": dich})
+    ok("trợ giảng chép được ảnh lớp (ảnh chung cho lớp gộp)", c == 200)
+    goi("DELETE", "/storage/v1/object/anh", S, {"prefixes": [dich]}, key=S)
 _, anh = SV("GET", "/rest/v1/anh_buoi?select=id,duong_dan&limit=1")
 if anh:
     c, r = goi("DELETE", f"/rest/v1/anh_buoi?id=eq.{anh[0]['id']}", T, prefer="return=representation")

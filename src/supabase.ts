@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import type { GioThu } from './gio-hoc'
 
 export const sb = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY)
 
@@ -8,13 +9,16 @@ export interface TaiKhoan {
   id: string; ten_dang_nhap: string | null; so_dien_thoai: string | null; ho_ten: string
   vai_tro: VaiTro; phai_doi_mat_khau: boolean; don_gia_buoi: number; hoat_dong: boolean
 }
-export interface Lop { id: string; ten: string; don_gia: number; lich: number[]; gio: string | null; hoat_dong: boolean }
+export interface Lop { id: string; ten: string; don_gia: number; lich: number[]; gio_thu: GioThu; hoat_dong: boolean }
 export interface HocSinh {
   id: string; ho_ten: string; lop_id: string; avatar: string | null; ten_phu_huynh: string | null
   sdt_phu_huynh: string | null; phu_huynh_id: string | null; ngay_vao: string; don_gia_rieng: number | null
   trang_thai: 'dang_hoc' | 'ngung'; ghi_chu: string | null; sticker_dau_ky: number
 }
-export interface BuoiHoc { id: string; lop_id: string; ngay: string; loai: 'lich' | 'phu' | 'bu'; lop_nghi: boolean; ghi_chu: string | null }
+export interface BuoiHoc {
+  id: string; lop_id: string; ngay: string; loai: 'lich' | 'phu' | 'bu'; lop_nghi: boolean; ghi_chu: string | null
+  bat_dau: string | null; ket_thuc: string | null // cột time: '16:45:00'
+}
 export interface DiemDanh { buoi_id: string; hoc_sinh_id: string; trang_thai: 'co_mat' | 'vang' | 'hoc_bu'; sticker: number }
 
 export const laQuanLy = (v?: VaiTro) => v === 'admin' || v === 'giao_vien'

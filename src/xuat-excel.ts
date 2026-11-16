@@ -112,7 +112,7 @@ export async function xuatExcel(d: DuLieuThang) {
 
   // ---- Trợ giảng ----
   const wsTg = wb.addWorksheet('Trợ giảng')
-  tieuDe(wsTg, [{ header: 'Trợ giảng', key: 'ten', width: 24 }, { header: 'Số buổi', key: 'buoi', width: 9 }, { header: 'Thành tiền', key: 'tien', width: 14, tien: true }])
+  tieuDe(wsTg, [{ header: 'Trợ giảng', key: 'ten', width: 24 }, { header: 'Số ca', key: 'buoi', width: 9 }, { header: 'Thành tiền', key: 'tien', width: 14, tien: true }])
   d.luongTg.forEach((x) => wsTg.addRow({ ten: x.tg.ho_ten, buoi: x.soBuoi, tien: x.thanhTien }))
   const rTg = wsTg.addRow({ ten: 'TỔNG' })
   rTg.getCell('buoi').value = { formula: `SUM(B2:B${tgCuoi})` }; rTg.getCell('tien').value = { formula: `SUM(C2:C${tgCuoi})` }; rTg.font = { bold: true }

@@ -6,6 +6,7 @@ import dayjs from 'dayjs'
 import { useToi } from '../App'
 import { goiTaiKhoan, laQuanLy, q, sb, useMotLan, taiAnhLen, THU, urlAnh, type HocSinh, type Lop } from '../supabase'
 import { vnd } from '../hoc-phi'
+import { cong2Gio, moTaLich, thieuGio, type GioThu } from '../gio-hoc'
 import { O_TIEN } from '../giao-dien'
 import HocSinhChiTiet from './HocSinhChiTiet'
 
@@ -31,7 +32,8 @@ export default function LopHoc() {
 
   const [luuLop, dangLuuLop] = useMotLan(async (v: Lop) => {
     try {
-      const ban = { ten: v.ten, don_gia: v.don_gia, lich: v.lich ?? [], gio: v.gio?.trim() || null, hoat_dong: v.hoat_dong ?? true }
+      const gio_thu = v.gio_thu ?? {}
+      const ban = { ten: v.ten, don_gia: v.don_gia, lich: Object.keys(gio_thu).map(Number), gio_thu, hoat_dong: v.hoat_dong ?? true }
       await q(suaLop?.id ? sb.from('lop').update(ban).eq('id', suaLop.id) : sb.from('lop').insert(ban))
       setSuaLop(null); tai()
     } catch (e) { message.error((e as Error).message) }
@@ -107,7 +109,7 @@ export default function LopHoc() {
         const ds = hs.filter((h) => h.lop_id === l.id && (hienNgung || h.trang_thai === 'dang_hoc'))
         return {
           key: l.id,
-          label: <Space wrap><b>{l.ten}</b><span>{l.lich.map((t) => THU[t]).join('-')}{l.gio && ` · ${l.gio}`}</span>
+          label: <Space wrap><b>{l.ten}</b>{l.lich.length > 0 && <span>{moTaLich(l)}</span>}{thieuGio(l) && <Tag color="red">Chưa có giờ</Tag>}
             {ql && <span>{vnd(l.don_gia)}/buổi</span>}<Tag>{ds.length} HS</Tag>{!l.hoat_dong && <Tag>Ngừng</Tag>}</Space>,
           extra: ql && <Button size="small" onClick={(e) => { e.stopPropagation(); setSuaLop(l) }}>Sửa lớp</Button>,
           children: <List dataSource={ds} locale={{ emptyText: 'Chưa có học sinh' }} renderItem={(h) => (
@@ -128,13 +130,15 @@ export default function LopHoc() {
       })} />
 
       <Modal open={!!suaLop} title={suaLop?.id ? 'Sửa lớp' : 'Thêm lớp'} onCancel={() => setSuaLop(null)} footer={null} destroyOnHidden>
-        <Form layout="vertical" initialValues={suaLop ?? {}} onFinish={luuLop}>
+        <Form layout="vertical" initialValues={suaLop ? { ...suaLop, gio_thu: gioThuSua(suaLop) } : {}} onFinish={luuLop}>
           <Form.Item name="ten" label="Tên lớp" rules={[{ required: true }]}><Input /></Form.Item>
           <Form.Item name="don_gia" label="Đơn giá một buổi (đ)" rules={[{ required: true }]}>
             <InputNumber<number> {...O_TIEN} step={10000} />
           </Form.Item>
-          <Form.Item name="lich" label="Lịch học trong tuần"><Checkbox.Group options={[1, 2, 3, 4, 5, 6, 0].map((t) => ({ value: t, label: THU[t] }))} /></Form.Item>
-          <Form.Item name="gio" label="Giờ học"><Input placeholder="17:30–19:00" /></Form.Item>
+          <Form.Item name="gio_thu" label="Lịch học trong tuần (giờ bắt đầu → kết thúc)" rules={[{
+            validator: (_, v: GioThu = {}) => Object.values(v).every((g) => g.bd && g.kt && g.kt > g.bd) ? Promise.resolve()
+              : Promise.reject(new Error('Thứ đã chọn phải có giờ bắt đầu và giờ kết thúc sau giờ bắt đầu')),
+          }]}><LichTuan /></Form.Item>
           <Form.Item name="hoat_dong" label="Đang mở" valuePropName="checked"><Checkbox /></Form.Item>
           <Button type="primary" htmlType="submit" block loading={dangLuuLop}>Lưu</Button>
           {suaLop?.id && <Button danger block style={{ marginTop: 8 }} onClick={() => xoaLop(suaLop)}>Xoá lớp</Button>}
@@ -161,3 +165,41 @@ export default function LopHoc() {
   )
 }
 
+
+// Thứ có trong lịch mà chưa có giờ (lớp cũ ghi giờ bằng chữ) vẫn hiện là đã chọn, để form bắt nhập giờ thay vì làm mất lịch.
+const gioThuSua = (l: Partial<Lop>): GioThu =>
+  Object.fromEntries((l.lich ?? []).map((t) => [t, l.gio_thu?.[t] ?? { bd: '', kt: '' }]))
+
+/** 7 dòng T2…CN: tick thứ có học, nhập giờ bằng ô giờ gốc của trình duyệt (điện thoại hiện bánh xe chọn giờ). */
+function LichTuan({ value = {}, onChange }: { value?: GioThu; onChange?: (v: GioThu) => void }) {
+  // giờ vừa nhập gần nhất: tick thêm thứ thì chép sang, vì đa số lớp học cùng giờ mọi thứ
+  const [gan, setGan] = useState<{ bd: string; kt: string }>()
+  const doi = (t: number, g?: { bd: string; kt: string }) => {
+    const v = { ...value }
+    if (g) v[t] = g; else delete v[t]
+    onChange?.(v)
+  }
+  const sua = (t: number, g: { bd: string; kt: string }) => { setGan(g); doi(t, g) }
+  return (
+    <div>
+      {[1, 2, 3, 4, 5, 6, 0].map((t) => {
+        const g = value[t]
+        return (
+          <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+            <Checkbox checked={!!g} style={{ width: 52 }}
+              onChange={(e) => doi(t, e.target.checked ? (gan ?? Object.values(value).find((x) => x.bd) ?? { bd: '', kt: '' }) : undefined)}>
+              {THU[t]}
+            </Checkbox>
+            {g && <>
+              <Input type="time" aria-label={`${THU[t]} bắt đầu`} value={g.bd} style={{ width: 120 }}
+                onChange={(e) => sua(t, { bd: e.target.value, kt: g.kt || (e.target.value ? cong2Gio(e.target.value) : '') })} />
+              <span>→</span>
+              <Input type="time" aria-label={`${THU[t]} kết thúc`} value={g.kt} style={{ width: 120 }}
+                onChange={(e) => sua(t, { ...g, kt: e.target.value })} />
+            </>}
+          </div>
+        )
+      })}
+    </div>
+  )
+}

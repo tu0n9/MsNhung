@@ -42,8 +42,9 @@ def tao():
     ds["bat_dau"] = ds["bat_dau"][0]["id"] if ds["bat_dau"] else 0
     luu = lambda: json.dump(ds, open(GHI, "w", encoding="utf-8"), ensure_ascii=False)
     # lịch có Chủ nhật để buổi "hôm nay" (CN 15/11/2026) hiện trong video điểm danh
-    movers = api("POST", "/rest/v1/lop", {"ten": "Movers 2", "don_gia": 150000, "lich": [0, 2, 4], "gio": "17:30–19:00"})[0]
-    starters = api("POST", "/rest/v1/lop", {"ten": "Starters 1", "don_gia": 120000, "lich": [1, 3, 5], "gio": "18:00–19:30"})[0]
+    gio = lambda thu, bd, kt: {str(t): {"bd": bd, "kt": kt} for t in thu}
+    movers = api("POST", "/rest/v1/lop", {"ten": "Movers 2", "don_gia": 150000, "lich": [0, 2, 4], "gio_thu": gio([0, 2, 4], "17:30", "19:00")})[0]
+    starters = api("POST", "/rest/v1/lop", {"ten": "Starters 1", "don_gia": 120000, "lich": [1, 3, 5], "gio_thu": gio([1, 3, 5], "18:00", "19:30")})[0]
     ds["lop"] += [movers["id"], starters["id"]]
     luu()
     ds["tk"].append(tao_tai_khoan(A, vai_tro="tro_giang", ho_ten="Cô Lan", ten_dang_nhap="colan", so_dien_thoai="0900100009", don_gia_buoi=80000))
@@ -71,8 +72,8 @@ def tao():
     luu()
     # điểm danh đầu tháng 11 để lưới "Điểm danh tháng" không toàn ô "chưa điểm danh": Minh Anh vắng 5/11 rồi học bù
     # 6/11 ở Starters 1, Huy vắng 10/11, còn lại có mặt. Không có buổi lớp nghỉ để số tiền dư của video không đổi.
-    buoi = {d: api("POST", "/rest/v1/buoi_hoc", {"lop_id": movers["id"], "ngay": f"2026-11-{d:02d}"})[0]["id"] for d in [1, 3, 5, 8, 10, 12]}
-    bu = api("POST", "/rest/v1/buoi_hoc", {"lop_id": starters["id"], "ngay": "2026-11-06"})[0]["id"]
+    buoi = {d: api("POST", "/rest/v1/buoi_hoc", {"lop_id": movers["id"], "ngay": f"2026-11-{d:02d}", "bat_dau": "17:30", "ket_thuc": "19:00"})[0]["id"] for d in [1, 3, 5, 8, 10, 12]}
+    bu = api("POST", "/rest/v1/buoi_hoc", {"lop_id": starters["id"], "ngay": "2026-11-06", "bat_dau": "18:00", "ket_thuc": "19:30"})[0]["id"]
     vang = {(0, 5), (3, 10)}
     api("POST", "/rest/v1/diem_danh", [
         {"buoi_id": b, "hoc_sinh_id": h, "trang_thai": "vang" if (i, d) in vang else "co_mat", "sticker": 0 if (i, d) in vang else (d + i) % 3 + 1}

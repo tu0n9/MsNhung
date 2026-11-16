@@ -6,7 +6,7 @@ await wb.xlsx.readFile(vao)
 const l = wb.getWorksheet('Lớp'), h = wb.getWorksheet('Học sinh')
 // ghi vào ngay dưới dòng ví dụ / các lớp có sẵn như người dùng gõ tay (addRow sẽ ghi sau 500 dòng đã định dạng)
 const dongTrong = (ws) => { let r = 2; while (ws.getCell(r, 1).value) r++; return r }
-l.getRow(dongTrong(l)).values = ['Kids 3', '130.000', 'x', '', 'x', '', '', '', '']
+l.getRow(dongTrong(l)).values = ['Kids 3', '130.000', '17:30-19:00', '', '17:30-19:00', '', '', '', '']
 const hs = [
   ['Vũ Ngọc Hân', 'Kids 3', 'Anh Nam', '0900100006', new Date(Date.UTC(2026, 10, 2)), '', 2, ''],
   ['Hoàng Tuệ Nhi', 'Kids 3', 'Chị Mai', '0900100007', '', '', '', ''],

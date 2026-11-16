@@ -8,6 +8,7 @@ import {
   congThang, conNoGoi, daDongGoi, demBuoiDuKien, demChuaBu, duConLai, tenGoi, thangHetGoi, tienDuGoi, tinhTrangGoi, tinNhanPhuHuynh, tongGoi, tongHopHocSinh, vnd,
   type Goi, type PhieuThu, type Thang,
 } from '../hoc-phi'
+import { moTaLich } from '../gio-hoc'
 import { luoiThang, type ONgay, type TrangThaiO } from '../diem-danh-thang'
 
 type Phieu = PhieuThu & { id: string; hinh_thuc: string; ghi_chu: string | null }
@@ -72,7 +73,7 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
       <Space wrap>
         {quayLai && <Button onClick={quayLai}>← Quay lại</Button>}
         <Avatar shape="square" size={64} src={avatar}>{hs.ho_ten.split(' ').pop()?.[0]}</Avatar>
-        <div><b style={{ fontSize: 18 }}>{hs.ho_ten}</b><br />{lop?.ten}{lop?.gio && ` · ${lop.gio}`} {hs.trang_thai === 'ngung' && <Tag>Ngừng học</Tag>}</div>
+        <div><b style={{ fontSize: 18 }}>{hs.ho_ten}</b><br />{lop?.ten}{lop?.lich.length ? ` · ${moTaLich(lop)}` : ''} {hs.trang_thai === 'ngung' && <Tag>Ngừng học</Tag>}</div>
         <DatePicker picker="month" value={dayjs(thang)} onChange={(d) => d && setThang(d.format('YYYY-MM'))} format="MM/YYYY" allowClear={false} />
       </Space>
 

@@ -68,7 +68,7 @@ with sync_playwright() as pw:
         lab(p, "Họ tên").fill("TEST Trợ giảng Lan")
         lab(p, "Tên đăng nhập").fill("testlan")
         lab(p, "Số điện thoại").fill("0911000001")
-        lab(p, "Đơn giá một buổi").fill("80000")
+        lab(p, "Đơn giá một ca").fill("80000")
         p.get_by_role("button", name="Tạo", exact=True).click()
         expect(p.get_by_text("TEST Trợ giảng Lan")).to_be_visible(timeout=15000)
     buoc("tạo trợ giảng", b_tao_tg)
@@ -78,9 +78,14 @@ with sync_playwright() as pw:
         p.get_by_role("button", name="Thêm lớp").click()
         lab(p, "Tên lớp").fill("TEST Lớp Starters")
         lab(p, "Đơn giá một buổi (đ)").fill("100000")
-        for t in ["T2", "T3", "T4", "T5", "T6", "T7", "CN"]:
-            p.locator(".ant-modal").get_by_text(t, exact=True).click()
-        lab(p, "Giờ học").fill("16:45–18:15")
+        m = p.locator(".ant-modal")
+        m.get_by_text("T2", exact=True).click()
+        m.get_by_label("T2 bắt đầu").fill("16:45")
+        expect(m.get_by_label("T2 kết thúc")).to_have_value("18:45")  # ca mặc định 2 tiếng
+        m.get_by_label("T2 kết thúc").fill("18:15")
+        for t in ["T3", "T4", "T5", "T6", "T7", "CN"]:  # tick thêm thứ thì chép giờ vừa nhập
+            m.get_by_text(t, exact=True).click()
+        expect(m.get_by_label("CN bắt đầu")).to_have_value("16:45")
         p.locator(".ant-modal").get_by_role("button", name="Lưu").click()
         expect(p.get_by_text("TEST Lớp Starters")).to_be_visible(timeout=15000)
         expect(p.get_by_text(re.compile("16:45–18:15"))).to_be_visible()
@@ -124,6 +129,9 @@ with sync_playwright() as pw:
         m.get_by_text("Buổi bù riêng").click()
         m.locator(".ant-select").click()
         p.locator(".ant-select-dropdown:visible .ant-select-item-option", has_text="TEST Lớp Starters").click()
+        # khác giờ buổi theo lịch (16:45) để không bị gộp chung một ca
+        m.get_by_label("Giờ bắt đầu").fill("19:30")
+        m.get_by_label("Giờ kết thúc").fill("21:00")
         m.get_by_role("button", name=re.compile("^(OK|Đồng ý)$")).click()
         p.locator(".ant-list-item", has_text="Buổi bù").get_by_role("button", name="Điểm danh").click()
         row = p.locator(".ant-list-item", has_text="TEST Nguyễn Bảo An")
@@ -175,6 +183,9 @@ with sync_playwright() as pw:
         m.get_by_text("Buổi bù riêng").click()
         m.locator(".ant-select").click()
         p.locator(".ant-select-dropdown:visible .ant-select-item-option", has_text="TEST Lớp Starters").click()
+        # khác giờ buổi theo lịch (16:45) để không bị gộp chung một ca
+        m.get_by_label("Giờ bắt đầu").fill("19:30")
+        m.get_by_label("Giờ kết thúc").fill("21:00")
         m.get_by_role("button", name=re.compile("^(OK|Đồng ý)$")).click()
         p.locator(".ant-list-item", has_text="Buổi bù").get_by_role("button", name="Điểm danh").click()
         p.locator(".ant-list-item", has_text="TEST Nguyễn Bảo An").get_by_text("Học bù", exact=True).click()

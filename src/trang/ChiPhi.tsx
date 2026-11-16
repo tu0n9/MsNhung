@@ -50,7 +50,7 @@ export default function ChiPhi() {
       <Card size="small" title={`Lương trợ giảng (tự tính từ điểm danh): ${vnd(luong)}`}>
         <Table size="small" rowKey={(r) => r.tg.id} pagination={false} dataSource={d.luongTg} columns={[
           { title: 'Trợ giảng', render: (_, r) => r.tg.ho_ten },
-          { title: 'Số buổi', dataIndex: 'soBuoi' },
+          { title: 'Số ca', dataIndex: 'soBuoi' },
           { title: 'Thành tiền', render: (_, r) => vnd(r.thanhTien) },
         ]} />
       </Card>

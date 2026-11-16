@@ -28,10 +28,11 @@ const ngayCua = (t) => { const [y, m] = t.split('-').map(Number); const n = new 
 const thu = (ngay) => new Date(`${ngay}T00:00:00Z`).getUTCDay()
 const chuaQua = (ngay) => (ngay > homNay ? homNay : ngay)  // phiếu thu, chi phí không ghi ngày tương lai
 
+const gio = (thu, bd, kt) => Object.fromEntries(thu.map((t) => [t, { bd, kt }]))
 const lop = await them('lop', [
-  { ten: 'Starters 1', don_gia: 120000, lich: [1, 3, 5], gio: '17:30–19:00' },
-  { ten: 'Movers 2', don_gia: 150000, lich: [2, 4], gio: '18:00–19:30' },
-  { ten: 'Flyers A', don_gia: 180000, lich: [6, 0], gio: 'T7 8:00, CN 9:30' },
+  { ten: 'Starters 1', don_gia: 120000, lich: [1, 3, 5], gio_thu: gio([1, 3, 5], '17:30', '19:00') },
+  { ten: 'Movers 2', don_gia: 150000, lich: [2, 4], gio_thu: gio([2, 4], '18:00', '19:30') },
+  { ten: 'Flyers A', don_gia: 180000, lich: [6, 0], gio_thu: { ...gio([6], '08:00', '09:30'), ...gio([0], '09:30', '11:00') } },
 ])
 const TEN = [
   ['Nguyễn Minh Anh', 'Trần Bảo Ngọc', 'Lê Gia Huy', 'Phạm Thảo Vy', 'Đỗ Đức Minh'],
@@ -57,7 +58,7 @@ for (const h of dsHs.filter((_, i) => i % 4 === 0)) {
 }
 
 // buổi theo lịch cả 3 tháng (tháng này sinh cả các ngày tới, như app tự sinh khi mở tháng)
-const buoi = await them('buoi_hoc', lop.flatMap((l) => THANG.flatMap(ngayCua).filter((d) => l.lich.includes(thu(d))).map((ngay) => ({ lop_id: l.id, ngay }))))
+const buoi = await them('buoi_hoc', lop.flatMap((l) => THANG.flatMap(ngayCua).filter((d) => l.lich.includes(thu(d))).map((ngay) => ({ lop_id: l.id, ngay, bat_dau: l.gio_thu[thu(ngay)].bd, ket_thuc: l.gio_thu[thu(ngay)].kt }))))
 const buoiLop = (l) => buoi.filter((b) => b.lop_id === l.id).sort((a, b) => a.ngay.localeCompare(b.ngay))
 const nghi = buoiLop(lop[1]).filter((b) => b.ngay.startsWith(THANG[1]))[1]
 ok(await sb.from('buoi_hoc').update({ lop_nghi: true, ghi_chu: 'Nghỉ lễ' }).eq('id', nghi.id))

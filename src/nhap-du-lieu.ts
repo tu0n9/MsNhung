@@ -15,7 +15,7 @@ export async function nhapDuLieu(lops: KqLop[], hss: KqHs[], lopCo: Lop[], baoTi
   baoTienDo({ xong: 0, tong, dang: 'Đang thêm lớp' })
   const idLop = new Map(lopCo.map((l) => [khoa(l.ten), l.id]))
   if (lopMoi.length) {
-    const da = await q(sb.from('lop').insert(lopMoi.map((l) => ({ ten: l.ten, don_gia: l.don_gia, lich: l.lich }))).select('id, ten')) as { id: string; ten: string }[]
+    const da = await q(sb.from('lop').insert(lopMoi.map((l) => ({ ten: l.ten, don_gia: l.don_gia, lich: l.lich, gio_thu: l.gio_thu }))).select('id, ten')) as { id: string; ten: string }[]
     da.forEach((l) => idLop.set(khoa(l.ten), l.id))
     kq.lopMoi = da.length
   }

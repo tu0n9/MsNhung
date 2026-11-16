@@ -2,6 +2,7 @@
 // chỉ thêm mới, dòng đã có thì bỏ qua (import lại cùng file vẫn an toàn), dòng lỗi báo lý do và không nhập.
 import type ExcelJS from 'exceljs'
 import type { HocSinh, Lop } from './supabase'
+import { docOGio, type GioThu } from './gio-hoc'
 
 // không import giá trị từ ./supabase: file đó tạo client ngay khi nạp, test chạy không có .env
 const THU = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
@@ -18,7 +19,7 @@ export interface DongHsTho {
 }
 
 export type TrangThai = 'moi' | 'da_co' | 'loi'
-export interface KqLop { loai: 'lop'; so: number; trangThai: TrangThai; loi?: string; ten: string; don_gia: number; lich: number[] }
+export interface KqLop { loai: 'lop'; so: number; trangThai: TrangThai; loi?: string; ten: string; don_gia: number; lich: number[]; gio_thu: GioThu }
 export interface KqHs {
   loai: 'hs'; so: number; trangThai: TrangThai; loi?: string
   ho_ten: string; tenLop: string; ten_phu_huynh: string | null; sdt_phu_huynh: string | null
@@ -88,16 +89,19 @@ export function kiemTra(
   const lops: KqLop[] = lopTho.map((r) => {
     const ten = chu(r.ten)
     const gia = chuanTien(r.donGia, 'Đơn giá/buổi', true)
-    const thuSai = r.thu.find((x) => chu(x) && khoa(chu(x)) !== 'x')
-    const lich = COT_THU.filter((_, i) => khoa(chu(r.thu[i])) === 'x')
-    const kq: KqLop = { loai: 'lop', so: r.so, trangThai: 'moi', ten, don_gia: gia.so ?? 0, lich }
+    // ô thứ ghi giờ học "17:30-19:00"; ô trống = không học thứ đó
+    const o = COT_THU.map((t, i) => ({ t, v: chu(r.thu[i]), g: docOGio(chu(r.thu[i])) })).filter((x) => x.v)
+    const thuSai = o.find((x) => !x.g)
+    const gio_thu: GioThu = Object.fromEntries(o.filter((x) => x.g).map((x) => [x.t, x.g!]))
+    const lich = o.filter((x) => x.g).map((x) => x.t)
+    const kq: KqLop = { loai: 'lop', so: r.so, trangThai: 'moi', ten, don_gia: gia.so ?? 0, lich, gio_thu }
     if (!ten) return { ...kq, trangThai: 'loi', loi: 'Thiếu tên lớp' }
     if (tenLopCo.has(khoa(ten))) return { ...kq, trangThai: 'da_co' }
     if (daGap.has(khoa(ten))) return { ...kq, trangThai: 'da_co', loi: 'Trùng tên với dòng trên trong file' }
     daGap.add(khoa(ten))
     if (gia.loi) return { ...kq, trangThai: 'loi', loi: gia.loi }
-    if (thuSai !== undefined) return { ...kq, trangThai: 'loi', loi: `Cột thứ chỉ được đánh "x" (đang có "${chu(thuSai)}")` }
-    if (!lich.length) return { ...kq, trangThai: 'loi', loi: 'Chưa đánh "x" vào ngày học nào' }
+    if (thuSai) return { ...kq, trangThai: 'loi', loi: `Cột ${THU[thuSai.t]} ghi giờ dạng 17:30-19:00 (đang có "${thuSai.v}")` }
+    if (!lich.length) return { ...kq, trangThai: 'loi', loi: 'Chưa ghi giờ vào ngày học nào' }
     return kq
   })
 
@@ -174,7 +178,7 @@ export async function taiFileMau(lops: Lop[]) {
   hd.getColumn(1).width = 110
   ;[
     'CÁCH DÙNG FILE MẪU',
-    '1. Trang "Lớp": mỗi dòng một lớp. Các lớp đang có đã điền sẵn, import sẽ bỏ qua chúng. Đánh "x" vào cột thứ có học.',
+    '1. Trang "Lớp": mỗi dòng một lớp. Các lớp đang có đã điền sẵn, import sẽ bỏ qua chúng. Cột thứ có học ghi giờ bắt đầu-kết thúc, ví dụ 17:30-19:00; thứ không học để trống.',
     '2. Trang "Học sinh": mỗi dòng một học sinh. Cột Lớp chọn trong ô thả xuống (lấy từ trang Lớp).',
     '3. Cột có dấu * là bắt buộc. Dòng bắt đầu bằng "Ví dụ" sẽ được bỏ qua.',
     '4. SĐT phụ huynh: 10 số, bắt đầu bằng 0. Mỗi SĐT tạo một tài khoản phụ huynh, mật khẩu đầu là chính SĐT. Anh chị em dùng chung SĐT.',
@@ -186,9 +190,9 @@ export async function taiFileMau(lops: Lop[]) {
 
   const wsLop = wb.addWorksheet(TRANG_LOP)
   tieuDe(wsLop, [{ ten: 'Tên lớp', rong: 22, batBuoc: true }, { ten: 'Đơn giá/buổi', rong: 14, batBuoc: true },
-    ...COT_THU.map((t) => ({ ten: THU[t], rong: 6 }))])
-  wsLop.addRow(['Ví dụ: Movers 2', 120000, '', 'x', '', 'x', '', 'x', '']).font = { italic: true, color: { argb: 'FF8C8C8C' } }
-  for (const l of lops) wsLop.addRow([l.ten, l.don_gia, ...COT_THU.map((t) => (l.lich.includes(t) ? 'x' : ''))])
+    ...COT_THU.map((t) => ({ ten: THU[t], rong: 12 }))])
+  wsLop.addRow(['Ví dụ: Movers 2', 120000, '', '17:30-19:00', '', '17:30-19:00', '', '08:00-09:30', '']).font = { italic: true, color: { argb: 'FF8C8C8C' } }
+  for (const l of lops) wsLop.addRow([l.ten, l.don_gia, ...COT_THU.map((t) => (l.lich.includes(t) ? (l.gio_thu[t] ? `${l.gio_thu[t].bd}-${l.gio_thu[t].kt}` : 'chưa có giờ') : ''))])
   wsLop.getColumn(2).numFmt = '#,##0'
 
   const wsHs = wb.addWorksheet(TRANG_HS)

@@ -220,7 +220,10 @@ Giờ học theo thứ, lương trợ giảng theo ca, điểm danh gộp (grill
 - **Giờ học theo từng thứ** bằng ô chọn giờ (thay ô chữ `gio`): tick thứ nào thì **bắt buộc** giờ bắt đầu–kết thúc của
   thứ đó; kết thúc mặc định = bắt đầu + 2 tiếng (một ca 2 tiếng), sửa được. Danh sách buổi trong ngày xếp theo giờ.
 - **Mỗi buổi lưu giờ riêng** lúc sinh; buổi phụ / bù chọn giờ khi tạo (tự điền giờ của lớp nếu thứ đó có lịch). Đổi giờ
-  lớp không đổi buổi đã sinh.
+  lớp thì buổi theo lịch **từ hôm nay trở đi** đổi theo, buổi đã qua giữ giờ cũ (lớp nhập giờ muộn vẫn có giờ cho các buổi
+  còn lại của tháng); tháng đã chốt không đổi.
+- **Ảnh lớp gộp** tải một lần, app chép file sang từng buổi của ca (phụ huynh mỗi lớp đều thấy). Tốn gấp đôi dung lượng
+  cho ảnh lớp gộp, đổi lại không phải sửa quyền xem ảnh, xoá lớp và workflow dọn ảnh.
 - **Lương trợ giảng tính theo ca:** số cặp (ngày, giờ bắt đầu) khác nhau mà trợ giảng có mặt × đơn giá của trợ giảng
   (hiện là "đơn giá / ca"). Một trợ giảng không thể ở hai lớp khác giờ: cùng ngày cùng giờ bắt đầu là lớp gộp, tính 1 ca;
   khác giờ bắt đầu thì mỗi lớp 1 ca. Màn lương và sheet Excel "Trợ giảng" đổi "buổi" thành "ca". Tính lại từ tháng 11;

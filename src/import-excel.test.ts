@@ -4,13 +4,14 @@ import { chuanNgay, chuanSdt, chuanTien, docFile, kiemTra, type DongHsTho, type 
 import type { HocSinh, Lop } from './supabase'
 
 const HOM_NAY = '2026-11-15'
-const lopCo: Lop[] = [{ id: 'l1', ten: 'Starters 1', don_gia: 100000, lich: [1, 3], gio: null, hoat_dong: true }]
+const lopCo: Lop[] = [{ id: 'l1', ten: 'Starters 1', don_gia: 100000, lich: [1, 3], gio_thu: {}, hoat_dong: true }]
 const hsCo = [{ id: 'h1', ho_ten: 'Trần Khánh Linh', lop_id: 'l1', sdt_phu_huynh: '0903615240' }] as HocSinh[]
 const hs = (so: number, o: Partial<DongHsTho>): DongHsTho => ({
   so, hoTen: 'Lê Minh Châu', lop: 'Starters 1', tenPh: '', sdt: '', ngayVao: '', donGiaRieng: '', sticker: '', ghiChu: '', ...o,
 })
+// 'g' = ô ghi giờ hợp lệ, '.' = ô trống, ký tự khác giữ nguyên (ví dụ 'x' kiểu file cũ)
 const lop = (so: number, ten: string, donGia: unknown, thu: string): DongLopTho =>
-  ({ so, ten, donGia, thu: [...thu].map((c) => (c === 'x' ? 'x' : c === '.' ? '' : c)) })
+  ({ so, ten, donGia, thu: [...thu].map((c) => (c === 'g' ? '17:30-19:00' : c === '.' ? '' : c)) })
 
 describe('chuẩn hoá ô', () => {
   it('SĐT: bỏ ký tự thừa, +84 thành 0, số mất 0 đầu do ô kiểu số, báo lỗi khi thiếu số', () => {
@@ -36,21 +37,25 @@ describe('chuẩn hoá ô', () => {
 })
 
 describe('kiemTra', () => {
-  it('lớp: đã có thì bỏ qua (không phân biệt hoa thường), lớp mới cần đơn giá và ít nhất một thứ', () => {
+  it('lớp: đã có thì bỏ qua (không phân biệt hoa thường), lớp mới cần đơn giá và ít nhất một thứ có giờ', () => {
     const { lops } = kiemTra([
-      lop(2, 'starters 1', 999, 'x......'),
-      lop(3, 'Movers 2', '120.000', '.x.x.x.'),
-      lop(4, 'Flyers A', '', 'x......'),
+      lop(2, 'starters 1', 999, 'g......'),
+      lop(3, 'Movers 2', '120.000', '.g.g.g.'),
+      lop(4, 'Flyers A', '', 'g......'),
       lop(5, 'Flyers B', 100000, '.......'),
-      lop(6, 'Flyers C', 100000, 'v......'),
+      lop(6, 'Flyers C', 100000, 'x......'),
+      lop(7, 'Flyers D', 100000, '.v.....'),
     ], [], lopCo, [], HOM_NAY)
-    expect(lops.map((l) => l.trangThai)).toEqual(['da_co', 'moi', 'loi', 'loi', 'loi'])
+    expect(lops.map((l) => l.trangThai)).toEqual(['da_co', 'moi', 'loi', 'loi', 'loi', 'loi'])
     expect(lops[1].lich).toEqual([2, 4, 6])
+    expect(lops[1].gio_thu[4]).toEqual({ bd: '17:30', kt: '19:00' })
+    expect(lops[4].loi).toBe('Cột T2 ghi giờ dạng 17:30-19:00 (đang có "x")')
+    expect(lops[5].loi).toMatch(/Cột T3/)
     expect(lops[1].don_gia).toBe(120000)
   })
 
   it('học sinh: trùng (tên + lớp + SĐT) thì bỏ qua; lớp mới trong cùng file dùng được; trùng trong file bỏ qua', () => {
-    const { hss } = kiemTra([lop(2, 'Movers 2', 120000, '.x.....')], [
+    const { hss } = kiemTra([lop(2, 'Movers 2', 120000, '.g.....')], [
       hs(2, { hoTen: 'Trần Khánh Linh', sdt: '0903 615 240' }),
       hs(3, { lop: 'Movers 2', sdt: '0987220413', sticker: 12 }),
       hs(4, { lop: 'Movers 2', sdt: '0987220413' }),
@@ -79,7 +84,7 @@ describe('docFile', () => {
     const l = wb.addWorksheet('Lớp')
     l.addRow(['Tên lớp *', 'Đơn giá/buổi *', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'])
     l.addRow(['Ví dụ: Movers 2', 120000, '', 'x'])
-    l.addRow(['Flyers A', 150000, 'x', '', 'x'])
+    l.addRow(['Flyers A', 150000, '8:00-9:30', '', '17:30 – 19:00'])
     const h = wb.addWorksheet('Học sinh')
     h.addRow(['Họ tên *', 'Lớp *', 'Tên phụ huynh', 'SĐT phụ huynh', 'Ngày vào học', 'Đơn giá riêng', 'Sticker đã có', 'Ghi chú'])
     h.addRow(['Ví dụ: Nguyễn Gia Bảo', 'Movers 2'])
@@ -90,7 +95,7 @@ describe('docFile', () => {
     expect(lopTho.map((x) => x.so)).toEqual([3])
     expect(hsTho.map((x) => x.so)).toEqual([4])
     const { lops, hss } = kiemTra(lopTho, hsTho, [], [], HOM_NAY)
-    expect(lops[0]).toMatchObject({ trangThai: 'moi', ten: 'Flyers A', lich: [1, 3] })
+    expect(lops[0]).toMatchObject({ trangThai: 'moi', ten: 'Flyers A', lich: [1, 3], gio_thu: { 1: { bd: '08:00', kt: '09:30' }, 3: { bd: '17:30', kt: '19:00' } } })
     expect(hss[0]).toMatchObject({ trangThai: 'moi', ngay_vao: '2026-10-05', sdt_phu_huynh: '0911222333', sticker_dau_ky: 4 })
   })
 
