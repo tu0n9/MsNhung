@@ -34,6 +34,9 @@ jobs:
         run: |
           cd sl
           git config user.name "sao-luu-bot" && git config user.email "sao-luu@users.noreply.github.com"
+          # Vercel build mọi nhánh được push; nhánh này chỉ có file .sql nên bản Preview nào cũng báo Error.
+          # Vercel đọc vercel.json ngay trong commit đó, nên phải đặt file vào chính nhánh sao-luu.
+          echo '{"git":{"deploymentEnabled":false}}' > vercel.json
           git add -A
           git commit -q -m "Sao lưu $(date -u +%F)" || echo "Không có thay đổi"
           git push -q origin sao-luu
