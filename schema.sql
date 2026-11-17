@@ -164,10 +164,15 @@ CREATE OR REPLACE FUNCTION "public"."luong_tro_giang"("tu" "date", "den" "date")
 begin
   if not la_quan_ly() then raise exception 'Chỉ giáo viên xem được lương trợ giảng'; end if;
   return query
-    select t.tro_giang_id, k.ho_ten, count(*), sum(t.don_gia)::bigint
-    from tro_giang_buoi t join buoi_hoc b on b.id = t.buoi_id join tai_khoan k on k.id = t.tro_giang_id
-    where b.ngay >= tu and b.ngay < den
-    group by t.tro_giang_id, k.ho_ten
+    with ca as (
+      select t.tro_giang_id, b.ngay, coalesce(b.bat_dau::text, b.id::text) as gio, max(t.don_gia) as don_gia
+      from tro_giang_buoi t join buoi_hoc b on b.id = t.buoi_id
+      where b.ngay >= tu and b.ngay < den
+      group by 1, 2, 3
+    )
+    select c.tro_giang_id, k.ho_ten, count(*), sum(c.don_gia)::bigint
+    from ca c join tai_khoan k on k.id = c.tro_giang_id
+    group by c.tro_giang_id, k.ho_ten
     order by k.ho_ten;
 end $$;
 
@@ -252,12 +257,16 @@ begin
   if not la_nhan_vien() then raise exception 'Không có quyền'; end if;
   select khoa_den into k from khoa_so;
   if k is not null and date_trunc('month', thang)::date <= k then return; end if;
-  insert into buoi_hoc (lop_id, ngay, loai)
-  select l.id, d::date, 'lich'
+  insert into buoi_hoc (lop_id, ngay, loai, bat_dau, ket_thuc)
+  select l.id, d::date, 'lich',
+    (l.gio_thu -> extract(dow from d)::int::text ->> 'bd')::time,
+    (l.gio_thu -> extract(dow from d)::int::text ->> 'kt')::time
   from lop l
   cross join generate_series(date_trunc('month', thang), date_trunc('month', thang) + interval '1 month - 1 day', interval '1 day') d
   where l.hoat_dong and extract(dow from d)::smallint = any (l.lich)
-  on conflict (lop_id, ngay) where loai = 'lich' do nothing;
+  on conflict (lop_id, ngay) where loai = 'lich' do update set bat_dau = excluded.bat_dau, ket_thuc = excluded.ket_thuc
+    where buoi_hoc.ngay >= (now() at time zone 'Asia/Ho_Chi_Minh')::date
+      and (buoi_hoc.bat_dau, buoi_hoc.ket_thuc) is distinct from (excluded.bat_dau, excluded.ket_thuc);
 end $$;
 
 
@@ -373,6 +382,9 @@ CREATE TABLE IF NOT EXISTS "public"."buoi_hoc" (
     "loai" "text" DEFAULT 'lich'::"text" NOT NULL,
     "lop_nghi" boolean DEFAULT false NOT NULL,
     "ghi_chu" "text",
+    "bat_dau" time without time zone,
+    "ket_thuc" time without time zone,
+    CONSTRAINT "buoi_hoc_gio_hop_le" CHECK (("ket_thuc" > "bat_dau")),
     CONSTRAINT "buoi_hoc_loai_check" CHECK (("loai" = ANY (ARRAY['lich'::"text", 'phu'::"text", 'bu'::"text"])))
 );
 
@@ -468,6 +480,7 @@ CREATE TABLE IF NOT EXISTS "public"."lop" (
     "hoat_dong" boolean DEFAULT true NOT NULL,
     "tao_luc" timestamp with time zone DEFAULT "now"() NOT NULL,
     "gio" "text",
+    "gio_thu" "jsonb" DEFAULT '{}'::"jsonb" NOT NULL,
     CONSTRAINT "lop_don_gia_check" CHECK (("don_gia" >= 0))
 );
 
@@ -799,10 +812,6 @@ CREATE POLICY "doc" ON "public"."tai_khoan" FOR SELECT USING ((("id" = "auth"."u
 
 
 
-CREATE POLICY "ghi" ON "public"."buoi_hoc" USING ("public"."la_quan_ly"()) WITH CHECK ("public"."la_quan_ly"());
-
-
-
 CREATE POLICY "ghi" ON "public"."diem_danh" USING ("public"."la_nhan_vien"()) WITH CHECK ("public"."la_nhan_vien"());
 
 
@@ -849,6 +858,10 @@ CREATE POLICY "ql" ON "public"."chi_phi" USING ("public"."la_quan_ly"()) WITH CH
 
 
 
+CREATE POLICY "sua" ON "public"."buoi_hoc" FOR UPDATE USING ("public"."la_nhan_vien"()) WITH CHECK ("public"."la_nhan_vien"());
+
+
+
 CREATE POLICY "sua" ON "public"."tai_khoan" FOR UPDATE USING ((("vai_tro" <> 'admin'::"text") AND (("public"."vai_tro"() = 'admin'::"text") OR ("public"."la_quan_ly"() AND ("vai_tro" = ANY (ARRAY['tro_giang'::"text", 'phu_huynh'::"text"]))))));
 
 
@@ -860,10 +873,18 @@ CREATE POLICY "them" ON "public"."anh_buoi" FOR INSERT WITH CHECK ("public"."la_
 
 
 
+CREATE POLICY "them" ON "public"."buoi_hoc" FOR INSERT WITH CHECK ("public"."la_nhan_vien"());
+
+
+
 ALTER TABLE "public"."tro_giang_buoi" ENABLE ROW LEVEL SECURITY;
 
 
 CREATE POLICY "xoa" ON "public"."anh_buoi" FOR DELETE USING ("public"."la_quan_ly"());
+
+
+
+CREATE POLICY "xoa" ON "public"."buoi_hoc" FOR DELETE USING ("public"."la_quan_ly"());
 
 
 
