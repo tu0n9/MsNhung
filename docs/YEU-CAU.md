@@ -282,6 +282,8 @@ Giao diện "Sổ vàng" (2026-11-16):
 - **Lượt 2 đã làm (2026-11-18)**, Edge Function `tom-tat-danh-gia`: model `gemini-flash-latest` (đổi được bằng secret
   `GEMINI_MODEL`), Flash quá tải (503) hoặc treo quá 55 giây thì tự thử `gemini-flash-lite-latest`. Một lần tóm tắt mất
   10–60 giây. Bản tóm tắt chưa đưa vào file Excel.
+- **Không tự xoá phiếu cũ** (người dùng chốt 2026-11-18): phiếu và bản tóm tắt giữ mãi, mỗi phiếu chỉ 1–2 KB; điểm
+  trợ giảng tính lại từ phiếu nên xoá phiếu là mất điểm tháng đó. Chỉ xoá tay từng phiếu (rác / nhầm tên).
 
 ## Câu hỏi còn mở
 
