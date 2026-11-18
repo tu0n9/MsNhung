@@ -9,8 +9,8 @@ import { createInterface } from 'node:readline/promises'
 const sb = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } })
 const ok = ({ data, error }) => { if (error) throw new Error(error.message); return data }
 // thứ tự xoá theo khoá ngoại: bảng con trước
-const BANG = ['danh_gia', 'link_danh_gia', 'phieu_thu', 'goi_hoc', 'diem_danh', 'tro_giang_buoi', 'anh_buoi', 'chi_phi', 'hoc_sinh', 'buoi_hoc', 'lop', 'nhat_ky_chot_so']
-const KHOA = { diem_danh: 'buoi_id', tro_giang_buoi: 'buoi_id', link_danh_gia: 'thang' }
+const BANG = ['tom_tat_danh_gia', 'danh_gia', 'link_danh_gia', 'phieu_thu', 'goi_hoc', 'diem_danh', 'tro_giang_buoi', 'anh_buoi', 'chi_phi', 'hoc_sinh', 'buoi_hoc', 'lop', 'nhat_ky_chot_so']
+const KHOA = { diem_danh: 'buoi_id', tro_giang_buoi: 'buoi_id', link_danh_gia: 'thang', tom_tat_danh_gia: 'thang' }
 
 const rl = createInterface({ input: process.stdin, output: process.stdout })
 const tl = await rl.question('Xoá TOÀN BỘ dữ liệu (giữ tài khoản). Gõ XOA HET để tiếp tục: ')

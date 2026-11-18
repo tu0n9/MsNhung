@@ -8,7 +8,7 @@ import { homNay, q, sb, urlAnh, type HocSinh } from '../supabase'
 import HocSinhChiTiet from './HocSinhChiTiet'
 import { CHU_SO, MAU } from '../giao-dien'
 
-const BANG = ['tai_khoan', 'lop', 'hoc_sinh', 'buoi_hoc', 'diem_danh', 'tro_giang_buoi', 'anh_buoi', 'goi_hoc', 'phieu_thu', 'chi_phi', 'khoa_so', 'nhat_ky_chot_so', 'link_danh_gia', 'danh_gia']
+const BANG = ['tai_khoan', 'lop', 'hoc_sinh', 'buoi_hoc', 'diem_danh', 'tro_giang_buoi', 'anh_buoi', 'goi_hoc', 'phieu_thu', 'chi_phi', 'khoa_so', 'nhat_ky_chot_so', 'link_danh_gia', 'danh_gia', 'tom_tat_danh_gia']
 
 export async function saoLuuToanBo() {
   const du: Record<string, unknown> = { luc: new Date().toISOString() }

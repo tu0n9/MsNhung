@@ -30,8 +30,11 @@ export async function q<T>(p: PromiseLike<{ data: T; error: { message: string } 
   return data
 }
 
-export async function goiTaiKhoan(body: Record<string, unknown>) {
-  const { data, error } = await sb.functions.invoke('tai-khoan', { body })
+export const goiTaiKhoan = (body: Record<string, unknown>) => goiHam('tai-khoan', body)
+
+/** Gọi Edge Function; lỗi ném ra kèm câu `loi` function trả về thay vì "non-2xx status code". */
+export async function goiHam(ten: string, body: Record<string, unknown>) {
+  const { data, error } = await sb.functions.invoke(ten, { body })
   if (error) {
     const chiTiet = await (error as { context?: Response }).context?.json?.().catch(() => null)
     throw new Error(chiTiet?.loi ?? error.message)

@@ -4,12 +4,24 @@ import { App, Button, Card, Collapse, DatePicker, Select, Space, Table, Tag } fr
 import dayjs from 'dayjs'
 import { CAU_VIET, hanNhan, taoMa, TIEU_CHI, tongHop, urlPhieu, type PhieuDanhGia } from '../danh-gia'
 import { congThang, type Thang } from '../hoc-phi'
-import { q, sb, type HocSinh, type Lop } from '../supabase'
+import { goiHam, q, sb, useMotLan, type HocSinh, type Lop } from '../supabase'
 import { MAU } from '../giao-dien'
 
 const TEN_NGAN: Record<keyof typeof CAU_VIET, string> = {
   khoa_hoc: 'Nhận xét khoá học', kho_khan: 'Khó khăn khi học', nhan_xet: 'Nhận xét gửi trợ giảng', chua_bai: 'Chữa bài tập về nhà',
 }
+
+interface TomTat {
+  so_phieu: number; tao_luc: string
+  noi_dung: { khoa_hoc: Record<'y_chinh' | 'kho_khan' | 'de_xuat', string[]>; tro_giang: { ten: string; diem_manh: string[]; can_cai_thien: string[] }[] }
+}
+
+const DanhSach = ({ ten, ds }: { ten: string; ds: string[] }) => !ds.length ? null : (
+  <div style={{ marginBottom: 8 }}>
+    <div style={{ fontWeight: 600 }}>{ten}</div>
+    <ul style={{ margin: '2px 0 0', paddingLeft: 20 }}>{ds.map((x, i) => <li key={i}>{x}</li>)}</ul>
+  </div>
+)
 
 export default function DanhGia() {
   const { message, modal } = App.useApp()
@@ -20,6 +32,7 @@ export default function DanhGia() {
   const [lops, setLops] = useState<Lop[]>([])
   const [hss, setHss] = useState<HocSinh[]>([])
   const [lopId, setLopId] = useState<string>()
+  const [tomTat, setTomTat] = useState<TomTat | null>(null)
 
   const tai = async () => {
     const thangTruoc = `${congThang(thang, -1)}-01`
@@ -34,6 +47,14 @@ export default function DanhGia() {
     setPhieus(p as PhieuDanhGia[]); setTruoc(pt as PhieuDanhGia[]); setLops(lo as Lop[]); setHss(hs as HocSinh[])
   }
   useEffect(() => { tai().catch((e) => message.error(e.message)) }, [thang])
+  // bản tóm tắt theo (tháng, lớp): lọc "Tất cả lớp" thì không có
+  useEffect(() => {
+    setTomTat(null)
+    if (lopId) sb.from('tom_tat_danh_gia').select('*').eq('thang', `${thang}-01`).eq('lop_id', lopId).maybeSingle().then(({ data }) => setTomTat(data))
+  }, [thang, lopId])
+  const [tomTatAi, dangTomTat] = useMotLan(async () => {
+    try { setTomTat(await goiHam('tom-tat-danh-gia', { thang, lop_id: lopId })) } catch (e) { message.error((e as Error).message) }
+  })
 
   // tạo và đổi link là một lệnh: ghi mã mới cho tháng, link cũ hết hiệu lực
   const ghiMa = () => q(sb.from('link_danh_gia').upsert({ thang: `${thang}-01`, ma: taoMa() })).then(tai).catch((e) => message.error(e.message))
@@ -101,6 +122,33 @@ export default function DanhGia() {
           ]} />
         <div style={{ fontSize: 12, color: MAU.chuPhu, padding: '6px 12px' }}>Điểm 1–5. ▲▼ so với điểm chung tháng trước.</div>
       </Card>
+
+      {lopId && k.soPhieu > 0 && (
+        <Card size="small" title="Tóm tắt bằng AI" extra={tomTat &&
+          <Button size="small" loading={dangTomTat} onClick={tomTatAi}>Tóm tắt lại</Button>}>
+          {tomTat ? <>
+            <DanhSach ten="Ý chính về khoá học" ds={tomTat.noi_dung.khoa_hoc.y_chinh} />
+            <DanhSach ten="Khó khăn" ds={tomTat.noi_dung.khoa_hoc.kho_khan} />
+            <DanhSach ten="Đề xuất" ds={tomTat.noi_dung.khoa_hoc.de_xuat} />
+            {tomTat.noi_dung.tro_giang.map((t) => (
+              <div key={t.ten} style={{ borderTop: `1px solid ${MAU.vien}`, paddingTop: 8 }}>
+                <b style={{ color: MAU.chinh }}>{t.ten}</b>
+                <DanhSach ten="Điểm mạnh" ds={t.diem_manh} />
+                <DanhSach ten="Cần cải thiện" ds={t.can_cai_thien} />
+              </div>
+            ))}
+            <div style={{ fontSize: 12, color: MAU.chuPhu }} data-tom-tat>
+              Tóm tắt lúc {dayjs(tomTat.tao_luc).format('DD/MM HH:mm')} từ {tomTat.so_phieu} phiếu
+              {tomTat.so_phieu !== k.soPhieu && <span style={{ color: MAU.do }}> (số phiếu đã đổi, nên tóm tắt lại)</span>}
+            </div>
+          </> : <>
+            <Button type="primary" loading={dangTomTat} onClick={tomTatAi}>Tóm tắt bằng AI</Button>
+            <div style={{ fontSize: 12, color: MAU.chuPhu, marginTop: 6 }}>
+              {dangTomTat ? 'Đang đọc phiếu, mất khoảng 10–30 giây…' : 'Gemini đọc nhận xét của lớp này và rút ra ý chính. Tên học sinh không gửi đi.'}
+            </div>
+          </>}
+        </Card>
+      )}
 
       {(Object.keys(CAU_VIET) as (keyof typeof CAU_VIET)[]).map((c) => k.nhanXet[c].length > 0 && (
         // câu hỏi đầy đủ dài, tiêu đề thẻ bị cắt trên điện thoại nên dùng tên ngắn

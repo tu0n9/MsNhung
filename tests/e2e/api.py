@@ -167,6 +167,13 @@ try:
     _, dg = goi("GET", f"/rest/v1/danh_gia?select=ten_hoc_sinh,ten_lop,tro_giang&hoc_sinh_id=eq.{hs_id}", A)
     ok("phiếu: giáo viên đọc được, tên lấy từ database",
        dg and dg[0]["ten_hoc_sinh"] == "TEST Nguyễn Bảo An" and dg[0]["tro_giang"][0]["ten"] == "TEST Trợ giảng Lan")
+    # tóm tắt AI: chỉ kiểm quyền và trường hợp không có phiếu, không gọi Gemini (khỏi phụ thuộc mạng ngoài, tốn lượt free)
+    TT = lambda tk, thang: goi("POST", "/functions/v1/tom-tat-danh-gia", tk, {"thang": thang, "lop_id": lop_dg})
+    ok("tóm tắt AI: chưa đăng nhập bị từ chối", TT(None, thang_nay[:7])[0] == 401)
+    ok("tóm tắt AI: trợ giảng bị từ chối", TT(T, thang_nay[:7])[0] == 403)
+    c, r = TT(A, "2020-01")
+    ok("tóm tắt AI: lớp chưa có phiếu thì báo, không gọi Gemini", c == 400 and r.get("loi") == "Lớp chưa có phiếu")
+    ok("tóm tắt AI: trợ giảng đọc bảng tóm tắt ra rỗng", goi("GET", "/rest/v1/tom_tat_danh_gia?select=lop_id", T) == (200, []))
 finally:
     if tao_lk:
         SV("DELETE", f"/rest/v1/link_danh_gia?thang=eq.{thang_nay}")

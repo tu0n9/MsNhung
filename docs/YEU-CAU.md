@@ -279,6 +279,9 @@ Giao diện "Sổ vàng" (2026-11-16):
   khi cần, gọi Gemini gói free qua Edge Function, chỉ giáo viên gọi được. Tên trợ giảng đổi thành "TG1, TG2…" và **không gửi tên
   học sinh** lên Gemini, đổi lại tên trợ giảng khi nhận. **Tóm tắt theo từng lớp**, lưu theo (tháng, lớp), bấm lại thì ghi đè, ghi "Tóm tắt lúc… từ N
   phiếu"; lọc "Tất cả lớp" thì ẩn nút.
+- **Lượt 2 đã làm (2026-11-18)**, Edge Function `tom-tat-danh-gia`: model `gemini-flash-latest` (đổi được bằng secret
+  `GEMINI_MODEL`), Flash quá tải (503) hoặc treo quá 55 giây thì tự thử `gemini-flash-lite-latest`. Một lần tóm tắt mất
+  10–60 giây. Bản tóm tắt chưa đưa vào file Excel.
 
 ## Câu hỏi còn mở
 

@@ -9,7 +9,8 @@ thu tiền nhiều đợt, sổ thu chi, chốt sổ tháng, xuất Excel. Yêu 
 ## Tech stack
 
 React + Vite + Ant Design (PWA, `HashRouter`) gọi thẳng Supabase (project `msnhung`, Singapore). Phân quyền ở RLS
-(`supabase/migrations/`), tạo tài khoản qua Edge Function `supabase/functions/tai-khoan`. Tính tiền ở `src/hoc-phi.ts`
+(`supabase/migrations/`), tạo tài khoản qua Edge Function `supabase/functions/tai-khoan`, tóm tắt phiếu đánh giá bằng
+Gemini qua `supabase/functions/tom-tat-danh-gia` (secret `GEMINI_API_KEY` chỉ nằm trên Supabase, người dùng tự đặt). Tính tiền ở `src/hoc-phi.ts`
 (thuần, có test). Kiến trúc ở [`docs/KE-HOACH.md`](docs/KE-HOACH.md).
 
 Bản chạy thật: **https://ms-nhung.vercel.app** (Vercel team `tuong6`, tự deploy mỗi lần push `main`).
