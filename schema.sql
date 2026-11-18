@@ -119,6 +119,43 @@ $$;
 ALTER FUNCTION "public"."email_dang_nhap"("dinh_danh" "text") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."gui_danh_gia"("p_ma" "text", "p_lop" "uuid", "p_hoc_sinh" "uuid", "p_khoa_hoc" "text", "p_kho_khan" "text", "p_tro_giang" "jsonb") RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  t date := thang_cua_ma(p_ma);
+  tl text; th text; x jsonb; tg jsonb := '[]'; ten text; diem int;
+begin
+  select l.ten, h.ho_ten into tl, th from hoc_sinh h join lop l on l.id = h.lop_id
+  where h.id = p_hoc_sinh and l.id = p_lop and l.hoat_dong and h.trang_thai = 'dang_hoc';
+  if th is null then raise exception 'Học sinh không thuộc lớp này'; end if;
+  if length(p_khoa_hoc) > 1000 or length(p_kho_khan) > 1000 then raise exception 'Nhận xét quá dài'; end if;
+  if jsonb_typeof(p_tro_giang) <> 'array' or jsonb_array_length(p_tro_giang) > 20 then raise exception 'Dữ liệu trợ giảng sai'; end if;
+  if (select count(distinct e->>'id') from jsonb_array_elements(p_tro_giang) e) <> jsonb_array_length(p_tro_giang) then
+    raise exception 'Trợ giảng bị chọn trùng';
+  end if;
+  for x in select * from jsonb_array_elements(p_tro_giang) loop
+    select ho_ten into ten from tai_khoan where id::text = x->>'id' and vai_tro = 'tro_giang' and hoat_dong;
+    if ten is null then raise exception 'Trợ giảng không tồn tại'; end if;
+    foreach diem in array array[(x->>'kien_thuc')::int, (x->>'tuong_tac')::int, (x->>'ho_tro')::int] loop
+      if diem is null or diem not between 1 and 5 then raise exception 'Điểm phải từ 1 đến 5'; end if;
+    end loop;
+    if length(x->>'nhan_xet') > 1000 or length(x->>'chua_bai') > 1000 then raise exception 'Nhận xét quá dài'; end if;
+    tg := tg || jsonb_build_object('id', x->>'id', 'ten', ten,
+      'kien_thuc', (x->>'kien_thuc')::int, 'tuong_tac', (x->>'tuong_tac')::int, 'ho_tro', (x->>'ho_tro')::int,
+      'nhan_xet', nullif(trim(x->>'nhan_xet'), ''), 'chua_bai', nullif(trim(x->>'chua_bai'), ''));
+  end loop;
+  insert into danh_gia (thang, lop_id, ten_lop, hoc_sinh_id, ten_hoc_sinh, khoa_hoc, kho_khan, tro_giang)
+  values (t, p_lop, tl, p_hoc_sinh, th, nullif(trim(p_khoa_hoc), ''), nullif(trim(p_kho_khan), ''), tg);
+exception when unique_violation then
+  raise exception 'Em đã gửi phiếu tháng này rồi';
+end $$;
+
+
+ALTER FUNCTION "public"."gui_danh_gia"("p_ma" "text", "p_lop" "uuid", "p_hoc_sinh" "uuid", "p_khoa_hoc" "text", "p_kho_khan" "text", "p_tro_giang" "jsonb") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."kiem_tra_khoa"("ngay" "date") RETURNS "void"
     LANGUAGE "plpgsql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -214,6 +251,27 @@ $$;
 ALTER FUNCTION "public"."ngay_cua"("bang" "text", "r" "jsonb") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."phieu_danh_gia"("p_ma" "text") RETURNS "jsonb"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare t date := thang_cua_ma(p_ma);
+begin
+  return jsonb_build_object(
+    'thang', to_char(t, 'YYYY-MM'),
+    'han', (t + interval '1 month 4 days')::date,
+    'lops', coalesce((select jsonb_agg(jsonb_build_object('id', id, 'ten', ten) order by ten) from lop where hoat_dong), '[]'),
+    'hoc_sinhs', coalesce((select jsonb_agg(jsonb_build_object('id', h.id, 'ho_ten', h.ho_ten, 'lop_id', h.lop_id,
+        'da_gui', exists (select 1 from danh_gia d where d.thang = t and d.hoc_sinh_id = h.id)) order by h.ho_ten)
+      from hoc_sinh h join lop l on l.id = h.lop_id where l.hoat_dong and h.trang_thai = 'dang_hoc'), '[]'),
+    'tro_giangs', coalesce((select jsonb_agg(jsonb_build_object('id', id, 'ho_ten', ho_ten) order by ho_ten)
+      from tai_khoan where vai_tro = 'tro_giang' and hoat_dong), '[]'));
+end $$;
+
+
+ALTER FUNCTION "public"."phieu_danh_gia"("p_ma" "text") OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."rls_auto_enable"() RETURNS "event_trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'pg_catalog'
@@ -271,6 +329,23 @@ end $$;
 
 
 ALTER FUNCTION "public"."sinh_buoi_thang"("thang" "date") OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."thang_cua_ma"("p_ma" "text") RETURNS "date"
+    LANGUAGE "plpgsql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare t date;
+begin
+  select thang into t from link_danh_gia where ma = p_ma;
+  if t is null or (now() at time zone 'Asia/Ho_Chi_Minh')::date >= (t + interval '1 month 5 days')::date then
+    raise exception 'Link không còn hiệu lực';
+  end if;
+  return t;
+end $$;
+
+
+ALTER FUNCTION "public"."thang_cua_ma"("p_ma" "text") OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."trg_gia_tro_giang"() RETURNS "trigger"
@@ -406,6 +481,23 @@ CREATE TABLE IF NOT EXISTS "public"."chi_phi" (
 ALTER TABLE "public"."chi_phi" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."danh_gia" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "thang" "date" NOT NULL,
+    "lop_id" "uuid",
+    "ten_lop" "text" NOT NULL,
+    "hoc_sinh_id" "uuid",
+    "ten_hoc_sinh" "text" NOT NULL,
+    "khoa_hoc" "text",
+    "kho_khan" "text",
+    "tro_giang" "jsonb" DEFAULT '[]'::"jsonb" NOT NULL,
+    "gui_luc" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."danh_gia" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."diem_danh" (
     "buoi_id" "uuid" NOT NULL,
     "hoc_sinh_id" "uuid" NOT NULL,
@@ -470,6 +562,18 @@ CREATE TABLE IF NOT EXISTS "public"."khoa_so" (
 
 
 ALTER TABLE "public"."khoa_so" OWNER TO "postgres";
+
+
+CREATE TABLE IF NOT EXISTS "public"."link_danh_gia" (
+    "thang" "date" NOT NULL,
+    "ma" "text" NOT NULL,
+    "tao_luc" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "link_danh_gia_ma_check" CHECK (("length"("ma") >= 10)),
+    CONSTRAINT "link_danh_gia_thang_check" CHECK ((EXTRACT("day" FROM "thang") = (1)::numeric))
+);
+
+
+ALTER TABLE "public"."link_danh_gia" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."lop" (
@@ -549,6 +653,18 @@ CREATE TABLE IF NOT EXISTS "public"."tai_khoan" (
 ALTER TABLE "public"."tai_khoan" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."tom_tat_danh_gia" (
+    "thang" "date" NOT NULL,
+    "lop_id" "uuid" NOT NULL,
+    "noi_dung" "jsonb" NOT NULL,
+    "so_phieu" integer NOT NULL,
+    "tao_luc" timestamp with time zone DEFAULT "now"() NOT NULL
+);
+
+
+ALTER TABLE "public"."tom_tat_danh_gia" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."tro_giang_buoi" (
     "buoi_id" "uuid" NOT NULL,
     "tro_giang_id" "uuid" NOT NULL,
@@ -579,6 +695,16 @@ ALTER TABLE ONLY "public"."chi_phi"
 
 
 
+ALTER TABLE ONLY "public"."danh_gia"
+    ADD CONSTRAINT "danh_gia_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."danh_gia"
+    ADD CONSTRAINT "danh_gia_thang_hoc_sinh_id_key" UNIQUE ("thang", "hoc_sinh_id");
+
+
+
 ALTER TABLE ONLY "public"."diem_danh"
     ADD CONSTRAINT "diem_danh_pkey" PRIMARY KEY ("buoi_id", "hoc_sinh_id");
 
@@ -596,6 +722,16 @@ ALTER TABLE ONLY "public"."hoc_sinh"
 
 ALTER TABLE ONLY "public"."khoa_so"
     ADD CONSTRAINT "khoa_so_pkey" PRIMARY KEY ("id");
+
+
+
+ALTER TABLE ONLY "public"."link_danh_gia"
+    ADD CONSTRAINT "link_danh_gia_ma_key" UNIQUE ("ma");
+
+
+
+ALTER TABLE ONLY "public"."link_danh_gia"
+    ADD CONSTRAINT "link_danh_gia_pkey" PRIMARY KEY ("thang");
 
 
 
@@ -634,12 +770,21 @@ ALTER TABLE ONLY "public"."tai_khoan"
 
 
 
+ALTER TABLE ONLY "public"."tom_tat_danh_gia"
+    ADD CONSTRAINT "tom_tat_danh_gia_pkey" PRIMARY KEY ("thang", "lop_id");
+
+
+
 ALTER TABLE ONLY "public"."tro_giang_buoi"
     ADD CONSTRAINT "tro_giang_buoi_pkey" PRIMARY KEY ("buoi_id", "tro_giang_id");
 
 
 
 CREATE UNIQUE INDEX "buoi_hoc_lich_duy_nhat" ON "public"."buoi_hoc" USING "btree" ("lop_id", "ngay") WHERE ("loai" = 'lich'::"text");
+
+
+
+CREATE INDEX "danh_gia_thang_idx" ON "public"."danh_gia" USING "btree" ("thang");
 
 
 
@@ -694,6 +839,16 @@ ALTER TABLE ONLY "public"."chi_phi"
 
 
 
+ALTER TABLE ONLY "public"."danh_gia"
+    ADD CONSTRAINT "danh_gia_hoc_sinh_id_fkey" FOREIGN KEY ("hoc_sinh_id") REFERENCES "public"."hoc_sinh"("id") ON DELETE SET NULL;
+
+
+
+ALTER TABLE ONLY "public"."danh_gia"
+    ADD CONSTRAINT "danh_gia_lop_id_fkey" FOREIGN KEY ("lop_id") REFERENCES "public"."lop"("id") ON DELETE SET NULL;
+
+
+
 ALTER TABLE ONLY "public"."diem_danh"
     ADD CONSTRAINT "diem_danh_buoi_id_fkey" FOREIGN KEY ("buoi_id") REFERENCES "public"."buoi_hoc"("id");
 
@@ -734,6 +889,11 @@ ALTER TABLE ONLY "public"."tai_khoan"
 
 
 
+ALTER TABLE ONLY "public"."tom_tat_danh_gia"
+    ADD CONSTRAINT "tom_tat_danh_gia_lop_id_fkey" FOREIGN KEY ("lop_id") REFERENCES "public"."lop"("id") ON DELETE CASCADE;
+
+
+
 ALTER TABLE ONLY "public"."tro_giang_buoi"
     ADD CONSTRAINT "tro_giang_buoi_buoi_id_fkey" FOREIGN KEY ("buoi_id") REFERENCES "public"."buoi_hoc"("id");
 
@@ -753,6 +913,9 @@ ALTER TABLE "public"."buoi_hoc" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."chi_phi" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."danh_gia" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."diem_danh" ENABLE ROW LEVEL SECURITY;
 
 
@@ -768,6 +931,10 @@ CREATE POLICY "doc" ON "public"."buoi_hoc" FOR SELECT USING (("public"."la_nhan_
   WHERE (("h"."phu_huynh_id" = "auth"."uid"()) AND (("h"."lop_id" = "buoi_hoc"."lop_id") OR (EXISTS ( SELECT 1
            FROM "public"."diem_danh" "d"
           WHERE (("d"."buoi_id" = "buoi_hoc"."id") AND ("d"."hoc_sinh_id" = "h"."id"))))))))));
+
+
+
+CREATE POLICY "doc" ON "public"."danh_gia" FOR SELECT USING ("public"."la_quan_ly"());
 
 
 
@@ -812,6 +979,10 @@ CREATE POLICY "doc" ON "public"."tai_khoan" FOR SELECT USING ((("id" = "auth"."u
 
 
 
+CREATE POLICY "doc" ON "public"."tom_tat_danh_gia" FOR SELECT USING ("public"."la_quan_ly"());
+
+
+
 CREATE POLICY "ghi" ON "public"."diem_danh" USING ("public"."la_nhan_vien"()) WITH CHECK ("public"."la_nhan_vien"());
 
 
@@ -841,6 +1012,9 @@ ALTER TABLE "public"."hoc_sinh" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "public"."khoa_so" ENABLE ROW LEVEL SECURITY;
 
 
+ALTER TABLE "public"."link_danh_gia" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."lop" ENABLE ROW LEVEL SECURITY;
 
 
@@ -855,6 +1029,10 @@ ALTER TABLE "public"."phieu_thu" ENABLE ROW LEVEL SECURITY;
 
 
 CREATE POLICY "ql" ON "public"."chi_phi" USING ("public"."la_quan_ly"()) WITH CHECK ("public"."la_quan_ly"());
+
+
+
+CREATE POLICY "ql" ON "public"."link_danh_gia" USING ("public"."la_quan_ly"()) WITH CHECK ("public"."la_quan_ly"());
 
 
 
@@ -877,6 +1055,9 @@ CREATE POLICY "them" ON "public"."buoi_hoc" FOR INSERT WITH CHECK ("public"."la_
 
 
 
+ALTER TABLE "public"."tom_tat_danh_gia" ENABLE ROW LEVEL SECURITY;
+
+
 ALTER TABLE "public"."tro_giang_buoi" ENABLE ROW LEVEL SECURITY;
 
 
@@ -885,6 +1066,10 @@ CREATE POLICY "xoa" ON "public"."anh_buoi" FOR DELETE USING ("public"."la_quan_l
 
 
 CREATE POLICY "xoa" ON "public"."buoi_hoc" FOR DELETE USING ("public"."la_quan_ly"());
+
+
+
+CREATE POLICY "xoa" ON "public"."danh_gia" FOR DELETE USING ("public"."la_quan_ly"());
 
 
 
@@ -1078,6 +1263,13 @@ GRANT ALL ON FUNCTION "public"."email_dang_nhap"("dinh_danh" "text") TO "service
 
 
 
+REVOKE ALL ON FUNCTION "public"."gui_danh_gia"("p_ma" "text", "p_lop" "uuid", "p_hoc_sinh" "uuid", "p_khoa_hoc" "text", "p_kho_khan" "text", "p_tro_giang" "jsonb") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."gui_danh_gia"("p_ma" "text", "p_lop" "uuid", "p_hoc_sinh" "uuid", "p_khoa_hoc" "text", "p_kho_khan" "text", "p_tro_giang" "jsonb") TO "anon";
+GRANT ALL ON FUNCTION "public"."gui_danh_gia"("p_ma" "text", "p_lop" "uuid", "p_hoc_sinh" "uuid", "p_khoa_hoc" "text", "p_kho_khan" "text", "p_tro_giang" "jsonb") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."gui_danh_gia"("p_ma" "text", "p_lop" "uuid", "p_hoc_sinh" "uuid", "p_khoa_hoc" "text", "p_kho_khan" "text", "p_tro_giang" "jsonb") TO "service_role";
+
+
+
 REVOKE ALL ON FUNCTION "public"."kiem_tra_khoa"("ngay" "date") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."kiem_tra_khoa"("ngay" "date") TO "service_role";
 
@@ -1112,6 +1304,13 @@ GRANT ALL ON FUNCTION "public"."ngay_cua"("bang" "text", "r" "jsonb") TO "servic
 
 
 
+REVOKE ALL ON FUNCTION "public"."phieu_danh_gia"("p_ma" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."phieu_danh_gia"("p_ma" "text") TO "anon";
+GRANT ALL ON FUNCTION "public"."phieu_danh_gia"("p_ma" "text") TO "authenticated";
+GRANT ALL ON FUNCTION "public"."phieu_danh_gia"("p_ma" "text") TO "service_role";
+
+
+
 REVOKE ALL ON FUNCTION "public"."rls_auto_enable"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."rls_auto_enable"() TO "service_role";
 
@@ -1120,6 +1319,11 @@ GRANT ALL ON FUNCTION "public"."rls_auto_enable"() TO "service_role";
 REVOKE ALL ON FUNCTION "public"."sinh_buoi_thang"("thang" "date") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."sinh_buoi_thang"("thang" "date") TO "authenticated";
 GRANT ALL ON FUNCTION "public"."sinh_buoi_thang"("thang" "date") TO "service_role";
+
+
+
+REVOKE ALL ON FUNCTION "public"."thang_cua_ma"("p_ma" "text") FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."thang_cua_ma"("p_ma" "text") TO "service_role";
 
 
 
@@ -1178,6 +1382,12 @@ GRANT ALL ON TABLE "public"."chi_phi" TO "service_role";
 
 
 
+GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."danh_gia" TO "anon";
+GRANT SELECT,REFERENCES,DELETE,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."danh_gia" TO "authenticated";
+GRANT ALL ON TABLE "public"."danh_gia" TO "service_role";
+
+
+
 GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."diem_danh" TO "anon";
 GRANT ALL ON TABLE "public"."diem_danh" TO "authenticated";
 GRANT ALL ON TABLE "public"."diem_danh" TO "service_role";
@@ -1199,6 +1409,12 @@ GRANT ALL ON TABLE "public"."hoc_sinh" TO "service_role";
 GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."khoa_so" TO "anon";
 GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."khoa_so" TO "authenticated";
 GRANT ALL ON TABLE "public"."khoa_so" TO "service_role";
+
+
+
+GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."link_danh_gia" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN,UPDATE ON TABLE "public"."link_danh_gia" TO "authenticated";
+GRANT ALL ON TABLE "public"."link_danh_gia" TO "service_role";
 
 
 
@@ -1239,6 +1455,12 @@ GRANT UPDATE("don_gia_buoi") ON TABLE "public"."tai_khoan" TO "authenticated";
 
 
 GRANT UPDATE("hoat_dong") ON TABLE "public"."tai_khoan" TO "authenticated";
+
+
+
+GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."tom_tat_danh_gia" TO "anon";
+GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."tom_tat_danh_gia" TO "authenticated";
+GRANT ALL ON TABLE "public"."tom_tat_danh_gia" TO "service_role";
 
 
 
