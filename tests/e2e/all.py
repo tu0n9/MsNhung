@@ -9,6 +9,7 @@ URL = "http://127.0.0.1:5180/"
 PW = sys.argv[1]
 REPO = r"C:\Users\TIENTUONG\MsNhung"
 KQ = []
+THANG_TEST = []  # tháng có link do test tạo, để xoá khi xong
 
 
 def buoc(ten, f):
@@ -244,6 +245,8 @@ with sync_playwright() as pw:
               "console.log(JSON.stringify({ten:w.worksheets.map(x=>x.name),goi:s&&[s.getCell('L1').value,s.getCell('L2').value]}))})")
         kq = json.loads(subprocess.run(["node", "-e", js, f], cwd=REPO, capture_output=True, text=True, encoding="utf-8").stdout)
         ten = kq["ten"]
+        # trang "Đánh giá" chỉ có khi tháng có phiếu (database dùng chung nên có thể đã có phiếu thật)
+        ten = [x for x in ten if x != "Đánh giá"]
         assert ten[0] == "Tổng hợp" and ten[-5:] == ["Điểm danh", "Sổ thu", "Chi phí", "Công nợ", "Trợ giảng"] and "TEST Lớp Starters" in ten, ten
         # cột Gói ở cuối sheet lớp (gói TEST 3 tháng từ tháng này)
         assert kq["goi"][0] == "Gói" and str(kq["goi"][1]).startswith("3 tháng · "), kq["goi"]
@@ -284,6 +287,47 @@ with sync_playwright() as pw:
         expect(p.locator(".ant-collapse-item", has_text="TEST Movers 2")).to_have_count(0)
         assert p.get_by_text("TEST Lê Minh Châu").count() == 0, "học sinh của lớp đã xoá vẫn còn"
     buoc("xoá lớp có học sinh: gõ sai tên thì nút Xoá hẳn bị khoá, gõ đúng thì lớp + học sinh biến mất", b_xoa_lop)
+
+    def b_danh_gia():
+        nav("Học phí")
+        p.get_by_role("button", name="Đánh giá học sinh").click()
+        p.wait_for_timeout(2000)
+        # database dùng chung với bản thật: tháng này đã có link thật thì dùng lại, không đổi mã
+        tao = p.get_by_role("button", name=re.compile("^Tạo link tháng")).count() > 0
+        if tao:
+            p.get_by_role("button", name=re.compile("^Tạo link tháng")).click()
+        link = p.locator("[data-link-danh-gia]")
+        expect(link).to_be_visible(timeout=10000)
+        url = link.inner_text()
+        THANG_TEST.append(None if not tao else date.today().replace(day=1).isoformat())
+        try:
+            p.goto(url)
+            chon(p, "Em học lớp nào?", "TEST Lớp Starters")
+            chon(p, "Tên em", "TEST Nguyễn Bảo An")
+            p.get_by_label("Nhận xét chung về khoá học", exact=False).fill("TEST nhận xét khoá học")
+            p.get_by_label("TEST Trợ giảng Lan").check()
+            the = p.locator(".ant-card", has_text="Đánh giá TEST Trợ giảng Lan")
+            for i in range(3):
+                the.locator(".ant-radio-group").nth(i).get_by_text("4", exact=True).click()
+            p.screenshot(path=os.path.join(OUT, "a-phieu-danh-gia.png"), full_page=True)
+            p.get_by_role("button", name="Gửi phiếu").click()
+            expect(p.get_by_text("Cảm ơn em đã đánh giá!")).to_be_visible(timeout=15000)
+            p.reload()
+            chon(p, "Em học lớp nào?", "TEST Lớp Starters")
+            lab(p, "Tên em").click()
+            expect(p.locator(".ant-select-item-option-disabled", has_text="TEST Nguyễn Bảo An (đã gửi)")).to_be_visible(timeout=5000)
+            p.goto(URL + "#/danh-gia")
+            expect(p.locator(".ant-table", has_text="TEST Trợ giảng Lan")).to_contain_text("4", timeout=15000)
+            expect(p.get_by_text("TEST nhận xét khoá học")).to_be_visible()
+            p.get_by_text(re.compile(r"^Từng phiếu")).click()
+            expect(p.locator(".ant-collapse", has_text="TEST Nguyễn Bảo An")).to_be_visible()
+            p.screenshot(path=os.path.join(OUT, "a-danh-gia.png"), full_page=True)
+            p.get_by_role("button", name="Chuyển sang giao diện tối").click()
+            p.screenshot(path=os.path.join(OUT, "a-danh-gia-toi.png"), full_page=True)
+            p.get_by_role("button", name="Chuyển sang giao diện sáng").click()
+        finally:
+            p.goto(URL)
+    buoc("đánh giá: tạo link, học sinh chọn lớp + tên gửi phiếu, tên mờ 'đã gửi', giáo viên thấy điểm + nhận xét", b_danh_gia)
     def thoat():
         p.get_by_text("Thoát").click()
         expect(lab(p, "Tên đăng nhập hoặc số điện thoại")).to_be_visible(timeout=15000)
@@ -326,6 +370,12 @@ with sync_playwright() as pw:
         huong_dan(lambda: p.get_by_role("button", name="Hướng dẫn").click(), 2)
         thoat()
     buoc("trợ giảng: không có tab tiền, chỉ thấy tài khoản mình + phụ huynh, 2 video hướng dẫn", b_tro_giang)
+
+    # link do test tạo thì xoá (phiếu TEST do don-test.mjs dọn), để số dòng database về như trước
+    if THANG_TEST and THANG_TEST[0]:
+        subprocess.run(["node", "--env-file=.env", "-e",
+            "const{createClient}=require('@supabase/supabase-js');createClient(process.env.VITE_SUPABASE_URL,process.env.SUPABASE_SECRET_KEY)"
+            ".from('link_danh_gia').delete().eq('thang',process.argv[1]).then(r=>{if(r.error)process.exit(1)})", THANG_TEST[0]], cwd=REPO, check=True)
 
     KQ.append(("PASS" if not loi else "FAIL", f"không lỗi JS ({len(loi)})" + (": " + loi[0][:150] if loi else "")))
     b.close()

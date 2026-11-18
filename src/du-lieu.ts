@@ -3,6 +3,7 @@
 // ponytail: tải toàn bộ goi_hoc/phieu_thu; khi lên hàng chục nghìn phiếu thì chuyển sang view tổng hợp trong Postgres.
 import { congThang, hocPhiGocThang, tongHopHocSinh, type Goi, type PhieuThu, type Thang, type TongHopThang } from './hoc-phi'
 import { q, sb, type HocSinh, type Lop, type TaiKhoan } from './supabase'
+import type { PhieuDanhGia } from './danh-gia'
 
 export interface ChiPhi { id: string; ngay: string; danh_muc: string; so_tien: number; ghi_chu: string | null }
 export interface DongHs extends TongHopThang { hs: HocSinh; soBuoi: number; dieuChinh: number }
@@ -11,11 +12,12 @@ export interface DuLieuThang {
   chi: ChiPhi[]; luongTg: { tg: Pick<TaiKhoan, 'id' | 'ho_ten'>; soBuoi: number; thanhTien: number }[]
   diemDanh: { hoc_sinh_id: string; trang_thai: string; sticker: number; ngay: string; lop_id: string }[]
   goi: Goi[]
+  danhGia: PhieuDanhGia[]
 }
 
 export async function taiDuLieuThang(thang: Thang): Promise<DuLieuThang> {
   const dau = `${thang}-01`, sau = `${congThang(thang, 1)}-01`
-  const [lops, hs, goi, phieu, chi, luong, dd] = await Promise.all([
+  const [lops, hs, goi, phieu, chi, luong, dd, dg] = await Promise.all([
     q(sb.from('lop').select('*').order('ten')),
     q(sb.from('hoc_sinh').select('*').order('ho_ten')),
     q(sb.from('goi_hoc').select('*')),
@@ -24,6 +26,7 @@ export async function taiDuLieuThang(thang: Thang): Promise<DuLieuThang> {
     // cột đơn giá của tro_giang_buoi không cấp cho client; lương tính trong hàm chỉ giáo viên gọi được
     q(sb.rpc('luong_tro_giang', { tu: dau, den: sau })),
     q(sb.from('diem_danh').select('hoc_sinh_id, trang_thai, sticker, buoi_hoc!inner(ngay, lop_id)').gte('buoi_hoc.ngay', dau).lt('buoi_hoc.ngay', sau)),
+    q(sb.from('danh_gia').select('*').eq('thang', dau).order('gui_luc')),
   ])
   const goiL = goi as Goi[], phieuL = phieu as DuLieuThang['phieu']
   const diemDanh = (dd as unknown as { hoc_sinh_id: string; trang_thai: string; sticker: number; buoi_hoc: { ngay: string; lop_id: string } }[])
@@ -44,7 +47,7 @@ export async function taiDuLieuThang(thang: Thang): Promise<DuLieuThang> {
   const luongTg = (luong as { tro_giang_id: string; ho_ten: string; so_buoi: number; thanh_tien: number }[])
     .map((x) => ({ tg: { id: x.tro_giang_id, ho_ten: x.ho_ten }, soBuoi: Number(x.so_buoi), thanhTien: Number(x.thanh_tien) }))
 
-  return { thang, lops: lops as Lop[], dong, phieu: phieuL.filter((p) => p.ngay_thu >= dau && p.ngay_thu < sau), chi: chi as ChiPhi[], luongTg, diemDanh, goi: goiL }
+  return { thang, lops: lops as Lop[], dong, phieu: phieuL.filter((p) => p.ngay_thu >= dau && p.ngay_thu < sau), chi: chi as ChiPhi[], luongTg, diemDanh, goi: goiL, danhGia: dg as PhieuDanhGia[] }
 }
 
 export function tongCong(d: DuLieuThang) {

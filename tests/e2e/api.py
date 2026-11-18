@@ -126,6 +126,52 @@ ok("không bỏ được cờ bắt đổi mật khẩu khi mật khẩu vẫn l
 _, bu = SV("GET", f"/rest/v1/buoi_hoc?select=id&loai=eq.bu&ngay=eq.{HN}")
 ok("buổi bù riêng: chọn Không đến thì không còn dòng điểm danh nào", bool(bu) and SV("GET", f"/rest/v1/diem_danh?select=hoc_sinh_id&buoi_id=eq.{bu[0]['id']}")[1] == [])
 
+# --- phiếu đánh giá (anon gọi qua hàm; database dùng chung nên link thật của tháng thì dùng lại, không đổi mã) ---
+thang_nay = date.today().replace(day=1).isoformat()
+_, lk = SV("GET", f"/rest/v1/link_danh_gia?select=ma&thang=eq.{thang_nay}")
+tao_lk = not lk
+MA = lk[0]["ma"] if lk else "testlinkdanhgia"
+if tao_lk:
+    SV("POST", "/rest/v1/link_danh_gia", {"thang": thang_nay, "ma": MA})
+SV("POST", "/rest/v1/link_danh_gia", {"thang": "2020-01-01", "ma": "testhethan2020"})
+try:
+    PDG = lambda ma: goi("POST", "/rest/v1/rpc/phieu_danh_gia", body={"p_ma": ma})
+    c, pd = PDG(MA)
+    lop_dg = next((l["id"] for l in pd["lops"] if l["ten"] == "TEST Lớp Starters"), None) if c == 200 else None
+    tg_dg = next((t["id"] for t in pd["tro_giangs"] if t["ho_ten"] == "TEST Trợ giảng Lan"), None) if c == 200 else None
+    ok("phiếu: chưa đăng nhập mở link đúng thấy lớp, học sinh, trợ giảng TEST",
+       bool(lop_dg and tg_dg) and any(h["id"] == hs_id and h["lop_id"] == lop_dg for h in pd["hoc_sinhs"]))
+    ok("phiếu: mã sai bị từ chối", PDG("khongcomanay")[0] == 400)
+    ok("phiếu: link tháng đã quá hạn bị từ chối", PDG("testhethan2020")[0] == 400)
+    # all.py đã gửi phiếu cho em An: giáo viên xoá để thử lại từ đầu (cũng là thử quyền xoá của giáo viên)
+    ok("phiếu: giáo viên xoá được phiếu", goi("DELETE", f"/rest/v1/danh_gia?hoc_sinh_id=eq.{hs_id}", A)[0] == 204)
+    x = {"id": tg_dg, "kien_thuc": 5, "tuong_tac": 4, "ho_tro": 3}
+    D = lambda **k: {"p_ma": MA, "p_lop": lop_dg, "p_hoc_sinh": hs_id, "p_khoa_hoc": "TEST", "p_kho_khan": "", "p_tro_giang": [x], **k}
+    G = lambda body: goi("POST", "/rest/v1/rpc/gui_danh_gia", body=body)[0]
+    ok("phiếu: điểm 6 bị từ chối", G(D(p_tro_giang=[{**x, "kien_thuc": 6}])) == 400)
+    ok("phiếu: thiếu điểm bị từ chối", G(D(p_tro_giang=[{"id": tg_dg, "kien_thuc": 5}])) == 400)
+    ok("phiếu: trợ giảng chọn trùng bị từ chối", G(D(p_tro_giang=[x, x])) == 400)
+    ok("phiếu: id không phải trợ giảng bị từ chối", G(D(p_tro_giang=[{**x, "id": hs_id}])) == 400)
+    ok("phiếu: học sinh không thuộc lớp bị từ chối", G(D(p_lop="00000000-0000-0000-0000-000000000000")) == 400)
+    ok("phiếu: mã sai không gửi được", G(D(p_ma="khongcomanay")) == 400)
+    ok("phiếu: gửi hợp lệ", G(D()) == 204)
+    ok("phiếu: cùng em gửi lần 2 bị từ chối", G(D()) == 400)
+    ok("phiếu: em đã gửi hiện da_gui", any(h["id"] == hs_id and h["da_gui"] for h in PDG(MA)[1]["hoc_sinhs"]))
+    ok("phiếu: chưa đăng nhập không đọc được bảng", goi("GET", "/rest/v1/danh_gia?select=id")[0] in (401, 403))
+    ok("phiếu: chưa đăng nhập không ghi thẳng vào bảng",
+       goi("POST", "/rest/v1/danh_gia", body={"thang": thang_nay, "ten_lop": "TEST x", "ten_hoc_sinh": "x"})[0] in (401, 403))
+    ok("phiếu: trợ giảng đọc bảng ra rỗng", goi("GET", "/rest/v1/danh_gia?select=id", T) == (200, []))
+    goi("DELETE", f"/rest/v1/danh_gia?hoc_sinh_id=eq.{hs_id}", T)
+    ok("phiếu: trợ giảng không xoá được phiếu", len(SV("GET", f"/rest/v1/danh_gia?select=id&hoc_sinh_id=eq.{hs_id}")[1]) == 1)
+    ok("phiếu: trợ giảng không đọc được link", goi("GET", "/rest/v1/link_danh_gia?select=ma", T) == (200, []))
+    _, dg = goi("GET", f"/rest/v1/danh_gia?select=ten_hoc_sinh,ten_lop,tro_giang&hoc_sinh_id=eq.{hs_id}", A)
+    ok("phiếu: giáo viên đọc được, tên lấy từ database",
+       dg and dg[0]["ten_hoc_sinh"] == "TEST Nguyễn Bảo An" and dg[0]["tro_giang"][0]["ten"] == "TEST Trợ giảng Lan")
+finally:
+    if tao_lk:
+        SV("DELETE", f"/rest/v1/link_danh_gia?thang=eq.{thang_nay}")
+    SV("DELETE", "/rest/v1/link_danh_gia?thang=eq.2020-01-01")
+
 _, khoa_truoc = SV("GET", "/rest/v1/khoa_so?select=khoa_den")
 # chỉ xoá nhật ký do test ghi: lọc theo id, không theo tháng (người dùng có thể đã chốt / mở khoá thật tháng 11)
 _, nk = SV("GET", "/rest/v1/nhat_ky_chot_so?select=id&order=id.desc&limit=1")
@@ -166,6 +212,8 @@ con_lai = {
 }
 ok(f"xoá lớp có dữ liệu: sạch mọi bảng, trả {len(anh_xoa) if c == 200 else '?'} đường dẫn ảnh",
    c == 200 and not any(con_lai.values()) and len(anh_xoa) >= 2)
+_, dg = SV("GET", "/rest/v1/danh_gia?select=lop_id,hoc_sinh_id&ten_lop=eq.TEST%20L%E1%BB%9Bp%20Starters")
+ok("xoá lớp: phiếu đánh giá của lớp vẫn giữ, chỉ bỏ liên kết", len(dg) == 1 and dg[0] == {"lop_id": None, "hoc_sinh_id": None})
 # client xoá file theo danh sách trả về; ở đây làm thay để Storage không sót file test
 if c == 200 and anh_xoa:
     goi("DELETE", "/storage/v1/object/anh", S, {"prefixes": anh_xoa}, key=S)

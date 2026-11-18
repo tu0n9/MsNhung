@@ -256,6 +256,30 @@ Giao diện "Sổ vàng" (2026-11-16):
   `#D23C69` chữ trắng, chữ / liên kết hồng `#B8325C`. Máy bật giảm trong suốt thì thẻ trắng đặc. Bản tối giữ nguyên.
 - Làm thử trên máy, người dùng duyệt ảnh rồi mới đưa lên bản thật. Video hướng dẫn cũ còn màu xanh.
 
+
+Đánh giá từ học sinh (2026-11-18, theo mẫu phiếu IELTS Arena người dùng gửi):
+
+- Cuối tháng giáo viên gửi link vào Zalo mời học sinh đánh giá khoá học và trợ giảng. **Bỏ phần đánh giá Admin**,
+  "giảng viên" trong mẫu đổi thành trợ giảng.
+- **Mỗi tháng 1 link chung, mã ngẫu nhiên**: giáo viên bấm "Tạo link tháng X" rồi sao chép. Nút **"Đổi link"** tạo mã
+  mới, link cũ hết hiệu lực ngay, phiếu đã gửi vẫn giữ. Link nhận phiếu tới **hết ngày 5 tháng sau** rồi tự đóng.
+- **Không đăng nhập, nhưng ghi tên** (đổi lại cùng ngày, thay "ẩn danh"): chọn lớp rồi chọn tên trong danh sách học
+  sinh đang học của lớp, cả hai bắt buộc. **Mỗi em mỗi tháng chỉ gửi 1 phiếu** (database chặn); tên em đã gửi hiện mờ.
+  Em nào chọn nhầm tên bạn thì giáo viên xoá phiếu đó, bạn kia gửi lại được. Giáo viên xoá được từng phiếu.
+- Phiếu thấy tên lớp, tên học sinh đang học và tên trợ giảng (lớp, tài khoản trợ giảng đang hoạt động), chỉ khi mã
+  link còn hạn. Trang kết quả có số em đã gửi / tổng số em và danh sách em chưa gửi để cô nhắc.
+- **Câu hỏi cố định trong code:** chọn lớp; phần Khoá học 2 câu viết (nhận xét chung và mong muốn cải thiện; khó khăn
+  khi học). Phần Trợ giảng: tick một hoặc nhiều trợ giảng, hoặc "không có trợ giảng"; **mỗi người được tick có riêng**
+  3 câu chấm 1–5 (kiến thức chuyên môn; tương tác, điều phối lớp, xử lý tình huống; hỗ trợ ngoài giờ) và 2 câu viết
+  (nhận xét riêng gửi trợ giảng; chữa bài tập về nhà). Câu chấm điểm bắt buộc, câu viết không bắt buộc. Thang 1–5, bỏ mức 0.
+- **Chỉ giáo viên xem kết quả** (trợ giảng không thấy). Trang "Đánh giá": chọn tháng, lọc lớp; bảng trợ giảng (số phiếu,
+  điểm trung bình 3 tiêu chí, tăng / giảm so với tháng trước), nhận xét chữ gom theo câu hỏi, số phiếu theo lớp.
+- File Excel tháng thêm trang **"Đánh giá"**.
+- **AI tóm tắt (làm lượt sau**, khi đã có phiếu thật và người dùng tự dán `GEMINI_API_KEY` vào secret Supabase): nút bấm
+  khi cần, gọi Gemini gói free qua Edge Function, chỉ giáo viên gọi được. Tên trợ giảng đổi thành "TG1, TG2…" và **không gửi tên
+  học sinh** lên Gemini, đổi lại tên trợ giảng khi nhận. **Tóm tắt theo từng lớp**, lưu theo (tháng, lớp), bấm lại thì ghi đè, ghi "Tóm tắt lúc… từ N
+  phiếu"; lọc "Tất cả lớp" thì ẩn nút.
+
 ## Câu hỏi còn mở
 
 Không còn.

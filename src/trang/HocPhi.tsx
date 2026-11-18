@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { App, Avatar, Button, Card, DatePicker, Input, Segmented, Space, Tag } from 'antd'
 import dayjs from 'dayjs'
+import { useNavigate } from 'react-router-dom'
 import { taiDuLieuThang, tongCong, type DongHs, type DuLieuThang } from '../du-lieu'
 import { demBuoiDuKien, tinhTrangGoi, tinNhanGiaHan, trangThaiThang, vnd, type Thang } from '../hoc-phi'
 import { homNay, q, sb, urlAnh, type HocSinh } from '../supabase'
 import HocSinhChiTiet from './HocSinhChiTiet'
 import { CHU_SO, MAU } from '../giao-dien'
 
-const BANG = ['tai_khoan', 'lop', 'hoc_sinh', 'buoi_hoc', 'diem_danh', 'tro_giang_buoi', 'anh_buoi', 'goi_hoc', 'phieu_thu', 'chi_phi', 'khoa_so', 'nhat_ky_chot_so']
+const BANG = ['tai_khoan', 'lop', 'hoc_sinh', 'buoi_hoc', 'diem_danh', 'tro_giang_buoi', 'anh_buoi', 'goi_hoc', 'phieu_thu', 'chi_phi', 'khoa_so', 'nhat_ky_chot_so', 'link_danh_gia', 'danh_gia']
 
 export async function saoLuuToanBo() {
   const du: Record<string, unknown> = { luc: new Date().toISOString() }
@@ -21,6 +22,7 @@ export async function saoLuuToanBo() {
 
 export default function HocPhi() {
   const { message, modal } = App.useApp()
+  const nav = useNavigate()
   const [thang, setThang] = useState<Thang>(dayjs().format('YYYY-MM'))
   const [d, setD] = useState<DuLieuThang>()
   const [loc, setLoc] = useState<'tat_ca' | 'no' | 'du' | 'gia_han'>('tat_ca')
@@ -88,6 +90,7 @@ export default function HocPhi() {
         {daChot ? <><Tag color="green">Đã chốt sổ</Tag><Button onClick={moKhoa}>Mở khoá</Button></> : <Button onClick={chot}>Chốt sổ tháng</Button>}
         <Button type="primary" loading={dangXuat} onClick={xuat}>Xuất Excel</Button>
         <Button onClick={() => saoLuuToanBo().catch((e) => message.error(e.message))}>Sao lưu toàn bộ</Button>
+        <Button onClick={() => nav('/danh-gia')}>Đánh giá học sinh</Button>
       </Space>
       {dungLuong !== undefined && <div style={{ fontSize: 13, color: dungLuong > 800 * 2 ** 20 ? MAU.do : MAU.chuPhu }} data-dung-luong-anh>
         Ảnh đang dùng: {(dungLuong / 2 ** 20).toFixed(1)} MB / 1 GB. Ảnh lớp cũ hơn 3 tháng tự cất lên GitHub và xoá khỏi đây mỗi tháng.

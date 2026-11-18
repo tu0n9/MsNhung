@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Button, Grid, Layout, Menu, Spin } from 'antd'
-import { BankOutlined, CheckSquareOutlined, DollarOutlined, MoonOutlined, SunOutlined, TeamOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons'
+import { BankOutlined, CheckSquareOutlined, DollarOutlined, MoonOutlined, StarOutlined, SunOutlined, TeamOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons'
 import type { Session } from '@supabase/supabase-js'
 import { laQuanLy, q, sb, type TaiKhoan } from './supabase'
 import { CHU_SO, MAU, useCheDo } from './giao-dien'
@@ -15,6 +15,8 @@ import TaiKhoanTrang from './trang/TaiKhoan'
 import PhuHuynh from './trang/PhuHuynh'
 import ImportExcel from './trang/ImportExcel'
 import HuongDan from './trang/HuongDan'
+import DanhGia from './trang/DanhGia'
+import PhieuDanhGia from './trang/PhieuDanhGia'
 
 const NguoiDung = createContext<TaiKhoan>(null!)
 export const useToi = () => useContext(NguoiDung)
@@ -37,6 +39,8 @@ export default function App() {
     phien && q(sb.from('tai_khoan').select('*').eq('id', phien.user.id).single()).then((t) => setToi(t as TaiKhoan))
   useEffect(() => { setToi(null); taiToi() }, [phien?.user.id])
 
+  // phiếu đánh giá: học sinh mở link từ Zalo, không đăng nhập
+  if (loc.pathname.startsWith('/danh-gia/')) return <PhieuDanhGia ma={loc.pathname.slice('/danh-gia/'.length)} />
   if (phien === undefined || (phien && !toi)) return <Spin fullscreen />
   if (!phien) return <DangNhap />
   if (!toi) return null
@@ -49,6 +53,7 @@ export default function App() {
         { key: '/', label: 'Điểm danh', icon: <CheckSquareOutlined /> },
         { key: '/lop', label: 'Lớp', icon: <TeamOutlined /> },
         ...(ql ? [{ key: '/hoc-phi', label: 'Học phí', icon: <DollarOutlined /> }, { key: '/chi-phi', label: 'Chi phí', icon: <WalletOutlined /> }] : []),
+        ...(ql ? [{ key: '/danh-gia', label: 'Đánh giá', icon: <StarOutlined /> }] : []),
         { key: '/tai-khoan', label: 'Tài khoản', icon: <BankOutlined /> },
       ]
   // điện thoại: thanh điều hướng dưới đáy, vì menu ngang bị gom vào nút "..." khó bấm
@@ -80,6 +85,7 @@ export default function App() {
                 {ql && <Route path="/hoc-phi" element={<HocPhi />} />}
                 {ql && <Route path="/chi-phi" element={<ChiPhi />} />}
                 {ql && <Route path="/import" element={<ImportExcel />} />}
+                {ql && <Route path="/danh-gia" element={<DanhGia />} />}
                 <Route path="/tai-khoan" element={<TaiKhoanTrang />} />
               </>
             )}
@@ -88,9 +94,10 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Layout.Content>
+        {/* Đánh giá không vào thanh dưới (đã đủ 5 mục); trên điện thoại vào từ nút ở trang Học phí */}
         {dienThoai && menu.length > 1 && (
           <nav className="thanh-duoi" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', background: MAU.dau, borderTop: `1px solid ${MAU.vien}`, zIndex: 10 }}>
-            {menu.map((m) => (
+            {menu.filter((m) => m.key !== '/danh-gia').map((m) => (
               <button key={m.key} onClick={() => nav(m.key)} style={{
                 flex: 1, border: 0, background: 'none', padding: '8px 0 10px', fontSize: 11,
                 color: dangO(m.key) ? MAU.chinh : MAU.chuMo, fontWeight: dangO(m.key) ? 600 : 400, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,

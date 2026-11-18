@@ -2,6 +2,7 @@
 import ExcelJS from 'exceljs'
 import { tongCong, type DuLieuThang } from './du-lieu'
 import { goiCuaThang, tenGoi } from './hoc-phi'
+import { TIEU_CHI, tongHop } from './danh-gia'
 
 const TIEN = '#,##0'
 const tenSheet = (s: string, daDung: Set<string>) => {
@@ -22,7 +23,7 @@ export async function xuatExcel(d: DuLieuThang) {
   const wb = new ExcelJS.Workbook()
   wb.calcProperties.fullCalcOnLoad = true // công thức chưa có kết quả lưu sẵn, bắt Excel tính lại khi mở
   const [y, m] = d.thang.split('-')
-  const daDung = new Set<string>(['Tổng hợp', 'Điểm danh', 'Sổ thu', 'Chi phí', 'Công nợ', 'Trợ giảng'])
+  const daDung = new Set<string>(['Tổng hợp', 'Điểm danh', 'Sổ thu', 'Chi phí', 'Công nợ', 'Trợ giảng', 'Đánh giá'])
   const tong = wb.addWorksheet('Tổng hợp')
 
   // ---- Mỗi lớp một trang ----
@@ -116,6 +117,26 @@ export async function xuatExcel(d: DuLieuThang) {
   d.luongTg.forEach((x) => wsTg.addRow({ ten: x.tg.ho_ten, buoi: x.soBuoi, tien: x.thanhTien }))
   const rTg = wsTg.addRow({ ten: 'TỔNG' })
   rTg.getCell('buoi').value = { formula: `SUM(B2:B${tgCuoi})` }; rTg.getCell('tien').value = { formula: `SUM(C2:C${tgCuoi})` }; rTg.font = { bold: true }
+
+  // ---- Đánh giá của học sinh: tổng hợp trợ giảng ở trên, chi tiết mỗi dòng một cặp (phiếu, trợ giảng) ở dưới ----
+  if (d.danhGia.length) {
+    const ws = wb.addWorksheet('Đánh giá')
+    // hai bảng dùng chung cột: A tên, B lớp / số phiếu, C–E ba tiêu chí, F chung / giờ gửi, G trở đi chữ
+    tieuDe(ws, [{ header: 'Trợ giảng', key: 'a', width: 22 }, { header: 'Số phiếu', key: 'b', width: 14 },
+      ...TIEU_CHI.map((c, i) => ({ header: c.ten, key: 'cde'[i], width: 10 })), { header: 'Chung', key: 'f', width: 15 },
+      ...'ghijk'.split('').map((key) => ({ header: '', key, width: key === 'g' ? 18 : 36 }))])
+    for (const t of tongHop(d.danhGia).troGiang) ws.addRow({ a: t.ten, b: t.soPhieu, c: t.kien_thuc, d: t.tuong_tac, e: t.ho_tro, f: t.chung })
+    ws.addRow({})
+    const h = ws.addRow(['Học sinh', 'Lớp', ...TIEU_CHI.map((c) => c.ten), 'Gửi lúc', 'Trợ giảng', 'Nhận xét khoá học', 'Khó khăn', 'Nhận xét trợ giảng', 'Chữa bài'])
+    h.font = { bold: true }
+    for (const p of d.danhGia) {
+      const luc = new Date(p.gui_luc).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })
+      for (const t of p.tro_giang.length ? p.tro_giang : [null]) {
+        ws.addRow([p.ten_hoc_sinh, p.ten_lop, t?.kien_thuc, t?.tuong_tac, t?.ho_tro, luc, t?.ten ?? 'Không có trợ giảng',
+          p.khoa_hoc, p.kho_khan, t?.nhan_xet, t?.chua_bai]).alignment = { wrapText: true, vertical: 'top' }
+      }
+    }
+  }
 
   // ---- Tổng hợp (lấy từ các trang trên bằng công thức) ----
   const t = tongCong(d)
