@@ -214,6 +214,19 @@ with sync_playwright() as pw:
         p.screenshot(path=os.path.join(OUT, "a-chi-tiet.png"), full_page=True)
     buoc("thu tiền gói 3 tháng 2 triệu → còn phải thu tháng 11 là 1.000.000", b_thu_tien)
 
+    def b_link_zalo():
+        # đang ở trang chi tiết TEST Nguyễn Bảo An sau bước thu tiền
+        o = lab(p, "Link nhóm Zalo")
+        o.fill("Tham gia nhóm trên Zalo: https://zalo.me/g/testabc123")
+        p.get_by_role("button", name="Lưu", exact=True).click()
+        expect(p.get_by_role("link", name="Mở nhóm Zalo")).to_have_attribute("href", "https://zalo.me/g/testabc123")
+        expect(o).to_have_value("https://zalo.me/g/testabc123")
+        expect(p.get_by_role("link", name="Mở Zalo PH")).to_be_visible()
+        o.fill("nhóm lớp")
+        p.get_by_role("button", name="Lưu", exact=True).click()
+        expect(p.get_by_text(re.compile("không có link nhóm Zalo"))).to_be_visible()
+    buoc("link nhóm Zalo: dán lời mời → lọc link, nút Mở nhóm Zalo + Mở Zalo PH; chữ không có link thì báo lỗi", b_link_zalo)
+
     def b_chi_phi():
         nav("Chi phí")
         p.get_by_role("button", name="Thêm khoản chi").click()

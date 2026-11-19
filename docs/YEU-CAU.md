@@ -285,6 +285,23 @@ Giao diện "Sổ vàng" (2026-11-16):
 - **Không tự xoá phiếu cũ** (người dùng chốt 2026-11-18): phiếu và bản tóm tắt giữ mãi, mỗi phiếu chỉ 1–2 KB; điểm
   trợ giảng tính lại từ phiếu nên xoá phiếu là mất điểm tháng đó. Chỉ xoá tay từng phiếu (rác / nhầm tên).
 
+Link nhóm Zalo của từng học sinh (grill 2026-11-20):
+
+- Mỗi em có một nhóm Zalo (phụ huynh, giáo viên, quản lý). Học sinh có thêm ô **Link nhóm Zalo**, không bắt buộc.
+  Anh chị em chung nhóm thì dán cùng link cho từng em, không có bảng "nhóm" riêng.
+- Chỉ nhận link `https://zalo.me/…`. Dán cả đoạn chữ thì app tự lọc lấy link; không có link thì báo lỗi.
+- **Chỉ admin và giáo viên** thấy, nhập, sửa, xoá link (trên giao diện). Quyền trợ giảng giữ nguyên, không có gì mới.
+  Phụ huynh không thấy. Trợ giảng vẫn đọc được cột này qua API như SĐT phụ huynh (policy đọc `hoc_sinh` sẵn có), chấp nhận.
+- **Nhập tay:** ô Link nhóm Zalo + nút Lưu trên trang chi tiết học sinh. Form Thêm/Sửa học sinh không đổi.
+- **Nút:** trang chi tiết học sinh và trang Học phí có **Mở Zalo PH** (nút "Mở Zalo" cũ, chat riêng theo SĐT) và
+  **Mở nhóm Zalo** (chỉ hiện khi đã có link).
+- **Excel import** (sửa luật "chỉ thêm mới, không sửa" ở trên, riêng cho cột này): file mẫu thêm cột cuối
+  "Link nhóm Zalo" và **điền sẵn các học sinh đang học**. Học sinh mới tạo kèm link. Học sinh đã có (họ tên + lớp +
+  SĐT phụ huynh) mà ô link có nội dung khác link đang có thì **cập nhật link**, các cột khác vẫn không sửa; ô link
+  trống thì giữ link cũ. Trang Hướng dẫn của file mẫu cảnh báo: sửa tên / lớp / SĐT trong file thì dòng đó thành học
+  sinh mới.
+- File Excel xuất tháng không thêm cột. Không quay lại video hướng dẫn, chỉ sửa phần chữ.
+
 ## Câu hỏi còn mở
 
 Không còn.

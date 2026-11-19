@@ -51,10 +51,11 @@ export default function ImportExcel() {
   const dong: Dong[] = useMemo(() => (kq ? [...kq.lops, ...kq.hss] : []), [kq])
   const dem = (t: Exclude<Loc, 'tat_ca'>) => dong.filter((d) => d.trangThai === t).length
   const loi = dong.filter((d) => d.trangThai === 'loi')
+  const soLink = kq?.hss.filter((h) => h.capNhatLink).length ?? 0
 
   const nhap = async () => {
     if (!kq) return
-    setTienDo({ xong: 0, tong: dem('moi'), dang: 'Bắt đầu' })
+    setTienDo({ xong: 0, tong: dem('moi') + soLink, dang: 'Bắt đầu' })
     try { setKetQua(await nhapDuLieu(kq.lops, kq.hss, lopCo, setTienDo)) }
     catch (e) { message.error((e as Error).message); setTienDo(undefined) }
   }
@@ -79,6 +80,7 @@ export default function ImportExcel() {
         <Result status={ketQua.loi.length ? 'warning' : 'success'} title={`Đã thêm ${ketQua.lopMoi} lớp và ${ketQua.hsMoi} học sinh`}
           subTitle={<>
             Tạo {ketQua.phMoi} tài khoản phụ huynh mới, {ketQua.phDungChung} em dùng chung tài khoản đã có.<br />
+            {ketQua.linkMoi > 0 && <>Cập nhật link nhóm Zalo cho {ketQua.linkMoi} học sinh đã có.<br /></>}
             Bỏ qua {dem('da_co')} dòng đã có, {loi.length + ketQua.loi.length} dòng chưa nhập.<br />
             Phụ huynh đăng nhập bằng số điện thoại, mật khẩu đầu là chính số điện thoại.
           </>}
@@ -99,8 +101,8 @@ export default function ImportExcel() {
       ) : !kq ? (
         <>
           <Card size="small" title="1. Tải file mẫu">
-            <p style={{ marginTop: 0, color: MAU.chuPhu }}>File có 3 trang: Hướng dẫn, Lớp (đã điền sẵn các lớp đang có), Học sinh. Cột có dấu * là bắt buộc.</p>
-            <Button icon={<DownloadOutlined />} onClick={() => taiFileMau(lopCo).catch((e) => message.error(e.message))}>Tải file mẫu</Button>
+            <p style={{ marginTop: 0, color: MAU.chuPhu }}>File có 3 trang: Hướng dẫn, Lớp (đã điền sẵn các lớp đang có), Học sinh (đã điền sẵn các em đang học, dán link nhóm Zalo vào cột cuối). Cột có dấu * là bắt buộc.</p>
+            <Button icon={<DownloadOutlined />} onClick={() => taiFileMau(lopCo, hsCo).catch((e) => message.error(e.message))}>Tải file mẫu</Button>
           </Card>
           <Card size="small" title="2. Chọn file đã điền">
             <Upload.Dragger accept=".xlsx" showUploadList={false} beforeUpload={(f) => { chonFile(f); return false }}>
@@ -160,7 +162,8 @@ export default function ImportExcel() {
 
           <div style={chan}>
             <Space direction="vertical" style={{ width: '100%' }}>
-              <Button type="primary" size="large" block disabled={!dem('moi')} onClick={nhap}>Nhập {dem('moi')} dòng mới</Button>
+              <Button type="primary" size="large" block disabled={!dem('moi') && !soLink} onClick={nhap}>
+                Nhập {dem('moi')} dòng mới{soLink ? `, cập nhật ${soLink} link nhóm Zalo` : ''}</Button>
               {loi.length > 0 && <Button type="link" block icon={<DownloadOutlined />} onClick={() => taiDanhSachLoi(kq.lops, kq.hss)}>Tải danh sách lỗi (.xlsx)</Button>}
             </Space>
           </div>

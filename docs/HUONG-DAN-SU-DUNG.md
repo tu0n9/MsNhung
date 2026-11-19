@@ -52,6 +52,18 @@ khác lớp), sticker đã có từ trước (sổ giấy).
 sinh", rồi tải file lên. App cho xem trước từng dòng xanh / đỏ kèm lý do, chỉ nhập dòng hợp lệ. Import lại cùng file
 vẫn an toàn: dòng đã có được bỏ qua.
 
+Trang "Học sinh" của file mẫu đã điền sẵn các em đang học. Muốn dán **link nhóm Zalo** cho nhiều em một lúc: dán link
+vào cột cuối "Link nhóm Zalo" rồi import, app cập nhật link cho các em đó (dòng hiện "Sẽ cập nhật link nhóm Zalo").
+Ô link để trống thì giữ link đang có. **Không sửa Họ tên, Lớp, SĐT** của dòng điền sẵn: sửa thì app coi là học sinh mới
+và tạo trùng.
+
+### Link nhóm Zalo của học sinh
+
+Mỗi em một nhóm Zalo (phụ huynh, giáo viên, quản lý). Mở học sinh → ô **Link nhóm Zalo** → dán link mời nhóm
+(`https://zalo.me/g/…`, dán cả lời mời của Zalo cũng được, app tự lọc link) → **Lưu**. Xoá trắng ô rồi Lưu để bỏ link.
+Anh chị em chung nhóm thì dán cùng link cho từng em. Chỉ giáo viên và admin thấy và sửa link; trợ giảng, phụ huynh
+không thấy.
+
 ### Xoá lớp
 
 **Sửa lớp → Xoá lớp**, gõ lại đúng tên lớp. Xoá cả học sinh, điểm danh, gói, phiếu thu, ảnh của lớp. **Không lấy lại
@@ -226,7 +238,8 @@ tháng sau là **−100.000** (số âm = đang có tiền thừa). Khi đóng g
 - Em **đang học mà chưa có gói** thì phải thu = 0, nên **không hiện ở Công nợ**. Các em này hiện ở bộ lọc
   **Sắp hết gói** với nhãn "Chưa có gói". Nhớ xem bộ lọc này mỗi tháng.
 - **Sắp hết gói:** em còn ≤ 4 buổi theo lịch tới cuối gói, hoặc gói đã hết mà chưa gia hạn. Mỗi em có nút **Sao chép
-  tin nhắn** (ghi học phí 1 tháng kế tiếp = buổi theo lịch × đơn giá) và **Mở Zalo**.
+  tin nhắn** (ghi học phí 1 tháng kế tiếp = buổi theo lịch × đơn giá), **Mở Zalo PH** (chat riêng phụ huynh) và
+  **Mở nhóm Zalo** (khi em đã có link nhóm).
 - Em đã đóng trước gói sau thì không bị báo.
 
 ### 5.16 Chốt sổ tháng
@@ -240,8 +253,8 @@ tháng sau là **−100.000** (số âm = đang có tiền thừa). Khi đóng g
 
 ### 5.17 Tin nhắn cho phụ huynh
 
-- Trang học sinh → **Sao chép tin nhắn**: học phí tháng, nợ cũ, đã thu, số cần nộp. Dán vào Zalo, hoặc bấm Mở Zalo /
-  Gửi SMS.
+- Trang học sinh → **Sao chép tin nhắn**: học phí tháng, nợ cũ, đã thu, số cần nộp. Dán vào Zalo, hoặc bấm Mở Zalo PH /
+  Mở nhóm Zalo / Gửi SMS.
 - Bộ lọc Sắp hết gói → **Sao chép tin nhắn** nhắc gia hạn.
 
 ## 6. Chi phí

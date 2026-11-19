@@ -14,6 +14,7 @@ export interface HocSinh {
   id: string; ho_ten: string; lop_id: string; avatar: string | null; ten_phu_huynh: string | null
   sdt_phu_huynh: string | null; phu_huynh_id: string | null; ngay_vao: string; don_gia_rieng: number | null
   trang_thai: 'dang_hoc' | 'ngung'; ghi_chu: string | null; sticker_dau_ky: number
+  link_zalo: string | null
 }
 export interface BuoiHoc {
   id: string; lop_id: string; ngay: string; loai: 'lich' | 'phu' | 'bu'; lop_nghi: boolean; ghi_chu: string | null

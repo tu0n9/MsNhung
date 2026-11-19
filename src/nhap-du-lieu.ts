@@ -3,13 +3,14 @@ import { khoa, type KqHs, type KqLop } from './import-excel'
 import { goiTaiKhoan, q, sb, type Lop } from './supabase'
 
 export interface TienDo { xong: number; tong: number; dang: string }
-export interface KetQuaNhap { lopMoi: number; hsMoi: number; phMoi: number; phDungChung: number; loi: { so: number; ten: string; loi: string }[] }
+export interface KetQuaNhap { lopMoi: number; hsMoi: number; phMoi: number; phDungChung: number; linkMoi: number; loi: { so: number; ten: string; loi: string }[] }
 
 export async function nhapDuLieu(lops: KqLop[], hss: KqHs[], lopCo: Lop[], baoTienDo: (t: TienDo) => void): Promise<KetQuaNhap> {
   const lopMoi = lops.filter((l) => l.trangThai === 'moi')
   const hsMoi = hss.filter((h) => h.trangThai === 'moi')
-  const tong = lopMoi.length + hsMoi.length
-  const kq: KetQuaNhap = { lopMoi: 0, hsMoi: 0, phMoi: 0, phDungChung: 0, loi: [] }
+  const capNhat = hss.filter((h) => h.capNhatLink)
+  const tong = lopMoi.length + hsMoi.length + capNhat.length
+  const kq: KetQuaNhap = { lopMoi: 0, hsMoi: 0, phMoi: 0, phDungChung: 0, linkMoi: 0, loi: [] }
 
   // lớp trước để học sinh xếp được vào lớp mới trong cùng file
   baoTienDo({ xong: 0, tong, dang: 'Đang thêm lớp' })
@@ -38,8 +39,20 @@ export async function nhapDuLieu(lops: KqLop[], hss: KqHs[], lopCo: Lop[], baoTi
       await q(sb.from('hoc_sinh').insert({
         ho_ten: h.ho_ten, lop_id: idLop.get(khoa(h.tenLop)), ten_phu_huynh: h.ten_phu_huynh, sdt_phu_huynh: h.sdt_phu_huynh,
         phu_huynh_id: phId, ngay_vao: h.ngay_vao, don_gia_rieng: h.don_gia_rieng, sticker_dau_ky: h.sticker_dau_ky, ghi_chu: h.ghi_chu,
+        link_zalo: h.link_zalo,
       }))
       kq.hsMoi++
+    } catch (e) {
+      kq.loi.push({ so: h.so, ten: h.ho_ten, loi: (e as Error).message })
+    }
+  }
+
+  // học sinh đã có: chỉ ghi đúng cột link, theo id, không đụng dữ liệu thật khác
+  for (const [i, h] of capNhat.entries()) {
+    baoTienDo({ xong: kq.lopMoi + hsMoi.length + i, tong, dang: `Đang cập nhật link nhóm cho ${h.ho_ten}` })
+    try {
+      await q(sb.from('hoc_sinh').update({ link_zalo: h.link_zalo }).eq('id', h.capNhatLink!))
+      kq.linkMoi++
     } catch (e) {
       kq.loi.push({ so: h.so, ten: h.ho_ten, loi: (e as Error).message })
     }

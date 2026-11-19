@@ -10,6 +10,7 @@ import {
 } from '../hoc-phi'
 import { moTaLich } from '../gio-hoc'
 import { luoiThang, type ONgay, type TrangThaiO } from '../diem-danh-thang'
+import { chuanLinkZalo } from '../import-excel'
 
 type Phieu = PhieuThu & { id: string; hinh_thuc: string; ghi_chu: string | null }
 
@@ -28,6 +29,16 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
   const [anh, setAnh] = useState<{ duong_dan: string; ngay: string }[]>([])
   const [urlA, setUrlA] = useState<Record<string, string>>({})
   const [daHoan, setDaHoan] = useState(0)
+  const [link, setLink] = useState(hs.link_zalo)
+  const [oLink, setOLink] = useState(hs.link_zalo ?? '')
+  const luuLink = async () => {
+    const { link: moi, loi } = chuanLinkZalo(oLink)
+    if (loi) return message.error(loi)
+    const { error } = await sb.from('hoc_sinh').update({ link_zalo: moi }).eq('id', hs.id)
+    if (error) return message.error(error.message)
+    setLink(moi); setOLink(moi ?? '')
+    message.success(moi ? 'Đã lưu link nhóm Zalo' : 'Đã xoá link nhóm Zalo')
+  }
 
   const tai = async () => {
     const [d, g, b, h] = await Promise.all([
@@ -77,6 +88,13 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
         <DatePicker picker="month" value={dayjs(thang)} onChange={(d) => d && setThang(d.format('YYYY-MM'))} format="MM/YYYY" allowClear={false} />
       </Space>
 
+      {ql && <Card size="small" title="Link nhóm Zalo">
+        <Space.Compact style={{ width: '100%' }}>
+          <Input value={oLink} onChange={(e) => setOLink(e.target.value)} placeholder="https://zalo.me/g/..." allowClear aria-label="Link nhóm Zalo" />
+          <Button type="primary" disabled={oLink.trim() === (link ?? '')} onClick={luuLink}>Lưu</Button>
+        </Space.Compact>
+      </Card>}
+
       <Card size="small">
         <Space wrap size="large">
           <Statistic title="Buổi đi học tháng này" value={soCoMat} />
@@ -109,7 +127,8 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
         ]} />
         {ql && <Space wrap style={{ marginTop: 8 }}>
           <Button onClick={() => navigator.clipboard.writeText(tinNhan).then(() => message.success('Đã sao chép, dán vào Zalo'))}>Sao chép tin nhắn</Button>
-          {hs.sdt_phu_huynh && <Button href={`https://zalo.me/${hs.sdt_phu_huynh}`} target="_blank">Mở Zalo</Button>}
+          {hs.sdt_phu_huynh && <Button href={`https://zalo.me/${hs.sdt_phu_huynh}`} target="_blank">Mở Zalo PH</Button>}
+          {link && <Button href={link} target="_blank" rel="noreferrer">Mở nhóm Zalo</Button>}
           {hs.sdt_phu_huynh && <Button href={`sms:${hs.sdt_phu_huynh}?body=${encodeURIComponent(tinNhan)}`}>Gửi SMS</Button>}
         </Space>}
 

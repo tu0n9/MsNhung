@@ -1,5 +1,6 @@
 // Import lớp và học sinh từ file mẫu Excel. Quyết định ở docs/YEU-CAU.md mục "Import lớp và học sinh bằng Excel":
 // chỉ thêm mới, dòng đã có thì bỏ qua (import lại cùng file vẫn an toàn), dòng lỗi báo lý do và không nhập.
+// Ngoại lệ duy nhất: học sinh đã có được cập nhật link nhóm Zalo (mục "Link nhóm Zalo").
 import type ExcelJS from 'exceljs'
 import type { HocSinh, Lop } from './supabase'
 import { docOGio, type GioThu } from './gio-hoc'
@@ -15,7 +16,7 @@ const COT_THU = [1, 2, 3, 4, 5, 6, 0]
 export interface DongLopTho { so: number; ten: unknown; donGia: unknown; thu: unknown[] }
 export interface DongHsTho {
   so: number; hoTen: unknown; lop: unknown; tenPh: unknown; sdt: unknown; ngayVao: unknown
-  donGiaRieng: unknown; sticker: unknown; ghiChu: unknown
+  donGiaRieng: unknown; sticker: unknown; ghiChu: unknown; linkZalo: unknown
 }
 
 export type TrangThai = 'moi' | 'da_co' | 'loi'
@@ -24,6 +25,9 @@ export interface KqHs {
   loai: 'hs'; so: number; trangThai: TrangThai; loi?: string
   ho_ten: string; tenLop: string; ten_phu_huynh: string | null; sdt_phu_huynh: string | null
   ngay_vao: string; don_gia_rieng: number | null; sticker_dau_ky: number; ghi_chu: string | null
+  link_zalo: string | null
+  /** dòng "da_co" mà link trong file khác link đang có: id học sinh cần cập nhật link */
+  capNhatLink?: string
 }
 
 // ---------- chuẩn hoá từng ô ----------
@@ -51,6 +55,15 @@ export function chuanSdt(v: unknown): { sdt: string | null; loi?: string } {
   if (/^[1-9]\d{8}$/.test(s) && typeof v === 'number') s = '0' + s
   if (!/^0\d{9}$/.test(s)) return { sdt: null, loi: `SĐT phụ huynh "${tho}" phải có 10 số, bắt đầu bằng 0` }
   return { sdt: s }
+}
+
+/** Link nhóm Zalo: lọc link zalo.me ra khỏi đoạn chữ dán vào (lời mời của Zalo có kèm chữ), thiếu https thì thêm. */
+export function chuanLinkZalo(v: unknown): { link: string | null; loi?: string } {
+  const tho = chu(v)
+  if (!tho) return { link: null }
+  const m = tho.match(/(?:https?:\/\/)?(?:www\.)?zalo\.me\/\S+/i)
+  if (!m) return { link: null, loi: `"${tho.slice(0, 40)}" không có link nhóm Zalo (https://zalo.me/…)` }
+  return { link: 'https://zalo.me/' + m[0].replace(/^(?:https?:\/\/)?(?:www\.)?zalo\.me\//i, '') }
 }
 
 /** Tiền: số, hoặc chữ kiểu "150.000" / "150,000 đ". */
@@ -108,24 +121,28 @@ export function kiemTra(
   // học sinh được xếp vào lớp đã có hoặc lớp mới hợp lệ trong cùng file
   const lopDung = new Set([...tenLopCo.keys(), ...lops.filter((l) => l.trangThai === 'moi').map((l) => khoa(l.ten))])
   const khoaHs = (ten: string, lop: string, sdt: string | null) => `${khoa(ten)}|${khoa(lop)}|${sdt ?? ''}`
-  const hsDaCo = new Set(hsCo.map((h) => khoaHs(h.ho_ten, lopCo.find((l) => l.id === h.lop_id)?.ten ?? '', h.sdt_phu_huynh)))
+  const hsDaCo = new Map(hsCo.map((h) => [khoaHs(h.ho_ten, lopCo.find((l) => l.id === h.lop_id)?.ten ?? '', h.sdt_phu_huynh), h]))
   const hsTrongFile = new Set<string>()
 
   const hss: KqHs[] = hsTho.map((r) => {
     const hoTen = chu(r.hoTen), tenLop = chu(r.lop)
-    const sdt = chuanSdt(r.sdt), ngay = chuanNgay(r.ngayVao, homNay)
+    const sdt = chuanSdt(r.sdt), ngay = chuanNgay(r.ngayVao, homNay), link = chuanLinkZalo(r.linkZalo)
     const gia = chuanTien(r.donGiaRieng, 'Đơn giá riêng', false), st = chuanTien(r.sticker, 'Sticker đã có', false)
     const kq: KqHs = {
       loai: 'hs', so: r.so, trangThai: 'moi', ho_ten: hoTen, tenLop, ten_phu_huynh: chu(r.tenPh) || null,
       sdt_phu_huynh: sdt.sdt, ngay_vao: ngay.ngay ?? homNay, don_gia_rieng: gia.so, sticker_dau_ky: st.so ?? 0,
-      ghi_chu: chu(r.ghiChu) || null,
+      ghi_chu: chu(r.ghiChu) || null, link_zalo: link.link,
     }
     const loi = (!hoTen && 'Thiếu họ tên') || (!tenLop && 'Chưa chọn lớp')
       || (!lopDung.has(khoa(tenLop)) && `Lớp "${tenLop}" chưa có (hoặc dòng lớp đó đang lỗi)`)
-      || sdt.loi || ngay.loi || gia.loi || st.loi
+      || sdt.loi || ngay.loi || gia.loi || st.loi || link.loi
     if (loi) return { ...kq, trangThai: 'loi', loi }
     const k = khoaHs(hoTen, tenLop, sdt.sdt)
-    if (hsDaCo.has(k)) return { ...kq, trangThai: 'da_co' }
+    const co = hsDaCo.get(k)
+    // ô link trống thì giữ link cũ: file mẫu điền sẵn học sinh nên nhiều em chưa có link trong file
+    if (co) return link.link && link.link !== co.link_zalo
+      ? { ...kq, trangThai: 'da_co', capNhatLink: co.id, loi: 'Sẽ cập nhật link nhóm Zalo' }
+      : { ...kq, trangThai: 'da_co' }
     if (hsTrongFile.has(k)) return { ...kq, trangThai: 'da_co', loi: 'Trùng với dòng trên trong file' }
     hsTrongFile.add(k)
     return kq
@@ -153,8 +170,8 @@ export async function docFile(buf: ArrayBuffer): Promise<{ lopTho: DongLopTho[];
   wsHs.eachRow((row, so) => {
     if (so === 1 || laDongMau(row.getCell(1).value)) return
     const o = (c: number) => row.getCell(c).value
-    if (![1, 2, 3, 4, 5, 6, 7, 8].some((c) => chu(o(c)))) return
-    hsTho.push({ so, hoTen: o(1), lop: o(2), tenPh: o(3), sdt: o(4), ngayVao: o(5), donGiaRieng: o(6), sticker: o(7), ghiChu: o(8) })
+    if (![1, 2, 3, 4, 5, 6, 7, 8, 9].some((c) => chu(o(c)))) return
+    hsTho.push({ so, hoTen: o(1), lop: o(2), tenPh: o(3), sdt: o(4), ngayVao: o(5), donGiaRieng: o(6), sticker: o(7), ghiChu: o(8), linkZalo: o(9) })
   })
   return { lopTho, hsTho }
 }
@@ -170,7 +187,7 @@ function tieuDe(ws: ExcelJS.Worksheet, cot: { ten: string; rong: number; batBuoc
 
 const SO_DONG = 500
 
-export async function taiFileMau(lops: Lop[]) {
+export async function taiFileMau(lops: Lop[], hss: HocSinh[]) {
   const { default: Excel } = await import('exceljs')
   const wb = new Excel.Workbook()
 
@@ -184,8 +201,10 @@ export async function taiFileMau(lops: Lop[]) {
     '4. SĐT phụ huynh: 10 số, bắt đầu bằng 0. Mỗi SĐT tạo một tài khoản phụ huynh, mật khẩu đầu là chính SĐT. Anh chị em dùng chung SĐT.',
     '5. Ngày vào học: dạng ngày/tháng/năm, để trống thì lấy ngày import.',
     '6. Đơn giá riêng: để trống thì học theo đơn giá của lớp. Sticker đã có: số sticker tích luỹ từ trước.',
-    '7. Import chỉ THÊM MỚI. Học sinh trùng họ tên + lớp + SĐT phụ huynh với người đã có sẽ được bỏ qua, không bị sửa.',
+    '7. Import chỉ THÊM MỚI. Học sinh trùng họ tên + lớp + SĐT phụ huynh với người đã có sẽ được bỏ qua, không bị sửa (trừ cột Link nhóm Zalo, xem mục 9).',
     '8. Dòng lỗi không được nhập. Sửa trong file rồi import lại cùng file: những dòng đã nhập sẽ tự bỏ qua.',
+    '9. Link nhóm Zalo: dán link mời vào nhóm (https://zalo.me/g/...). Các học sinh đang học đã điền sẵn: chỉ cần dán link vào cột cuối rồi import, app cập nhật link cho em đó. Ô link để trống thì giữ link đang có.',
+    '10. CHÚ Ý: không sửa Họ tên, Lớp, SĐT phụ huynh của các dòng điền sẵn. Sửa thì dòng đó bị coi là học sinh MỚI và sẽ tạo trùng. Muốn sửa thông tin thì sửa trong app.',
   ].forEach((t, i) => { const r = hd.addRow([t]); if (i === 0) r.font = { bold: true, size: 14 } })
 
   const wsLop = wb.addWorksheet(TRANG_LOP)
@@ -198,9 +217,16 @@ export async function taiFileMau(lops: Lop[]) {
   const wsHs = wb.addWorksheet(TRANG_HS)
   tieuDe(wsHs, [{ ten: 'Họ tên', rong: 24, batBuoc: true }, { ten: 'Lớp', rong: 18, batBuoc: true }, { ten: 'Tên phụ huynh', rong: 18 },
     { ten: 'SĐT phụ huynh', rong: 15 }, { ten: 'Ngày vào học', rong: 13 }, { ten: 'Đơn giá riêng', rong: 13 },
-    { ten: 'Sticker đã có', rong: 12 }, { ten: 'Ghi chú', rong: 28 }])
-  wsHs.addRow(['Ví dụ: Nguyễn Gia Bảo', lops[0]?.ten ?? 'Movers 2', 'Chị Hằng', '0987220413', new Date(), '', 12, 'Anh trai học lớp khác'])
+    { ten: 'Sticker đã có', rong: 12 }, { ten: 'Ghi chú', rong: 28 }, { ten: 'Link nhóm Zalo', rong: 34 }])
+  wsHs.addRow(['Ví dụ: Nguyễn Gia Bảo', lops[0]?.ten ?? 'Movers 2', 'Chị Hằng', '0987220413', new Date(), '', 12, 'Anh trai học lớp khác', 'https://zalo.me/g/abcxyz123'])
     .font = { italic: true, color: { argb: 'FF8C8C8C' } }
+  // điền sẵn học sinh đang học để dán link nhóm Zalo hàng loạt; import sẽ nhận ra là "đã có" theo họ tên + lớp + SĐT
+  const tenLop = new Map(lops.map((l) => [l.id, l.ten]))
+  for (const h of hss.filter((x) => x.trang_thai === 'dang_hoc' && tenLop.has(x.lop_id))
+    .sort((a, b) => tenLop.get(a.lop_id)!.localeCompare(tenLop.get(b.lop_id)!) || a.ho_ten.localeCompare(b.ho_ten))) {
+    wsHs.addRow([h.ho_ten, tenLop.get(h.lop_id), h.ten_phu_huynh ?? '', h.sdt_phu_huynh ?? '', new Date(h.ngay_vao),
+      h.don_gia_rieng ?? '', h.sticker_dau_ky || '', h.ghi_chu ?? '', h.link_zalo ?? ''])
+  }
   // SĐT để Text cho khỏi mất số 0 đầu; Lớp là danh sách thả xuống lấy từ trang Lớp
   wsHs.getColumn(4).numFmt = '@'
   wsHs.getColumn(5).numFmt = 'dd/mm/yyyy'

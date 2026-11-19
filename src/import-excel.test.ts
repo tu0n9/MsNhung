@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import ExcelJS from 'exceljs'
-import { chuanNgay, chuanSdt, chuanTien, docFile, kiemTra, type DongHsTho, type DongLopTho } from './import-excel'
+import { chuanLinkZalo, chuanNgay, chuanSdt, chuanTien, docFile, kiemTra, type DongHsTho, type DongLopTho } from './import-excel'
 import type { HocSinh, Lop } from './supabase'
 
 const HOM_NAY = '2026-11-15'
 const lopCo: Lop[] = [{ id: 'l1', ten: 'Starters 1', don_gia: 100000, lich: [1, 3], gio_thu: {}, hoat_dong: true }]
 const hsCo = [{ id: 'h1', ho_ten: 'Trần Khánh Linh', lop_id: 'l1', sdt_phu_huynh: '0903615240' }] as HocSinh[]
 const hs = (so: number, o: Partial<DongHsTho>): DongHsTho => ({
-  so, hoTen: 'Lê Minh Châu', lop: 'Starters 1', tenPh: '', sdt: '', ngayVao: '', donGiaRieng: '', sticker: '', ghiChu: '', ...o,
+  so, hoTen: 'Lê Minh Châu', lop: 'Starters 1', tenPh: '', sdt: '', ngayVao: '', donGiaRieng: '', sticker: '', ghiChu: '', linkZalo: '', ...o,
 })
 // 'g' = ô ghi giờ hợp lệ, '.' = ô trống, ký tự khác giữ nguyên (ví dụ 'x' kiểu file cũ)
 const lop = (so: number, ten: string, donGia: unknown, thu: string): DongLopTho =>
@@ -33,6 +33,13 @@ describe('chuẩn hoá ô', () => {
     expect(chuanNgay('3/9/2026', HOM_NAY).ngay).toBe('2026-09-03')
     expect(chuanNgay('', HOM_NAY).ngay).toBe(HOM_NAY)
     expect(chuanNgay('31/02/2026', HOM_NAY).loi).toMatch(/không có thật/)
+  })
+  it('link Zalo: lọc link khỏi lời mời, thêm https, báo lỗi khi không có link', () => {
+    expect(chuanLinkZalo('Tham gia nhóm "Lớp Bảo" trên Zalo: https://zalo.me/g/abc123 nhé').link).toBe('https://zalo.me/g/abc123')
+    expect(chuanLinkZalo('zalo.me/g/xyz').link).toBe('https://zalo.me/g/xyz')
+    expect(chuanLinkZalo('http://www.zalo.me/g/xyz').link).toBe('https://zalo.me/g/xyz')
+    expect(chuanLinkZalo('').link).toBeNull()
+    expect(chuanLinkZalo('https://facebook.com/g/1').loi).toMatch(/zalo\.me/)
   })
 })
 
@@ -64,6 +71,21 @@ describe('kiemTra', () => {
     expect(hss.map((h) => h.trangThai)).toEqual(['da_co', 'moi', 'da_co', 'moi'])
     expect(hss[1].sticker_dau_ky).toBe(12)
     expect(hss[1].ngay_vao).toBe(HOM_NAY)
+  })
+
+  it('học sinh đã có: link khác thì cập nhật, trống hoặc trùng thì giữ; học sinh mới mang link theo; link sai là lỗi', () => {
+    const co = [{ ...hsCo[0], link_zalo: 'https://zalo.me/g/cu' }] as HocSinh[]
+    const { hss } = kiemTra([], [
+      hs(2, { hoTen: 'Trần Khánh Linh', sdt: '0903615240', linkZalo: 'https://zalo.me/g/moi' }),
+      hs(3, { hoTen: 'Trần Khánh Linh', sdt: '0903615240', linkZalo: '' }),
+      hs(4, { hoTen: 'Trần Khánh Linh', sdt: '0903615240', linkZalo: 'https://zalo.me/g/cu' }),
+      hs(5, { linkZalo: 'zalo.me/g/em-moi' }),
+      hs(6, { hoTen: 'Lê Văn A', linkZalo: 'nhóm lớp' }),
+    ], lopCo, co, HOM_NAY)
+    expect(hss.map((h) => h.trangThai)).toEqual(['da_co', 'da_co', 'da_co', 'moi', 'loi'])
+    expect(hss.map((h) => h.capNhatLink)).toEqual(['h1', undefined, undefined, undefined, undefined])
+    expect(hss[0].link_zalo).toBe('https://zalo.me/g/moi')
+    expect(hss[3].link_zalo).toBe('https://zalo.me/g/em-moi')
   })
 
   it('học sinh lỗi: thiếu tên, thiếu lớp, lớp không có, SĐT sai', () => {

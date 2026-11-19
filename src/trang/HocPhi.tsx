@@ -128,7 +128,8 @@ export default function HocPhi() {
                 {r.hs.sdt_phu_huynh && <div style={{ fontSize: 12, color: MAU.chuPhu }}>{r.hs.ten_phu_huynh ? `${r.hs.ten_phu_huynh} · ` : ''}{r.hs.sdt_phu_huynh}</div>}
                 <Space wrap size="small" style={{ marginTop: 6 }}>
                   <Button size="small" onClick={() => navigator.clipboard.writeText(tinNhan).then(() => message.success('Đã sao chép, dán vào Zalo'))}>Sao chép tin nhắn</Button>
-                  {r.hs.sdt_phu_huynh && <Button size="small" href={`https://zalo.me/${r.hs.sdt_phu_huynh}`} target="_blank">Mở Zalo</Button>}
+                  {r.hs.sdt_phu_huynh && <Button size="small" href={`https://zalo.me/${r.hs.sdt_phu_huynh}`} target="_blank">Mở Zalo PH</Button>}
+                  {r.hs.link_zalo && <Button size="small" href={r.hs.link_zalo} target="_blank" rel="noreferrer">Mở nhóm Zalo</Button>}
                 </Space>
               </div>
             ))}
