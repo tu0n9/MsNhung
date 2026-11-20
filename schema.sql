@@ -545,7 +545,9 @@ CREATE TABLE IF NOT EXISTS "public"."hoc_sinh" (
     "ghi_chu" "text",
     "tao_luc" timestamp with time zone DEFAULT "now"() NOT NULL,
     "sticker_dau_ky" integer DEFAULT 0 NOT NULL,
+    "link_zalo" "text",
     CONSTRAINT "hoc_sinh_don_gia_rieng_check" CHECK (("don_gia_rieng" >= 0)),
+    CONSTRAINT "hoc_sinh_link_zalo_check" CHECK (("link_zalo" ~ '^https://zalo\.me/\S+$'::"text")),
     CONSTRAINT "hoc_sinh_sticker_dau_ky_check" CHECK (("sticker_dau_ky" >= 0)),
     CONSTRAINT "hoc_sinh_trang_thai_check" CHECK (("trang_thai" = ANY (ARRAY['dang_hoc'::"text", 'ngung'::"text"])))
 );

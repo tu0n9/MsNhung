@@ -4,7 +4,7 @@ SET session_replication_role = replica;
 -- PostgreSQL database dump
 --
 
--- \restrict sRoPTPdAiUO5S7mmgHFtnb8HRlefEsqjVJ29c5TlefanzRQ245JJnq372DOGlsL
+-- \restrict v9yJqgqZFaBfPuPbjq8GpR848bpCd9f8JkTpEV4MeyYtURDDWF5ahIf0U8iuRFd
 
 -- Dumped from database version 17.11
 -- Dumped by pg_dump version 17.12
@@ -50,15 +50,15 @@ COPY "auth"."flow_state" ("id", "user_id", "auth_code", "code_challenge_method",
 --
 
 COPY "auth"."users" ("instance_id", "id", "aud", "role", "email", "encrypted_password", "email_confirmed_at", "invited_at", "confirmation_token", "confirmation_sent_at", "recovery_token", "recovery_sent_at", "email_change_token_new", "email_change", "email_change_sent_at", "last_sign_in_at", "raw_app_meta_data", "raw_user_meta_data", "is_super_admin", "created_at", "updated_at", "phone", "phone_confirmed_at", "phone_change", "phone_change_token", "phone_change_sent_at", "email_change_token_current", "email_change_confirm_status", "banned_until", "reauthentication_token", "reauthentication_sent_at", "is_sso_user", "deleted_at", "is_anonymous") FROM stdin;
-00000000-0000-0000-0000-000000000000	7925dcdb-7311-4634-896a-b4b6386b2df2	authenticated	authenticated	8ebb1955-2bf2-40c6-98fd-94c9104c1119@msnhung.local	$2a$10$aRQi3Bed93zbqvfex3T82ee9J2eTimialQxGPkYcbdyTDvilkVEPC	2026-11-18 10:51:11.090954+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:51:11.085776+00	2026-11-18 10:51:11.09232+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	authenticated	authenticated	19f38f04-61b3-43ca-8335-d6f1b809a252@msnhung.local	$2a$10$/d5jbvE1Q5z7R3bauuwKj.nild4IT38Y91YL0fmLwd/foL.l0zsay	2026-11-18 10:49:19.499215+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:49:19.494982+00	2026-11-18 10:49:19.50072+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	877e2be5-c648-4abe-b7a6-8ceff0df9d68	authenticated	authenticated	b3a2e022-4ac8-4e39-bf92-8eb8929f8818@msnhung.local	$2a$10$Qs1dEePeo9NfuXobIUwD5uPgQYkTbuNobiZr9KdEJUN45D6hgYzWS	2026-11-18 10:51:52.198234+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:51:52.194016+00	2026-11-18 10:51:52.202419+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	d45793f2-33af-41bf-91e4-410cf31087cc	authenticated	authenticated	f11afff5-2031-4c08-8ed1-1fb7a6e992b6@msnhung.local	$2a$10$3qL3UVR8xbLh.LD.BgmOu.BiYDs0rU2kNfqFwIP/yHVfeAnRyMBp6	2026-11-18 10:49:48.026277+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:49:48.022325+00	2026-11-18 10:49:48.027809+00	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	7925dcdb-7311-4634-896a-b4b6386b2df2	authenticated	authenticated	8ebb1955-2bf2-40c6-98fd-94c9104c1119@msnhung.local	$2a$10$.qKVyn44KDMq/QbVRuTwdO3arECmyPF2h0itwWyd/CfXAhMtW0bIq	2026-11-18 10:51:11.090954+00	\N		\N		\N			\N	2026-11-19 15:33:10.474457+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:51:11.085776+00	2026-11-19 15:33:19.891315+00	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	906a5d63-7289-4b55-a279-ff8db9b1a5c4	authenticated	authenticated	fcc895cd-f026-4e3f-81d1-1544acf6f727@msnhung.local	$2a$10$fk7lu2GZgnCeo8pi.fU9FOcvyaorYm2xYyyHDFwwDcs5.K2upZ5ia	2026-11-18 10:50:37.366255+00	\N		\N		\N			\N	2026-11-19 15:35:11.822744+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:50:37.354077+00	2026-11-19 15:35:11.855499+00	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	authenticated	authenticated	8a80fc97-4996-4655-afee-8eac991e9a12@msnhung.local	$2a$10$97fyKO0vuMQfYkBUWS32X.Q56vy5lBsfCC.aooYX7mAnGjFJmA3xW	2026-11-18 10:48:28.317304+00	\N		\N		\N			\N	2026-11-19 13:09:30.603649+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:48:28.280417+00	2026-11-19 16:31:49.537419+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	8b0b82af-8eee-477b-bc50-b5c72837c2f7	authenticated	authenticated	9b44af75-9759-4353-8276-9a34385879ac@msnhung.local	$2a$10$8vao8LW315Dfkchm1MBos.ijJyY9XJ1wNm.MG.jh30CoYiaS2ng2a	2026-11-18 10:58:11.97509+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:58:11.951136+00	2026-11-18 10:58:11.976631+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	906a5d63-7289-4b55-a279-ff8db9b1a5c4	authenticated	authenticated	fcc895cd-f026-4e3f-81d1-1544acf6f727@msnhung.local	$2a$10$fk7lu2GZgnCeo8pi.fU9FOcvyaorYm2xYyyHDFwwDcs5.K2upZ5ia	2026-11-18 10:50:37.366255+00	\N		\N		\N			\N	2026-11-18 11:43:23.633301+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:50:37.354077+00	2026-11-18 13:04:56.838548+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	9b8a626d-c10d-443e-adcf-8b152a9b6c90	authenticated	authenticated	ac70b571-f88b-4b91-910e-2056e06887f5@msnhung.local	$2a$10$L6Hx8GBRQb3UJP0RgrP49uzhjOQobgfNWJ4h4I/xunR7cf5q/sRSW	2026-11-18 11:01:13.795726+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 11:01:13.775131+00	2026-11-18 11:01:13.797193+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	43d2ab0d-e902-49d7-9e81-a3696d296ad2	authenticated	authenticated	admin@msnhung.local	$2a$10$BCdkciwG3PPPv4yCMa50oefbpbFKmU9xlXou.UTQCXONcdSKZxnAO	2026-11-15 10:27:58.76274+00	\N		\N		\N			\N	2026-11-18 14:56:45.609884+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-15 10:27:58.741954+00	2026-11-18 15:54:59.648822+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	authenticated	authenticated	8a80fc97-4996-4655-afee-8eac991e9a12@msnhung.local	$2a$10$97fyKO0vuMQfYkBUWS32X.Q56vy5lBsfCC.aooYX7mAnGjFJmA3xW	2026-11-18 10:48:28.317304+00	\N		\N		\N			\N	2026-11-18 11:15:04.569028+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:48:28.280417+00	2026-11-18 16:34:59.682006+00	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	43d2ab0d-e902-49d7-9e81-a3696d296ad2	authenticated	authenticated	admin@msnhung.local	$2a$10$BCdkciwG3PPPv4yCMa50oefbpbFKmU9xlXou.UTQCXONcdSKZxnAO	2026-11-15 10:27:58.76274+00	\N		\N		\N			\N	2026-11-19 17:59:08.483688+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-15 10:27:58.741954+00	2026-11-19 17:59:08.489424+00	\N	\N			\N		0	\N		\N	f	\N	f
 \.
 
 
@@ -100,13 +100,12 @@ COPY "auth"."oauth_clients" ("id", "client_secret_hash", "registration_type", "r
 --
 
 COPY "auth"."sessions" ("id", "user_id", "created_at", "updated_at", "factor_id", "aal", "not_after", "refreshed_at", "user_agent", "ip", "tag", "oauth_client_id", "refresh_token_hmac_key", "refresh_token_counter", "scopes") FROM stdin;
-41c428bd-782f-44c5-bfe7-e834d6a4ee2a	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-18 10:06:28.463604+00	2026-11-18 10:06:28.463604+00	\N	aal1	\N	\N	Python-urllib/3.12	42.113.16.7	\N	\N	\N	\N	\N
-30809fba-b7db-4fe2-b8ed-2004c0aa5522	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-18 10:34:24.17775+00	2026-11-18 11:32:46.699584+00	\N	aal1	\N	2026-11-18 11:32:46.699412	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0	116.96.46.150	\N	\N	\N	\N	\N
-61fb99f1-0c58-424b-8945-a3063d437c77	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-18 10:38:54.83179+00	2026-11-18 11:44:05.109318+00	\N	aal1	\N	2026-11-18 11:44:05.109193	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Zalo iOS/261101802 ZaloTheme/dark ZaloLanguage/vn	116.96.46.150	\N	\N	\N	\N	\N
-56331b80-4941-48d4-a50f-607a48efac8a	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-18 10:19:54.041734+00	2026-11-18 12:09:46.097951+00	\N	aal1	\N	2026-11-18 12:09:46.097773	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0	104.28.222.73	\N	\N	\N	\N	\N
-a4f49e36-4306-410d-9f04-b23e11e86a0f	906a5d63-7289-4b55-a279-ff8db9b1a5c4	2026-11-18 11:43:23.634035+00	2026-11-18 13:04:57.054131+00	\N	aal1	\N	2026-11-18 13:04:57.053991	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6.1 Mobile/15E148 Safari/604.1	171.255.112.90	\N	\N	\N	\N	\N
-b98910e6-48cc-4364-a94c-4c9ca25a0c23	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-18 14:56:45.610521+00	2026-11-18 15:54:59.67387+00	\N	aal1	\N	2026-11-18 15:54:59.673744	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0	183.80.97.88	\N	\N	\N	\N	\N
-138b0991-bade-4ac1-99f0-d5b4e29bfcce	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	2026-11-18 11:15:04.570018+00	2026-11-18 16:34:59.711116+00	\N	aal1	\N	2026-11-18 16:34:59.710994	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Mobile/15E148 Safari/604.1	58.187.174.235	\N	\N	\N	\N	\N
+138b0991-bade-4ac1-99f0-d5b4e29bfcce	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	2026-11-18 11:15:04.570018+00	2026-11-19 09:28:18.636381+00	\N	aal1	\N	2026-11-19 09:28:18.636189	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Mobile/15E148 Safari/604.1	171.251.153.178	\N	\N	\N	\N	\N
+a4f49e36-4306-410d-9f04-b23e11e86a0f	906a5d63-7289-4b55-a279-ff8db9b1a5c4	2026-11-18 11:43:23.634035+00	2026-11-19 13:04:04.894628+00	\N	aal1	\N	2026-11-19 13:04:04.894502	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6.1 Mobile/15E148 Safari/604.1	171.255.123.110	\N	\N	\N	\N	\N
+eeb51907-2ea4-4b83-ac18-4d4d82e61ad1	7925dcdb-7311-4634-896a-b4b6386b2df2	2026-11-19 15:33:10.47744+00	2026-11-19 15:33:10.47744+00	\N	aal1	\N	\N	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0	183.80.74.68	\N	\N	\N	\N	\N
+0b5f5220-9718-46f0-ac89-fdb7950d083e	906a5d63-7289-4b55-a279-ff8db9b1a5c4	2026-11-19 15:35:11.823551+00	2026-11-19 15:35:11.823551+00	\N	aal1	\N	\N	Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36	104.28.222.73	\N	\N	\N	\N	\N
+c0d0a073-5f8e-45d2-b701-61fb6aee22fd	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	2026-11-19 13:09:30.604521+00	2026-11-19 16:31:49.563857+00	\N	aal1	\N	2026-11-19 16:31:49.563726	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Mobile/15E148 Safari/604.1	118.68.111.181	\N	\N	\N	\N	\N
+6ee5fbd4-1327-4c1f-bb0c-6d5adcb1540c	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-19 17:59:08.483825+00	2026-11-19 17:59:08.483825+00	\N	aal1	\N	\N	Python-urllib/3.12	104.28.222.73	\N	\N	\N	\N	\N
 \.
 
 
@@ -115,13 +114,12 @@ b98910e6-48cc-4364-a94c-4c9ca25a0c23	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-1
 --
 
 COPY "auth"."mfa_amr_claims" ("session_id", "created_at", "updated_at", "authentication_method", "id") FROM stdin;
-41c428bd-782f-44c5-bfe7-e834d6a4ee2a	2026-11-18 10:06:28.472074+00	2026-11-18 10:06:28.472074+00	password	711e047e-59ca-47f5-afd7-44e5a764c447
-56331b80-4941-48d4-a50f-607a48efac8a	2026-11-18 10:19:54.088764+00	2026-11-18 10:19:54.088764+00	password	2a97650c-6ba7-4853-b27f-24ca0f923e92
-30809fba-b7db-4fe2-b8ed-2004c0aa5522	2026-11-18 10:34:24.209006+00	2026-11-18 10:34:24.209006+00	password	6db211dc-6461-4166-9743-71118ce65b7e
-61fb99f1-0c58-424b-8945-a3063d437c77	2026-11-18 10:38:54.853905+00	2026-11-18 10:38:54.853905+00	password	245dd476-e314-4f89-9ef9-9f004b44df1f
 138b0991-bade-4ac1-99f0-d5b4e29bfcce	2026-11-18 11:15:04.66948+00	2026-11-18 11:15:04.66948+00	password	0e8bcbd4-b605-4f8d-92ef-a09f44104bec
 a4f49e36-4306-410d-9f04-b23e11e86a0f	2026-11-18 11:43:23.662095+00	2026-11-18 11:43:23.662095+00	password	f04701af-705f-4e0d-9fa8-f70a51ccee56
-b98910e6-48cc-4364-a94c-4c9ca25a0c23	2026-11-18 14:56:45.653505+00	2026-11-18 14:56:45.653505+00	password	e15c6e91-e2c3-4dd1-8478-ec21fd5de51a
+c0d0a073-5f8e-45d2-b701-61fb6aee22fd	2026-11-19 13:09:30.662961+00	2026-11-19 13:09:30.662961+00	password	af8deb5d-c21a-41f3-832b-e2efa8a9f085
+eeb51907-2ea4-4b83-ac18-4d4d82e61ad1	2026-11-19 15:33:10.569478+00	2026-11-19 15:33:10.569478+00	password	f9153c04-47e8-4095-9108-0105f4f831fa
+0b5f5220-9718-46f0-ac89-fdb7950d083e	2026-11-19 15:35:11.8588+00	2026-11-19 15:35:11.8588+00	password	c4a85f2d-4074-4d4b-89da-a88f87957951
+6ee5fbd4-1327-4c1f-bb0c-6d5adcb1540c	2026-11-19 17:59:08.490995+00	2026-11-19 17:59:08.490995+00	password	5e132481-2f04-47d4-a44d-85e5b8ee195c
 \.
 
 
@@ -194,21 +192,20 @@ COPY "auth"."one_time_tokens" ("id", "user_id", "token_type", "token_hash", "rel
 --
 
 COPY "auth"."refresh_tokens" ("instance_id", "id", "token", "user_id", "revoked", "created_at", "updated_at", "parent", "session_id") FROM stdin;
-00000000-0000-0000-0000-000000000000	485	2vvzwbiudfry	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-18 10:06:28.465612+00	2026-11-18 10:06:28.465612+00	\N	41c428bd-782f-44c5-bfe7-e834d6a4ee2a
-00000000-0000-0000-0000-000000000000	490	xvbgkpuvjy3p	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-18 10:34:24.2016+00	2026-11-18 11:32:46.646169+00	\N	30809fba-b7db-4fe2-b8ed-2004c0aa5522
-00000000-0000-0000-0000-000000000000	493	vopdywncuo2d	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-18 11:32:46.668868+00	2026-11-18 11:32:46.668868+00	xvbgkpuvjy3p	30809fba-b7db-4fe2-b8ed-2004c0aa5522
-00000000-0000-0000-0000-000000000000	491	6laorjk2pwqj	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-18 10:38:54.845219+00	2026-11-18 11:44:05.100758+00	\N	61fb99f1-0c58-424b-8945-a3063d437c77
-00000000-0000-0000-0000-000000000000	495	f5gncf6h5wfm	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-18 11:44:05.104886+00	2026-11-18 11:44:05.104886+00	6laorjk2pwqj	61fb99f1-0c58-424b-8945-a3063d437c77
-00000000-0000-0000-0000-000000000000	489	mmuw4aewikxy	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-18 10:19:54.071193+00	2026-11-18 12:09:46.05237+00	\N	56331b80-4941-48d4-a50f-607a48efac8a
-00000000-0000-0000-0000-000000000000	496	p5csidjz2fls	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-18 12:09:46.062054+00	2026-11-18 12:09:46.062054+00	mmuw4aewikxy	56331b80-4941-48d4-a50f-607a48efac8a
+00000000-0000-0000-0000-000000000000	523	jlbd2ocuqilc	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-19 17:59:08.488124+00	2026-11-19 17:59:08.488124+00	\N	6ee5fbd4-1327-4c1f-bb0c-6d5adcb1540c
 00000000-0000-0000-0000-000000000000	492	4ar5dq6mxsrv	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-18 11:15:04.612498+00	2026-11-18 12:20:21.000342+00	\N	138b0991-bade-4ac1-99f0-d5b4e29bfcce
 00000000-0000-0000-0000-000000000000	494	yop7s75def6u	906a5d63-7289-4b55-a279-ff8db9b1a5c4	t	2026-11-18 11:43:23.652022+00	2026-11-18 13:04:56.804141+00	\N	a4f49e36-4306-410d-9f04-b23e11e86a0f
-00000000-0000-0000-0000-000000000000	498	d46sligcrtxe	906a5d63-7289-4b55-a279-ff8db9b1a5c4	f	2026-11-18 13:04:56.822369+00	2026-11-18 13:04:56.822369+00	yop7s75def6u	a4f49e36-4306-410d-9f04-b23e11e86a0f
 00000000-0000-0000-0000-000000000000	497	oiucqvgppb62	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-18 12:20:21.012121+00	2026-11-18 13:22:21.165498+00	4ar5dq6mxsrv	138b0991-bade-4ac1-99f0-d5b4e29bfcce
-00000000-0000-0000-0000-000000000000	500	wwuzbihjjjnc	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-18 14:56:45.636849+00	2026-11-18 15:54:59.625588+00	\N	b98910e6-48cc-4364-a94c-4c9ca25a0c23
-00000000-0000-0000-0000-000000000000	501	k6g4jfblvhdi	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-18 15:54:59.642858+00	2026-11-18 15:54:59.642858+00	wwuzbihjjjnc	b98910e6-48cc-4364-a94c-4c9ca25a0c23
 00000000-0000-0000-0000-000000000000	499	he4pscw7nv4q	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-18 13:22:21.175637+00	2026-11-18 16:34:59.646129+00	oiucqvgppb62	138b0991-bade-4ac1-99f0-d5b4e29bfcce
-00000000-0000-0000-0000-000000000000	502	hk4ftmgehg54	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	f	2026-11-18 16:34:59.669286+00	2026-11-18 16:34:59.669286+00	he4pscw7nv4q	138b0991-bade-4ac1-99f0-d5b4e29bfcce
+00000000-0000-0000-0000-000000000000	502	hk4ftmgehg54	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-18 16:34:59.669286+00	2026-11-19 09:28:18.584226+00	he4pscw7nv4q	138b0991-bade-4ac1-99f0-d5b4e29bfcce
+00000000-0000-0000-0000-000000000000	511	4b3s52br5fd3	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	f	2026-11-19 09:28:18.60024+00	2026-11-19 09:28:18.60024+00	hk4ftmgehg54	138b0991-bade-4ac1-99f0-d5b4e29bfcce
+00000000-0000-0000-0000-000000000000	498	d46sligcrtxe	906a5d63-7289-4b55-a279-ff8db9b1a5c4	t	2026-11-18 13:04:56.822369+00	2026-11-19 11:59:46.963383+00	yop7s75def6u	a4f49e36-4306-410d-9f04-b23e11e86a0f
+00000000-0000-0000-0000-000000000000	512	gxviiezsbur7	906a5d63-7289-4b55-a279-ff8db9b1a5c4	t	2026-11-19 11:59:46.977167+00	2026-11-19 13:04:04.842797+00	d46sligcrtxe	a4f49e36-4306-410d-9f04-b23e11e86a0f
+00000000-0000-0000-0000-000000000000	513	z5v4ivlqh4va	906a5d63-7289-4b55-a279-ff8db9b1a5c4	f	2026-11-19 13:04:04.852987+00	2026-11-19 13:04:04.852987+00	gxviiezsbur7	a4f49e36-4306-410d-9f04-b23e11e86a0f
+00000000-0000-0000-0000-000000000000	515	tez5ezxmlo7a	7925dcdb-7311-4634-896a-b4b6386b2df2	f	2026-11-19 15:33:10.535556+00	2026-11-19 15:33:10.535556+00	\N	eeb51907-2ea4-4b83-ac18-4d4d82e61ad1
+00000000-0000-0000-0000-000000000000	516	2vr7brehe4xk	906a5d63-7289-4b55-a279-ff8db9b1a5c4	f	2026-11-19 15:35:11.849644+00	2026-11-19 15:35:11.849644+00	\N	0b5f5220-9718-46f0-ac89-fdb7950d083e
+00000000-0000-0000-0000-000000000000	514	uqzjyb2jzeez	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-19 13:09:30.633872+00	2026-11-19 16:31:49.504555+00	\N	c0d0a073-5f8e-45d2-b701-61fb6aee22fd
+00000000-0000-0000-0000-000000000000	517	5aimmp2svbp6	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	f	2026-11-19 16:31:49.525176+00	2026-11-19 16:31:49.525176+00	uqzjyb2jzeez	c0d0a073-5f8e-45d2-b701-61fb6aee22fd
 \.
 
 
@@ -282,9 +279,13 @@ COPY "auth"."webauthn_credentials" ("id", "user_id", "credential_id", "public_ke
 
 COPY "public"."lop" ("id", "ten", "don_gia", "lich", "hoat_dong", "tao_luc", "gio", "gio_thu") FROM stdin;
 bafc8fee-b143-40b2-a06b-ae9a461c8e5a	Lớp Ielts nâng cao	400000	{4,6}	t	2026-11-17 13:21:21.512336+00	\N	{"4": {"bd": "18:30", "kt": "20:30"}, "6": {"bd": "09:00", "kt": "11:30"}}
-4e49d265-ef05-4457-8c75-ff435e266182	Ca 18-20 T4	150000	{3}	t	2026-11-18 10:38:23.726462+00	18:00-20:00	{}
-73c5a4e8-0c09-4062-a397-b56f9351b685	Lớp ielts cơ bản chiều t7 ca 2 	200000	{6}	t	2026-11-18 11:43:35.614655+00	18:00-20:00	{}
 0d76975d-4f18-47de-adb8-3992850432eb	Ielts pre chiều t7	200000	{6}	t	2026-11-18 11:05:43.398604+00	\N	{"6": {"bd": "15:15", "kt": "17:15"}}
+1d80e3bc-dfb1-4398-b242-bf46211e8e80	Cấp 1 Ca 18-20 t5	150000	{4}	t	2026-11-19 12:40:30.425366+00	\N	{"4": {"bd": "18:00", "kt": "20:00"}}
+73c5a4e8-0c09-4062-a397-b56f9351b685	Lớp ielts cơ bản chiều t7 ca 2 	200000	{6}	t	2026-11-18 11:43:35.614655+00	18:00-20:00	{"6": {"bd": "18:00", "kt": "20:00"}}
+633443ce-1a36-49f5-80c2-24a8eaf5e22e	1-1 Ngọc Linh 	1000000	{5}	t	2026-11-19 12:50:22.155933+00	\N	{"5": {"bd": "13:00", "kt": "15:00"}}
+4df112a4-8db9-4c78-a747-5ab93c497a19	1-1 Trung Dũng 	1000000	{5}	t	2026-11-19 12:51:37.855395+00	\N	{"5": {"bd": "15:00", "kt": "17:00"}}
+4e49d265-ef05-4457-8c75-ff435e266182	Ca 18-20 T4	150000	{3}	t	2026-11-18 10:38:23.726462+00	18:00-20:00	{"3": {"bd": "18:00", "kt": "20:00"}}
+04be4e4f-b69a-4443-b1a1-61ff6eee57cb	Ca 1 tối t6 	150000	{5}	t	2026-11-19 13:04:57.355675+00	\N	{"5": {"bd": "18:00", "kt": "20:00"}}
 \.
 
 
@@ -305,15 +306,31 @@ f6e57378-f553-452e-9d0c-3cd5920181c2	bafc8fee-b143-40b2-a06b-ae9a461c8e5a	2026-1
 b5d93120-96a2-4b6a-8ed4-3042aa4624cf	4e49d265-ef05-4457-8c75-ff435e266182	2026-11-04	lich	f	\N	\N	\N
 a1c02c20-6317-4d61-ba6b-656c1156c884	4e49d265-ef05-4457-8c75-ff435e266182	2026-11-11	lich	f	\N	\N	\N
 92b3cab2-5ac5-48d8-a4a8-9b189028353a	4e49d265-ef05-4457-8c75-ff435e266182	2026-11-18	lich	f	\N	\N	\N
-804fbd08-2178-4c1a-9c0a-293b1ca0462a	4e49d265-ef05-4457-8c75-ff435e266182	2026-11-25	lich	f	\N	\N	\N
 828c679c-152f-4e56-a36d-69158139863f	0d76975d-4f18-47de-adb8-3992850432eb	2026-11-07	lich	f	\N	15:15:00	17:15:00
 c8f1d446-55a0-41fa-8553-827903f3aab7	0d76975d-4f18-47de-adb8-3992850432eb	2026-11-14	lich	f	\N	15:15:00	17:15:00
 1c00f3c5-b4b9-4095-b86c-100d576579e3	0d76975d-4f18-47de-adb8-3992850432eb	2026-11-21	lich	f	\N	15:15:00	17:15:00
 256eace7-fc21-4c4f-b5f7-9688da6a1291	0d76975d-4f18-47de-adb8-3992850432eb	2026-11-28	lich	f	\N	15:15:00	17:15:00
 50b1f68a-fb37-4b70-ba5c-7ba6ee715129	73c5a4e8-0c09-4062-a397-b56f9351b685	2026-11-07	lich	f	\N	\N	\N
 2da115bc-1518-4359-a7e2-f524f536ba42	73c5a4e8-0c09-4062-a397-b56f9351b685	2026-11-14	lich	f	\N	\N	\N
-c15f4437-b842-4c90-afa8-6ef3d96900a6	73c5a4e8-0c09-4062-a397-b56f9351b685	2026-11-21	lich	f	\N	\N	\N
-6f0c4e19-2edb-4f30-a26b-fad2581c21cc	73c5a4e8-0c09-4062-a397-b56f9351b685	2026-11-28	lich	f	\N	\N	\N
+eea2018b-766f-4172-aefc-f89454e11876	1d80e3bc-dfb1-4398-b242-bf46211e8e80	2026-11-05	lich	f	\N	18:00:00	20:00:00
+99c06620-cdb1-41cc-b9b6-cc2cadb351dc	1d80e3bc-dfb1-4398-b242-bf46211e8e80	2026-11-12	lich	f	\N	18:00:00	20:00:00
+71e54043-f25e-48e8-873d-9f249bd6150c	1d80e3bc-dfb1-4398-b242-bf46211e8e80	2026-11-19	lich	f	\N	18:00:00	20:00:00
+c15f4437-b842-4c90-afa8-6ef3d96900a6	73c5a4e8-0c09-4062-a397-b56f9351b685	2026-11-21	lich	f	\N	18:00:00	20:00:00
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	4e49d265-ef05-4457-8c75-ff435e266182	2026-11-25	lich	f	\N	18:00:00	20:00:00
+ceb1cfa4-71bf-44bb-8697-f8fa4958502b	1d80e3bc-dfb1-4398-b242-bf46211e8e80	2026-11-26	lich	f	\N	18:00:00	20:00:00
+6f0c4e19-2edb-4f30-a26b-fad2581c21cc	73c5a4e8-0c09-4062-a397-b56f9351b685	2026-11-28	lich	f	\N	18:00:00	20:00:00
+3e8c80ca-802a-4b44-95ea-f9f1b274fb7e	633443ce-1a36-49f5-80c2-24a8eaf5e22e	2026-11-06	lich	f	\N	13:00:00	15:00:00
+c510b585-9651-4983-976c-9c4af08cd484	4df112a4-8db9-4c78-a747-5ab93c497a19	2026-11-06	lich	f	\N	15:00:00	17:00:00
+33376ba3-08e6-4509-a001-d4f6d0898b26	633443ce-1a36-49f5-80c2-24a8eaf5e22e	2026-11-13	lich	f	\N	13:00:00	15:00:00
+4d50f71f-4d1d-4be0-a868-093fd1896077	4df112a4-8db9-4c78-a747-5ab93c497a19	2026-11-13	lich	f	\N	15:00:00	17:00:00
+60bd6335-c8dd-40c3-9fed-be5893431eeb	633443ce-1a36-49f5-80c2-24a8eaf5e22e	2026-11-20	lich	f	\N	13:00:00	15:00:00
+1dc15fdd-fa0f-47e7-b22c-8e44dc54cd1b	4df112a4-8db9-4c78-a747-5ab93c497a19	2026-11-20	lich	f	\N	15:00:00	17:00:00
+14c61656-86ac-4ed2-b712-4349c7d908af	633443ce-1a36-49f5-80c2-24a8eaf5e22e	2026-11-27	lich	f	\N	13:00:00	15:00:00
+67e5ca37-7a1e-4f4d-90f9-66edc5d2bdb0	4df112a4-8db9-4c78-a747-5ab93c497a19	2026-11-27	lich	f	\N	15:00:00	17:00:00
+88e99a85-3d79-46e3-b5f4-e5caa7817535	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	2026-11-06	lich	f	\N	18:00:00	20:00:00
+45a23d78-e0da-44ae-9568-b0865bd1bc0f	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	2026-11-13	lich	f	\N	18:00:00	20:00:00
+c0f883fc-0857-4b2b-bc18-2e057ddde6a7	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	2026-11-20	lich	f	\N	18:00:00	20:00:00
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	2026-11-27	lich	f	\N	18:00:00	20:00:00
 \.
 
 
@@ -324,6 +341,8 @@ c15f4437-b842-4c90-afa8-6ef3d96900a6	73c5a4e8-0c09-4062-a397-b56f9351b685	2026-1
 COPY "public"."anh_buoi" ("id", "buoi_id", "duong_dan", "tao_luc") FROM stdin;
 205627d0-8772-4e5f-9b8b-34c5b0e4773b	f6e57378-f553-452e-9d0c-3cd5920181c2	buoi/f6e57378-f553-452e-9d0c-3cd5920181c2/90519080-c18d-407c-a4ea-b97c733a9440.jpg	2026-11-17 13:36:49.533277+00
 b7761556-cb3c-4fd4-961e-61b735250d1a	92b3cab2-5ac5-48d8-a4a8-9b189028353a	buoi/92b3cab2-5ac5-48d8-a4a8-9b189028353a/2c9ad16e-8d97-4db5-9b10-a08643e38e86.jpg	2026-11-18 12:20:49.956401+00
+73d1ef3a-4bd1-438a-baf5-4ec5ec7aa055	71e54043-f25e-48e8-873d-9f249bd6150c	buoi/71e54043-f25e-48e8-873d-9f249bd6150c/d65e8130-864b-4a59-b33b-326b36931b00.jpg	2026-11-19 13:05:42.199715+00
+1dff6559-51dd-43e3-9128-df1d47346d8c	7546fba6-4be9-440e-9ab2-c379d4c471e9	buoi/7546fba6-4be9-440e-9ab2-c379d4c471e9/4bed649d-8156-4425-86ef-d2f0b9c42959.jpg	2026-11-19 13:48:19.147381+00
 \.
 
 
@@ -335,12 +354,12 @@ COPY "public"."tai_khoan" ("id", "email", "ten_dang_nhap", "so_dien_thoai", "ho_
 43d2ab0d-e902-49d7-9e81-a3696d296ad2	admin@msnhung.local	admin	\N	Quản trị	admin	f	0	t
 77ffcb33-c53a-41b3-a728-f1fdb13cc37b	19f38f04-61b3-43ca-8335-d6f1b809a252@msnhung.local	ngan	\N	Ngân	tro_giang	t	100000	t
 d45793f2-33af-41bf-91e4-410cf31087cc	f11afff5-2031-4c08-8ed1-1fb7a6e992b6@msnhung.local	thanh	\N	Thành	tro_giang	t	100000	t
-7925dcdb-7311-4634-896a-b4b6386b2df2	8ebb1955-2bf2-40c6-98fd-94c9104c1119@msnhung.local	manh	\N	Trần Mạnh	tro_giang	t	100000	t
 877e2be5-c648-4abe-b7a6-8ceff0df9d68	b3a2e022-4ac8-4e39-bf92-8eb8929f8818@msnhung.local	duong	\N	Minh Dương	tro_giang	t	100000	t
 8b0b82af-8eee-477b-bc50-b5c72837c2f7	9b44af75-9759-4353-8276-9a34385879ac@msnhung.local	thanhielts	\N	Thành lớp ielts nâng cao 	tro_giang	t	50000	t
 9b8a626d-c10d-443e-adcf-8b152a9b6c90	ac70b571-f88b-4b91-910e-2056e06887f5@msnhung.local	tuanielts	\N	Tuấn lớp ielts nâng cao 	tro_giang	t	50000	t
 69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	8a80fc97-4996-4655-afee-8eac991e9a12@msnhung.local	tuan	\N	Anh Tuấn	tro_giang	f	100000	t
 906a5d63-7289-4b55-a279-ff8db9b1a5c4	fcc895cd-f026-4e3f-81d1-1544acf6f727@msnhung.local	nga	\N	Thiên Nga	tro_giang	f	100000	t
+7925dcdb-7311-4634-896a-b4b6386b2df2	8ebb1955-2bf2-40c6-98fd-94c9104c1119@msnhung.local	manh	\N	Trần Mạnh	tro_giang	f	100000	t
 \.
 
 
@@ -348,51 +367,82 @@ d45793f2-33af-41bf-91e4-410cf31087cc	f11afff5-2031-4c08-8ed1-1fb7a6e992b6@msnhun
 -- Data for Name: hoc_sinh; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY "public"."hoc_sinh" ("id", "ho_ten", "lop_id", "avatar", "ten_phu_huynh", "sdt_phu_huynh", "phu_huynh_id", "ngay_vao", "don_gia_rieng", "trang_thai", "ghi_chu", "tao_luc", "sticker_dau_ky") FROM stdin;
-a6071b67-2130-479d-9960-be9b713e379d	Lê Duy Anh	4e49d265-ef05-4457-8c75-ff435e266182	avatar/a6071b67-2130-479d-9960-be9b713e379d-1794998592009.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:43:11.843234+00	0
-09426ac0-e7af-47bc-a029-195fcee72b46	Bùi Bách	bafc8fee-b143-40b2-a06b-ae9a461c8e5a	avatar/09426ac0-e7af-47bc-a029-195fcee72b46-1794921820760.jpg	\N	\N	\N	2026-11-01	0	dang_hoc	\N	2026-11-17 13:23:40.619385+00	0
-2a71aebf-2868-4496-8c0d-26a9c5fdac6d	Gia Khánh	bafc8fee-b143-40b2-a06b-ae9a461c8e5a	avatar/2a71aebf-2868-4496-8c0d-26a9c5fdac6d-1794921883142.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-17 13:24:43.072064+00	0
-6125884c-53f0-45ee-a303-3d03bc111254	Gia Minh	bafc8fee-b143-40b2-a06b-ae9a461c8e5a	avatar/6125884c-53f0-45ee-a303-3d03bc111254-1794921934570.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-17 13:25:34.500012+00	0
-98deb901-bd60-4e1a-94c1-0ab944440ecb	Hải Hiếu	bafc8fee-b143-40b2-a06b-ae9a461c8e5a	avatar/98deb901-bd60-4e1a-94c1-0ab944440ecb-1794921993396.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-17 13:26:33.273193+00	0
-1b364415-27c0-4528-b772-6f9331702874	Hoàng Tuấn	bafc8fee-b143-40b2-a06b-ae9a461c8e5a	avatar/1b364415-27c0-4528-b772-6f9331702874-1794922033355.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-17 13:27:13.282976+00	0
-9c5e27df-2361-46d3-9551-92dc6109c2f5	Lâm Tùng	bafc8fee-b143-40b2-a06b-ae9a461c8e5a	avatar/9c5e27df-2361-46d3-9551-92dc6109c2f5-1794922065703.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-17 13:27:45.537928+00	0
-b3065572-cd6a-4131-bae6-4f0b9ed4f46f	Nam Phong	bafc8fee-b143-40b2-a06b-ae9a461c8e5a	avatar/b3065572-cd6a-4131-bae6-4f0b9ed4f46f-1794922100871.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-17 13:28:20.821969+00	0
-e561c6d5-6fbc-462a-ab2e-e1423f3b692f	Ngọc Minh	bafc8fee-b143-40b2-a06b-ae9a461c8e5a	avatar/e561c6d5-6fbc-462a-ab2e-e1423f3b692f-1794922166340.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-17 13:29:26.274078+00	0
-800d8814-bc3d-460b-827b-97ef5dc49eda	Nguyễn Đăng Dương	4e49d265-ef05-4457-8c75-ff435e266182	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:44:09.588667+00	0
-e3906889-be7a-483c-a548-52c80afb47e7	Nguyễn Tự Huy	4e49d265-ef05-4457-8c75-ff435e266182	avatar/e3906889-be7a-483c-a548-52c80afb47e7-1794998686016.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:44:45.767249+00	0
-eaff414d-ac8c-44a0-9ed3-483992927fb9	Ánh Long	4e49d265-ef05-4457-8c75-ff435e266182	avatar/eaff414d-ac8c-44a0-9ed3-483992927fb9-1794998386874.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:39:46.828145+00	0
-bc4166c1-2a49-43d1-9769-f752dcc2d91c	Bùi Ngọc Hà	4e49d265-ef05-4457-8c75-ff435e266182	avatar/bc4166c1-2a49-43d1-9769-f752dcc2d91c-1794998426835.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:40:26.742895+00	0
-a409e2ce-01c6-49e8-bbdf-5caf4477db1e	Đinh Bá Quang Anh	4e49d265-ef05-4457-8c75-ff435e266182	avatar/a409e2ce-01c6-49e8-bbdf-5caf4477db1e-1794998465030.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:41:04.952525+00	0
-47286437-2fcd-451e-b01f-c19e8cbbcbef	Đỗ Phương Thu	4e49d265-ef05-4457-8c75-ff435e266182	avatar/47286437-2fcd-451e-b01f-c19e8cbbcbef-1794998506091.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:41:46.019686+00	0
-33a3cfe1-6ebb-46fb-b851-4282d579a315	Hoàng Diệu Linh	4e49d265-ef05-4457-8c75-ff435e266182	avatar/33a3cfe1-6ebb-46fb-b851-4282d579a315-1794998542956.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:42:22.881958+00	0
-94c6acd3-4c22-405e-a976-d9cd63a72345	Trần Gia Bảo	4e49d265-ef05-4457-8c75-ff435e266182	avatar/94c6acd3-4c22-405e-a976-d9cd63a72345-1794998722264.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:45:22.118529+00	0
-04c0644a-6490-4551-9b84-2b3e606b2f11	Trịnh Ngọc Bảo Anh	4e49d265-ef05-4457-8c75-ff435e266182	avatar/04c0644a-6490-4551-9b84-2b3e606b2f11-1794998765684.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:46:05.536913+00	0
-7c7fc404-3d84-4d6b-8972-3926976216f4	Trịnh Ngọc Bảo Trân	4e49d265-ef05-4457-8c75-ff435e266182	avatar/7c7fc404-3d84-4d6b-8972-3926976216f4-1794998800089.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:46:39.986746+00	0
-d2c38a11-b7b8-41da-9cf9-9f5808755c9b	Tùng Lâm	4e49d265-ef05-4457-8c75-ff435e266182	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:47:01.711591+00	0
-0377768d-cc45-49f5-a96d-8d170c3bf41f	Vũ Hải Hà	4e49d265-ef05-4457-8c75-ff435e266182	avatar/0377768d-cc45-49f5-a96d-8d170c3bf41f-1794998858970.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:47:38.903246+00	0
-ad4eb7e3-ef7e-442e-9e18-766284275ff7	Chu Bảo Ngân	0d76975d-4f18-47de-adb8-3992850432eb	avatar/ad4eb7e3-ef7e-442e-9e18-766284275ff7-1794999976075.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:06:16.031289+00	0
-e57f5ae7-1615-43da-89c0-af87f74cdc97	Hoàng Diệu Linh	0d76975d-4f18-47de-adb8-3992850432eb	avatar/e57f5ae7-1615-43da-89c0-af87f74cdc97-1795000028815.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:07:08.678948+00	0
-e83a1cf4-c38e-4ddc-acd0-ff0fb166c6af	Lê Thị Anh Thư	0d76975d-4f18-47de-adb8-3992850432eb	avatar/e83a1cf4-c38e-4ddc-acd0-ff0fb166c6af-1795003669718.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:08:14.94948+00	0
-a7a4a0fd-b313-4cc7-a91a-43726d34edc9	Lê Hồng Ngọc	0d76975d-4f18-47de-adb8-3992850432eb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:08:40.036682+00	0
-4f80d2ff-fc12-472d-8330-f9d4eba659ab	Nguyễn Hải Sơn	0d76975d-4f18-47de-adb8-3992850432eb	avatar/4f80d2ff-fc12-472d-8330-f9d4eba659ab-1795000166855.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:09:26.774658+00	0
-d52ba56a-1453-4315-8de9-75f0bbe3c7b4	Nguyễn Thị Ngọc	0d76975d-4f18-47de-adb8-3992850432eb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:09:51.735342+00	0
-d33f6ef4-92f6-4de1-bde4-d15d6f1dc5c7	Phạm Sương Mai	0d76975d-4f18-47de-adb8-3992850432eb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:10:09.65974+00	0
-ef8b67df-fbeb-4c52-ba94-4be8fdb8053b	Phạm Thị Vân Anh	0d76975d-4f18-47de-adb8-3992850432eb	avatar/ef8b67df-fbeb-4c52-ba94-4be8fdb8053b-1795000241808.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:10:41.735205+00	0
-fa327d0b-f6b8-4d58-b67a-74eafeea4798	Phạm Trí Thành	0d76975d-4f18-47de-adb8-3992850432eb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:11:04.707612+00	0
-b20830c3-0747-45aa-bba0-0efd2f0cd32e	Ngô Thảo Chi	0d76975d-4f18-47de-adb8-3992850432eb	avatar/b20830c3-0747-45aa-bba0-0efd2f0cd32e-1795003682982.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:11:47.747478+00	0
-3f7ce3c1-adc5-4a3c-b88e-5f6cd8aeac91	Vũ Hải Long	0d76975d-4f18-47de-adb8-3992850432eb	avatar/3f7ce3c1-adc5-4a3c-b88e-5f6cd8aeac91-1795000346567.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:12:26.51448+00	0
-3706e8ca-a8c3-47ea-8629-73c3c62ab4f6	Chu Bảo Ngân	73c5a4e8-0c09-4062-a397-b56f9351b685	avatar/3706e8ca-a8c3-47ea-8629-73c3c62ab4f6-1795002295550.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:44:55.50174+00	0
-d8534bf8-c1b6-4b40-8ce2-2e4c4407ee0c	Hoàng Diệu Linh	73c5a4e8-0c09-4062-a397-b56f9351b685	avatar/d8534bf8-c1b6-4b40-8ce2-2e4c4407ee0c-1795002323128.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:45:22.925537+00	0
-6e534433-03c4-452e-ab68-988e6cceb111	Lê Thị Anh Thư	73c5a4e8-0c09-4062-a397-b56f9351b685	avatar/6e534433-03c4-452e-ab68-988e6cceb111-1795002416126.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:46:55.983237+00	0
-08b349c7-6d97-465f-97dd-f3437e6227e1	Lê Hồng Ngọc	73c5a4e8-0c09-4062-a397-b56f9351b685	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:47:20.356878+00	0
-1ef16544-19ec-4e43-9f9c-c4d8eb485b29	Nguyễn Hải Sơn	73c5a4e8-0c09-4062-a397-b56f9351b685	avatar/1ef16544-19ec-4e43-9f9c-c4d8eb485b29-1795002468641.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:47:48.496603+00	0
-d624703f-7d65-4ba6-8d6e-501b919bff4b	Nguyễn Thế Hiếu	73c5a4e8-0c09-4062-a397-b56f9351b685	avatar/d624703f-7d65-4ba6-8d6e-501b919bff4b-1795002510421.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:48:30.247223+00	0
-5758ae90-4154-4dcf-a4df-94abedf1e033	Nguyễn Thị Ngọc	73c5a4e8-0c09-4062-a397-b56f9351b685	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:48:53.076187+00	0
-80a446ab-7ca6-4ee5-9df7-1d9e267e4d25	Phạm Sương Mai	73c5a4e8-0c09-4062-a397-b56f9351b685	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:49:07.854985+00	0
-437e3823-c23f-494c-82ef-7866580d5abe	Phạm Thị Vân Anh	73c5a4e8-0c09-4062-a397-b56f9351b685	avatar/437e3823-c23f-494c-82ef-7866580d5abe-1795002570430.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:49:30.368548+00	0
-668df112-f3f0-4267-8b54-6cbb43ae966c	Phạm Trí Thành	73c5a4e8-0c09-4062-a397-b56f9351b685	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:49:51.342652+00	0
-6dfcd269-b65d-46e0-9734-6708c3bff15d	Ngô Thảo Chi	73c5a4e8-0c09-4062-a397-b56f9351b685	avatar/6dfcd269-b65d-46e0-9734-6708c3bff15d-1795002611697.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:50:11.643741+00	0
-b799cd61-1a93-47d7-b390-66f48d357a1d	Vũ Hải Long	73c5a4e8-0c09-4062-a397-b56f9351b685	avatar/b799cd61-1a93-47d7-b390-66f48d357a1d-1795002648049.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:50:47.889282+00	0
+COPY "public"."hoc_sinh" ("id", "ho_ten", "lop_id", "avatar", "ten_phu_huynh", "sdt_phu_huynh", "phu_huynh_id", "ngay_vao", "don_gia_rieng", "trang_thai", "ghi_chu", "tao_luc", "sticker_dau_ky", "link_zalo") FROM stdin;
+a6071b67-2130-479d-9960-be9b713e379d	Lê Duy Anh	4e49d265-ef05-4457-8c75-ff435e266182	avatar/a6071b67-2130-479d-9960-be9b713e379d-1794998592009.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:43:11.843234+00	0	\N
+09426ac0-e7af-47bc-a029-195fcee72b46	Bùi Bách	bafc8fee-b143-40b2-a06b-ae9a461c8e5a	avatar/09426ac0-e7af-47bc-a029-195fcee72b46-1794921820760.jpg	\N	\N	\N	2026-11-01	0	dang_hoc	\N	2026-11-17 13:23:40.619385+00	0	\N
+2a71aebf-2868-4496-8c0d-26a9c5fdac6d	Gia Khánh	bafc8fee-b143-40b2-a06b-ae9a461c8e5a	avatar/2a71aebf-2868-4496-8c0d-26a9c5fdac6d-1794921883142.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-17 13:24:43.072064+00	0	\N
+6125884c-53f0-45ee-a303-3d03bc111254	Gia Minh	bafc8fee-b143-40b2-a06b-ae9a461c8e5a	avatar/6125884c-53f0-45ee-a303-3d03bc111254-1794921934570.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-17 13:25:34.500012+00	0	\N
+98deb901-bd60-4e1a-94c1-0ab944440ecb	Hải Hiếu	bafc8fee-b143-40b2-a06b-ae9a461c8e5a	avatar/98deb901-bd60-4e1a-94c1-0ab944440ecb-1794921993396.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-17 13:26:33.273193+00	0	\N
+1b364415-27c0-4528-b772-6f9331702874	Hoàng Tuấn	bafc8fee-b143-40b2-a06b-ae9a461c8e5a	avatar/1b364415-27c0-4528-b772-6f9331702874-1794922033355.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-17 13:27:13.282976+00	0	\N
+9c5e27df-2361-46d3-9551-92dc6109c2f5	Lâm Tùng	bafc8fee-b143-40b2-a06b-ae9a461c8e5a	avatar/9c5e27df-2361-46d3-9551-92dc6109c2f5-1794922065703.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-17 13:27:45.537928+00	0	\N
+b3065572-cd6a-4131-bae6-4f0b9ed4f46f	Nam Phong	bafc8fee-b143-40b2-a06b-ae9a461c8e5a	avatar/b3065572-cd6a-4131-bae6-4f0b9ed4f46f-1794922100871.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-17 13:28:20.821969+00	0	\N
+e561c6d5-6fbc-462a-ab2e-e1423f3b692f	Ngọc Minh	bafc8fee-b143-40b2-a06b-ae9a461c8e5a	avatar/e561c6d5-6fbc-462a-ab2e-e1423f3b692f-1794922166340.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-17 13:29:26.274078+00	0	\N
+800d8814-bc3d-460b-827b-97ef5dc49eda	Nguyễn Đăng Dương	4e49d265-ef05-4457-8c75-ff435e266182	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:44:09.588667+00	0	\N
+e3906889-be7a-483c-a548-52c80afb47e7	Nguyễn Tự Huy	4e49d265-ef05-4457-8c75-ff435e266182	avatar/e3906889-be7a-483c-a548-52c80afb47e7-1794998686016.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:44:45.767249+00	0	\N
+eaff414d-ac8c-44a0-9ed3-483992927fb9	Ánh Long	4e49d265-ef05-4457-8c75-ff435e266182	avatar/eaff414d-ac8c-44a0-9ed3-483992927fb9-1794998386874.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:39:46.828145+00	0	\N
+bc4166c1-2a49-43d1-9769-f752dcc2d91c	Bùi Ngọc Hà	4e49d265-ef05-4457-8c75-ff435e266182	avatar/bc4166c1-2a49-43d1-9769-f752dcc2d91c-1794998426835.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:40:26.742895+00	0	\N
+a409e2ce-01c6-49e8-bbdf-5caf4477db1e	Đinh Bá Quang Anh	4e49d265-ef05-4457-8c75-ff435e266182	avatar/a409e2ce-01c6-49e8-bbdf-5caf4477db1e-1794998465030.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:41:04.952525+00	0	\N
+47286437-2fcd-451e-b01f-c19e8cbbcbef	Đỗ Phương Thu	4e49d265-ef05-4457-8c75-ff435e266182	avatar/47286437-2fcd-451e-b01f-c19e8cbbcbef-1794998506091.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:41:46.019686+00	0	\N
+33a3cfe1-6ebb-46fb-b851-4282d579a315	Hoàng Diệu Linh	4e49d265-ef05-4457-8c75-ff435e266182	avatar/33a3cfe1-6ebb-46fb-b851-4282d579a315-1794998542956.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:42:22.881958+00	0	\N
+94c6acd3-4c22-405e-a976-d9cd63a72345	Trần Gia Bảo	4e49d265-ef05-4457-8c75-ff435e266182	avatar/94c6acd3-4c22-405e-a976-d9cd63a72345-1794998722264.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:45:22.118529+00	0	\N
+04c0644a-6490-4551-9b84-2b3e606b2f11	Trịnh Ngọc Bảo Anh	4e49d265-ef05-4457-8c75-ff435e266182	avatar/04c0644a-6490-4551-9b84-2b3e606b2f11-1794998765684.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:46:05.536913+00	0	\N
+7c7fc404-3d84-4d6b-8972-3926976216f4	Trịnh Ngọc Bảo Trân	4e49d265-ef05-4457-8c75-ff435e266182	avatar/7c7fc404-3d84-4d6b-8972-3926976216f4-1794998800089.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:46:39.986746+00	0	\N
+d2c38a11-b7b8-41da-9cf9-9f5808755c9b	Tùng Lâm	4e49d265-ef05-4457-8c75-ff435e266182	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:47:01.711591+00	0	\N
+0377768d-cc45-49f5-a96d-8d170c3bf41f	Vũ Hải Hà	4e49d265-ef05-4457-8c75-ff435e266182	avatar/0377768d-cc45-49f5-a96d-8d170c3bf41f-1794998858970.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 10:47:38.903246+00	0	\N
+ad4eb7e3-ef7e-442e-9e18-766284275ff7	Chu Bảo Ngân	0d76975d-4f18-47de-adb8-3992850432eb	avatar/ad4eb7e3-ef7e-442e-9e18-766284275ff7-1794999976075.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:06:16.031289+00	0	\N
+e57f5ae7-1615-43da-89c0-af87f74cdc97	Hoàng Diệu Linh	0d76975d-4f18-47de-adb8-3992850432eb	avatar/e57f5ae7-1615-43da-89c0-af87f74cdc97-1795000028815.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:07:08.678948+00	0	\N
+e83a1cf4-c38e-4ddc-acd0-ff0fb166c6af	Lê Thị Anh Thư	0d76975d-4f18-47de-adb8-3992850432eb	avatar/e83a1cf4-c38e-4ddc-acd0-ff0fb166c6af-1795003669718.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:08:14.94948+00	0	\N
+a7a4a0fd-b313-4cc7-a91a-43726d34edc9	Lê Hồng Ngọc	0d76975d-4f18-47de-adb8-3992850432eb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:08:40.036682+00	0	\N
+4f80d2ff-fc12-472d-8330-f9d4eba659ab	Nguyễn Hải Sơn	0d76975d-4f18-47de-adb8-3992850432eb	avatar/4f80d2ff-fc12-472d-8330-f9d4eba659ab-1795000166855.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:09:26.774658+00	0	\N
+d52ba56a-1453-4315-8de9-75f0bbe3c7b4	Nguyễn Thị Ngọc	0d76975d-4f18-47de-adb8-3992850432eb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:09:51.735342+00	0	\N
+d33f6ef4-92f6-4de1-bde4-d15d6f1dc5c7	Phạm Sương Mai	0d76975d-4f18-47de-adb8-3992850432eb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:10:09.65974+00	0	\N
+ef8b67df-fbeb-4c52-ba94-4be8fdb8053b	Phạm Thị Vân Anh	0d76975d-4f18-47de-adb8-3992850432eb	avatar/ef8b67df-fbeb-4c52-ba94-4be8fdb8053b-1795000241808.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:10:41.735205+00	0	\N
+fa327d0b-f6b8-4d58-b67a-74eafeea4798	Phạm Trí Thành	0d76975d-4f18-47de-adb8-3992850432eb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:11:04.707612+00	0	\N
+b20830c3-0747-45aa-bba0-0efd2f0cd32e	Ngô Thảo Chi	0d76975d-4f18-47de-adb8-3992850432eb	avatar/b20830c3-0747-45aa-bba0-0efd2f0cd32e-1795003682982.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:11:47.747478+00	0	\N
+3f7ce3c1-adc5-4a3c-b88e-5f6cd8aeac91	Vũ Hải Long	0d76975d-4f18-47de-adb8-3992850432eb	avatar/3f7ce3c1-adc5-4a3c-b88e-5f6cd8aeac91-1795000346567.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:12:26.51448+00	0	\N
+3706e8ca-a8c3-47ea-8629-73c3c62ab4f6	Chu Bảo Ngân	73c5a4e8-0c09-4062-a397-b56f9351b685	avatar/3706e8ca-a8c3-47ea-8629-73c3c62ab4f6-1795002295550.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:44:55.50174+00	0	\N
+d8534bf8-c1b6-4b40-8ce2-2e4c4407ee0c	Hoàng Diệu Linh	73c5a4e8-0c09-4062-a397-b56f9351b685	avatar/d8534bf8-c1b6-4b40-8ce2-2e4c4407ee0c-1795002323128.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:45:22.925537+00	0	\N
+6e534433-03c4-452e-ab68-988e6cceb111	Lê Thị Anh Thư	73c5a4e8-0c09-4062-a397-b56f9351b685	avatar/6e534433-03c4-452e-ab68-988e6cceb111-1795002416126.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:46:55.983237+00	0	\N
+08b349c7-6d97-465f-97dd-f3437e6227e1	Lê Hồng Ngọc	73c5a4e8-0c09-4062-a397-b56f9351b685	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:47:20.356878+00	0	\N
+1ef16544-19ec-4e43-9f9c-c4d8eb485b29	Nguyễn Hải Sơn	73c5a4e8-0c09-4062-a397-b56f9351b685	avatar/1ef16544-19ec-4e43-9f9c-c4d8eb485b29-1795002468641.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:47:48.496603+00	0	\N
+d624703f-7d65-4ba6-8d6e-501b919bff4b	Nguyễn Thế Hiếu	73c5a4e8-0c09-4062-a397-b56f9351b685	avatar/d624703f-7d65-4ba6-8d6e-501b919bff4b-1795002510421.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:48:30.247223+00	0	\N
+5758ae90-4154-4dcf-a4df-94abedf1e033	Nguyễn Thị Ngọc	73c5a4e8-0c09-4062-a397-b56f9351b685	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:48:53.076187+00	0	\N
+80a446ab-7ca6-4ee5-9df7-1d9e267e4d25	Phạm Sương Mai	73c5a4e8-0c09-4062-a397-b56f9351b685	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:49:07.854985+00	0	\N
+437e3823-c23f-494c-82ef-7866580d5abe	Phạm Thị Vân Anh	73c5a4e8-0c09-4062-a397-b56f9351b685	avatar/437e3823-c23f-494c-82ef-7866580d5abe-1795002570430.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:49:30.368548+00	0	\N
+668df112-f3f0-4267-8b54-6cbb43ae966c	Phạm Trí Thành	73c5a4e8-0c09-4062-a397-b56f9351b685	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:49:51.342652+00	0	\N
+6dfcd269-b65d-46e0-9734-6708c3bff15d	Ngô Thảo Chi	73c5a4e8-0c09-4062-a397-b56f9351b685	avatar/6dfcd269-b65d-46e0-9734-6708c3bff15d-1795002611697.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:50:11.643741+00	0	\N
+b799cd61-1a93-47d7-b390-66f48d357a1d	Vũ Hải Long	73c5a4e8-0c09-4062-a397-b56f9351b685	avatar/b799cd61-1a93-47d7-b390-66f48d357a1d-1795002648049.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-18 11:50:47.889282+00	0	\N
+8449f57a-28fa-40e2-b016-52d8fdfb1a1a	Đặng Bảo An	1d80e3bc-dfb1-4398-b242-bf46211e8e80	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 12:42:37.088899+00	0	\N
+127cf384-4ac0-4a57-8d3e-7f3755cf5e76	Đỗ Thùy Linh 	1d80e3bc-dfb1-4398-b242-bf46211e8e80	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 12:42:53.079265+00	0	\N
+47de7f3c-c311-44a9-b8e9-d535f63909c5	Hoàng Mai Phương 	1d80e3bc-dfb1-4398-b242-bf46211e8e80	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 12:43:07.199964+00	0	\N
+a5df955d-2040-41d3-a691-2a9526050dba	Hoàng Trung Đức 	1d80e3bc-dfb1-4398-b242-bf46211e8e80	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 12:43:24.654764+00	0	\N
+703a8acd-02b0-4f08-8151-7504f51802c1	Hoàng Trung Hải 	1d80e3bc-dfb1-4398-b242-bf46211e8e80	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 12:43:38.416812+00	0	\N
+4d36c077-ad54-4671-8a64-3c7d297faca3	Lê Tiến Anh 	1d80e3bc-dfb1-4398-b242-bf46211e8e80	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 12:44:12.041399+00	0	\N
+d96f705a-caed-4aed-8c5a-2f729630dd64	Phạm Bảo Anh 	1d80e3bc-dfb1-4398-b242-bf46211e8e80	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 12:44:44.198055+00	0	\N
+10e6b491-c559-4087-bbc6-d6520f6d21f5	Phạm Ngọc Anh 	1d80e3bc-dfb1-4398-b242-bf46211e8e80	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 12:45:09.048392+00	0	\N
+64a37c23-5108-4025-bcb3-e7ea6b1fe979	Phạm Nhật Linh (Sam)	1d80e3bc-dfb1-4398-b242-bf46211e8e80	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 12:45:26.515177+00	0	\N
+b218ff29-82e7-4386-8eae-0dd472b1894b	Trần Gia Nghĩa (Ỉn)	1d80e3bc-dfb1-4398-b242-bf46211e8e80	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 12:46:09.638888+00	0	\N
+da8f3b69-bcb6-46d7-b324-e5f61183d270	Vũ Dương Bảo An 	1d80e3bc-dfb1-4398-b242-bf46211e8e80	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 12:46:49.705307+00	0	\N
+e1d9c6da-9520-433a-9485-201be17d736d	Lê Danh Gia Bảo	1d80e3bc-dfb1-4398-b242-bf46211e8e80	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 12:43:54.430225+00	0	\N
+e6af6149-70f4-4687-8390-4f3886b7a42e	Trần Gia Khiêm (Voi)	1d80e3bc-dfb1-4398-b242-bf46211e8e80	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 12:45:50.826526+00	0	\N
+3e45fe76-7884-4e40-8f60-d54cb47ea033	Tú Anh	1d80e3bc-dfb1-4398-b242-bf46211e8e80	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 12:46:22.947966+00	0	\N
+e5d63dee-19fe-4ae1-a741-08a03111eb1d	Nguyễn Ngọc Châu An	1d80e3bc-dfb1-4398-b242-bf46211e8e80	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 12:44:30.250637+00	0	\N
+3fa5c3fb-712e-45c0-bfce-5124fe4c7c73	Ngọc Minh	633443ce-1a36-49f5-80c2-24a8eaf5e22e	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 12:50:38.442405+00	0	\N
+7dd34d24-cee2-4506-98f3-90bc27e293a9	Trung Dũng 	4df112a4-8db9-4c78-a747-5ab93c497a19	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 13:00:43.008932+00	0	\N
+93923906-397a-4ecc-bfce-af2b834f4d98	Bùi Ngọc Hà	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 13:05:39.234021+00	0	\N
+552de5e9-d599-4a8e-ace8-d80518dfe059	Hà Đoàn Nhật Hoàng 	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 13:06:01.175745+00	0	\N
+55328067-088a-4f1b-ae66-507f6d56aa15	Hoàng Trung Hải 	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 13:07:09.119992+00	0	\N
+1555600c-8358-42eb-b9f3-611dbeab3641	Khuất Hoàng An 	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 13:07:23.152836+00	0	\N
+ff386fd8-15b5-42a0-b103-536c60684008	Lê Minh Huy	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 13:07:37.094095+00	0	\N
+892394ca-8163-4263-9b19-957de160996b	Nguyễn Đăng Dương 	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 13:08:08.684126+00	0	\N
+242f8971-c4c0-44d1-8f4e-c26d77efd8ef	Nguyễn Hà Giang 	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 13:08:26.674575+00	0	\N
+dbe5da5f-5458-4023-abe1-26fa2dc82c1c	Nguyễn Hải Đăng 	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 13:09:18.770597+00	0	\N
+60cdb4a9-3025-44d3-8086-b14612242c76	Nguyễn Hải Đăng 	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 13:09:53.691685+00	0	\N
+f85931d6-9ede-45a1-acde-ba4789c6e853	Nguyễn Ngọc Quân 	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 13:10:15.639752+00	0	\N
+78e11889-7937-481d-8234-98df5fc25ddc	Phạm Minh Khôi 	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 13:10:55.593686+00	0	\N
+4478a3b0-0dad-4ade-aff7-f4009e2fe568	Tùng Lâm 	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 13:13:09.146202+00	0	\N
+8c90a7ae-70a0-4941-9048-bb64789516ad	Vũ Hải Hà 	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 13:13:34.90197+00	0	\N
+6ef103a4-fc2b-4fc6-bb1a-e113033e7f91	Vũ Quốc Tùng 	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	\N	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-19 13:13:57.036645+00	0	\N
 \.
 
 
@@ -409,6 +459,7 @@ COPY "public"."chi_phi" ("id", "ngay", "danh_muc", "so_tien", "ghi_chu", "hoc_si
 --
 
 COPY "public"."danh_gia" ("id", "thang", "lop_id", "ten_lop", "hoc_sinh_id", "ten_hoc_sinh", "khoa_hoc", "kho_khan", "tro_giang", "gui_luc") FROM stdin;
+9e064250-8093-43eb-9b41-3afbe5cc61cb	2026-11-01	4e49d265-ef05-4457-8c75-ff435e266182	Ca 18-20 T4	eaff414d-ac8c-44a0-9ed3-483992927fb9	Ánh Long	\N	\N	[{"id": "69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed", "ten": "Anh Tuấn", "ho_tro": 4, "chua_bai": "fer", "nhan_xet": "ntgcj", "kien_thuc": 4, "tuong_tac": 4}, {"id": "877e2be5-c648-4abe-b7a6-8ceff0df9d68", "ten": "Minh Dương", "ho_tro": 5, "chua_bai": "td", "nhan_xet": "xgyt", "kien_thuc": 5, "tuong_tac": 5}]	2026-11-19 09:01:54.724921+00
 \.
 
 
@@ -417,9 +468,14 @@ COPY "public"."danh_gia" ("id", "thang", "lop_id", "ten_lop", "hoc_sinh_id", "te
 --
 
 COPY "public"."diem_danh" ("buoi_id", "hoc_sinh_id", "trang_thai", "sticker") FROM stdin;
+71e54043-f25e-48e8-873d-9f249bd6150c	64a37c23-5108-4025-bcb3-e7ea6b1fe979	co_mat	7
+71e54043-f25e-48e8-873d-9f249bd6150c	4d36c077-ad54-4671-8a64-3c7d297faca3	co_mat	7
+71e54043-f25e-48e8-873d-9f249bd6150c	d96f705a-caed-4aed-8c5a-2f729630dd64	co_mat	4
 92b3cab2-5ac5-48d8-a4a8-9b189028353a	7c7fc404-3d84-4d6b-8972-3926976216f4	vang	0
 92b3cab2-5ac5-48d8-a4a8-9b189028353a	d2c38a11-b7b8-41da-9cf9-9f5808755c9b	vang	0
 92b3cab2-5ac5-48d8-a4a8-9b189028353a	800d8814-bc3d-460b-827b-97ef5dc49eda	vang	0
+71e54043-f25e-48e8-873d-9f249bd6150c	10e6b491-c559-4087-bbc6-d6520f6d21f5	co_mat	4
+71e54043-f25e-48e8-873d-9f249bd6150c	b218ff29-82e7-4386-8eae-0dd472b1894b	co_mat	5
 f6e57378-f553-452e-9d0c-3cd5920181c2	e83a1cf4-c38e-4ddc-acd0-ff0fb166c6af	hoc_bu	10
 f6e57378-f553-452e-9d0c-3cd5920181c2	b20830c3-0747-45aa-bba0-0efd2f0cd32e	hoc_bu	10
 92b3cab2-5ac5-48d8-a4a8-9b189028353a	04c0644a-6490-4551-9b84-2b3e606b2f11	co_mat	5
@@ -443,6 +499,24 @@ f6e57378-f553-452e-9d0c-3cd5920181c2	e561c6d5-6fbc-462a-ab2e-e1423f3b692f	co_mat
 92b3cab2-5ac5-48d8-a4a8-9b189028353a	b20830c3-0747-45aa-bba0-0efd2f0cd32e	hoc_bu	15
 92b3cab2-5ac5-48d8-a4a8-9b189028353a	fa327d0b-f6b8-4d58-b67a-74eafeea4798	hoc_bu	15
 92b3cab2-5ac5-48d8-a4a8-9b189028353a	33a3cfe1-6ebb-46fb-b851-4282d579a315	co_mat	15
+71e54043-f25e-48e8-873d-9f249bd6150c	a5df955d-2040-41d3-a691-2a9526050dba	co_mat	0
+71e54043-f25e-48e8-873d-9f249bd6150c	e6af6149-70f4-4687-8390-4f3886b7a42e	co_mat	0
+71e54043-f25e-48e8-873d-9f249bd6150c	8449f57a-28fa-40e2-b016-52d8fdfb1a1a	co_mat	7
+71e54043-f25e-48e8-873d-9f249bd6150c	e5d63dee-19fe-4ae1-a741-08a03111eb1d	co_mat	9
+71e54043-f25e-48e8-873d-9f249bd6150c	127cf384-4ac0-4a57-8d3e-7f3755cf5e76	co_mat	1
+71e54043-f25e-48e8-873d-9f249bd6150c	e1d9c6da-9520-433a-9485-201be17d736d	co_mat	5
+71e54043-f25e-48e8-873d-9f249bd6150c	3e45fe76-7884-4e40-8f60-d54cb47ea033	co_mat	4
+71e54043-f25e-48e8-873d-9f249bd6150c	47de7f3c-c311-44a9-b8e9-d535f63909c5	co_mat	9
+71e54043-f25e-48e8-873d-9f249bd6150c	da8f3b69-bcb6-46d7-b324-e5f61183d270	co_mat	3
+71e54043-f25e-48e8-873d-9f249bd6150c	703a8acd-02b0-4f08-8151-7504f51802c1	co_mat	2
+7546fba6-4be9-440e-9ab2-c379d4c471e9	2a71aebf-2868-4496-8c0d-26a9c5fdac6d	co_mat	10
+7546fba6-4be9-440e-9ab2-c379d4c471e9	6125884c-53f0-45ee-a303-3d03bc111254	co_mat	10
+7546fba6-4be9-440e-9ab2-c379d4c471e9	98deb901-bd60-4e1a-94c1-0ab944440ecb	co_mat	10
+7546fba6-4be9-440e-9ab2-c379d4c471e9	1b364415-27c0-4528-b772-6f9331702874	co_mat	10
+7546fba6-4be9-440e-9ab2-c379d4c471e9	9c5e27df-2361-46d3-9551-92dc6109c2f5	co_mat	10
+7546fba6-4be9-440e-9ab2-c379d4c471e9	b3065572-cd6a-4131-bae6-4f0b9ed4f46f	co_mat	10
+7546fba6-4be9-440e-9ab2-c379d4c471e9	e561c6d5-6fbc-462a-ab2e-e1423f3b692f	co_mat	10
+7546fba6-4be9-440e-9ab2-c379d4c471e9	09426ac0-e7af-47bc-a029-195fcee72b46	co_mat	10
 \.
 
 
@@ -504,6 +578,9 @@ COPY "public"."tro_giang_buoi" ("buoi_id", "tro_giang_id", "don_gia") FROM stdin
 f6e57378-f553-452e-9d0c-3cd5920181c2	8b0b82af-8eee-477b-bc50-b5c72837c2f7	50000
 92b3cab2-5ac5-48d8-a4a8-9b189028353a	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	100000
 92b3cab2-5ac5-48d8-a4a8-9b189028353a	906a5d63-7289-4b55-a279-ff8db9b1a5c4	100000
+71e54043-f25e-48e8-873d-9f249bd6150c	d45793f2-33af-41bf-91e4-410cf31087cc	100000
+71e54043-f25e-48e8-873d-9f249bd6150c	906a5d63-7289-4b55-a279-ff8db9b1a5c4	100000
+7546fba6-4be9-440e-9ab2-c379d4c471e9	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	100000
 \.
 
 
@@ -591,6 +668,8 @@ cc0e8fb2-4c63-4d91-a2c7-4a42549abb15	anh	avatar/d624703f-7d65-4ba6-8d6e-501b919b
 43fe21f9-5124-4408-82f8-0d490aa69544	anh	avatar/e83a1cf4-c38e-4ddc-acd0-ff0fb166c6af-1795003669718.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-18 12:07:51.149743+00	2026-11-18 12:07:51.149743+00	2026-11-18 12:07:51.149743+00	{"eTag": "\\"2d942f8823ec48e3232be887fd4556fe\\"", "size": 30340, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-18T12:07:52.000Z", "contentLength": 30340, "httpStatusCode": 200}	40d9adb5-080a-437d-9744-50a2094d8d68	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
 71c814ca-f2d5-4e44-9b46-884cc71afcda	anh	avatar/b20830c3-0747-45aa-bba0-0efd2f0cd32e-1795003682982.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-18 12:08:04.187829+00	2026-11-18 12:08:04.187829+00	2026-11-18 12:08:04.187829+00	{"eTag": "\\"507deffb33fca921ae6dc89491278407\\"", "size": 27283, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-18T12:08:05.000Z", "contentLength": 27283, "httpStatusCode": 200}	77cc96ac-f921-4cb7-aca8-6bfb11bf8980	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
 a9971b81-8c50-4a67-9657-eb125038e646	anh	buoi/92b3cab2-5ac5-48d8-a4a8-9b189028353a/2c9ad16e-8d97-4db5-9b10-a08643e38e86.jpg	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	2026-11-18 12:20:49.658409+00	2026-11-18 12:20:49.658409+00	2026-11-18 12:20:49.658409+00	{"eTag": "\\"1bbc5df55c60290e44ba41c8bae027aa\\"", "size": 576396, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-18T12:20:50.000Z", "contentLength": 576396, "httpStatusCode": 200}	3b343f0a-95ce-46e1-9da4-9b961203b945	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	{}	\N	f	f
+8037db5f-1bc1-4b80-a216-5765d99fffc7	anh	buoi/71e54043-f25e-48e8-873d-9f249bd6150c/d65e8130-864b-4a59-b33b-326b36931b00.jpg	906a5d63-7289-4b55-a279-ff8db9b1a5c4	2026-11-19 13:05:41.780632+00	2026-11-19 13:05:41.780632+00	2026-11-19 13:05:41.780632+00	{"eTag": "\\"da22bb5c3c352d42b461d6032ba44f6e\\"", "size": 523990, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-19T13:05:42.000Z", "contentLength": 523990, "httpStatusCode": 200}	b3f0992c-eec2-42df-90b9-f4ada59945d1	906a5d63-7289-4b55-a279-ff8db9b1a5c4	{}	\N	f	f
+85471116-1cea-47cc-97f9-9642ee0f404a	anh	buoi/7546fba6-4be9-440e-9ab2-c379d4c471e9/4bed649d-8156-4425-86ef-d2f0b9c42959.jpg	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	2026-11-19 13:48:18.88731+00	2026-11-19 13:48:18.88731+00	2026-11-19 13:48:18.88731+00	{"eTag": "\\"2ee6acacbcc316630376ce6401806341\\"", "size": 436214, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-19T13:48:19.000Z", "contentLength": 436214, "httpStatusCode": 200}	2681e8ad-7646-4392-8c9c-c9796512ce0f	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	{}	\N	f	f
 \.
 
 
@@ -622,20 +701,20 @@ COPY "storage"."vector_indexes" ("id", "name", "bucket_id", "data_type", "dimens
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: supabase_auth_admin
 --
 
-SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 502, true);
+SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 526, true);
 
 
 --
 -- Name: nhat_ky_chot_so_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."nhat_ky_chot_so_id_seq"', 119, true);
+SELECT pg_catalog.setval('"public"."nhat_ky_chot_so_id_seq"', 122, true);
 
 
 --
 -- PostgreSQL database dump complete
 --
 
--- \unrestrict sRoPTPdAiUO5S7mmgHFtnb8HRlefEsqjVJ29c5TlefanzRQ245JJnq372DOGlsL
+-- \unrestrict v9yJqgqZFaBfPuPbjq8GpR848bpCd9f8JkTpEV4MeyYtURDDWF5ahIf0U8iuRFd
 
 RESET ALL;
