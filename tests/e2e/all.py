@@ -36,8 +36,14 @@ def dang_nhap(p, ten, mk):
 
 
 def chon(p, nhan, gt):
-    lab(p, nhan).click()
-    p.locator(".ant-select-dropdown:visible .ant-select-item-option", has_text=gt).first.click()
+    (lab(p, nhan) if isinstance(nhan, str) else nhan).click()
+    # danh sách ảo của antd chỉ vẽ ~10 dòng; database thật nhiều lớp thì phải cuộn mới thấy lớp TEST
+    o = p.locator(".ant-select-dropdown:visible .ant-select-item-option", has_text=gt).first
+    for _ in range(300):
+        if o.count():
+            break
+        p.keyboard.press("ArrowDown")  # antd cuộn theo dòng đang chọn bằng phím
+    o.click()
 
 
 with sync_playwright() as pw:
@@ -128,8 +134,7 @@ with sync_playwright() as pw:
         p.get_by_role("button", name="Thêm buổi phụ / bù").click()
         m = p.locator(".ant-modal")
         m.get_by_text("Buổi bù riêng").click()
-        m.locator(".ant-select").click()
-        p.locator(".ant-select-dropdown:visible .ant-select-item-option", has_text="TEST Lớp Starters").click()
+        chon(p, m.locator(".ant-select"), "TEST Lớp Starters")
         # khác giờ buổi theo lịch (16:45) để không bị gộp chung một ca
         m.get_by_label("Giờ bắt đầu").fill("19:30")
         m.get_by_label("Giờ kết thúc").fill("21:00")
@@ -184,8 +189,7 @@ with sync_playwright() as pw:
         p.get_by_role("button", name="Thêm buổi phụ / bù").click()
         m = p.locator(".ant-modal")
         m.get_by_text("Buổi bù riêng").click()
-        m.locator(".ant-select").click()
-        p.locator(".ant-select-dropdown:visible .ant-select-item-option", has_text="TEST Lớp Starters").click()
+        chon(p, m.locator(".ant-select"), "TEST Lớp Starters")
         # khác giờ buổi theo lịch (16:45) để không bị gộp chung một ca
         m.get_by_label("Giờ bắt đầu").fill("19:30")
         m.get_by_label("Giờ kết thúc").fill("21:00")
@@ -285,6 +289,21 @@ with sync_playwright() as pw:
         p.wait_for_timeout(2000)
         expect(p.locator(".ant-segmented")).to_contain_text("Mới 0")
     buoc("import Excel: 4 lỗi, nhập 1 lớp 2 học sinh, import lại → Mới 0", b_import)
+
+    def b_go_hoc_bu():
+        nav("Điểm danh")
+        p.locator(".ant-list-item", has_text="TEST Lớp Starters", has_not_text="Buổi bù").get_by_role("button", name="Điểm danh").click()
+        p.locator(".ant-select", has_text="+ Thêm học sinh lớp khác học bù buổi này").click()
+        p.keyboard.type("TEST Lê Minh")
+        p.locator(".ant-select-dropdown:visible .ant-select-item-option", has_text="TEST Lê Minh Châu").click()
+        row = p.locator(".ant-list-item", has_text="TEST Lê Minh Châu")
+        expect(row.get_by_role("button", name="Gỡ")).to_be_visible(timeout=10000)
+        expect(p.locator(".ant-list-item", has_text="TEST Nguyễn Bảo An").get_by_role("button", name="Gỡ")).to_have_count(0)
+        row.get_by_role("button", name="Gỡ").click()
+        p.locator(".ant-popconfirm").get_by_role("button", name="Gỡ").click()
+        expect(row).to_have_count(0, timeout=10000)
+        p.get_by_role("button", name="← Quay lại").click()
+    buoc("gỡ em lớp khác thêm nhầm vào buổi thường: chỉ em lớp khác có nút Gỡ, gỡ xong biến khỏi danh sách", b_go_hoc_bu)
 
     def b_xoa_lop():
         nav("Lớp")

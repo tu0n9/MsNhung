@@ -302,6 +302,12 @@ Link nhóm Zalo của từng học sinh (grill 2026-11-20):
   sinh mới.
 - File Excel xuất tháng không thêm cột. Không quay lại video hướng dẫn, chỉ sửa phần chữ.
 
+### Gỡ học sinh lớp khác thêm nhầm vào buổi (2026-11-20)
+
+- Em lớp khác được thêm vào buổi (buổi thường, buổi phụ hay buổi bù riêng) có nút **Gỡ** (hỏi xác nhận). Gỡ là xoá
+  dòng điểm danh của em ở buổi đó, kể cả sticker đã chấm: em biến khỏi danh sách, không tính học bù hay vắng. Học sinh
+  của chính lớp không có nút Gỡ. Tháng đã chốt sổ thì không gỡ được (như mọi sửa điểm danh khác).
+
 ## Câu hỏi còn mở
 
 Không còn.

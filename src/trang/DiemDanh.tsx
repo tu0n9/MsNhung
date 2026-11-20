@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { App, Avatar, Button, Card, Checkbox, DatePicker, Empty, Image, Input, InputNumber, List, Modal, Radio, Segmented, Select, Space, Switch, Tag, Upload } from 'antd'
+import { App, Avatar, Button, Card, Checkbox, DatePicker, Empty, Image, Input, InputNumber, List, Modal, Popconfirm, Radio, Segmented, Select, Space, Switch, Tag, Upload } from 'antd'
 import { CameraOutlined, PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { CHU_SO, MAU } from '../giao-dien'
@@ -268,6 +268,16 @@ function DsHocSinh({ buoi, lop, tatCaHs, tatCaLan, nhieuLop, doiNghi }: {
               )}
               <InputNumber addonBefore="⭐" style={{ width: 110 }} value={x?.sticker ?? 0}
                 onChange={(v) => v !== null && luu(h.id, { sticker: v })} />
+              {/* em lớp khác thêm nhầm: "Vắng" sẽ cộng buổi chưa bù sai, nên phải xoá hẳn dòng điểm danh */}
+              {laBu && (
+                <Popconfirm title={`Gỡ ${h.ho_ten} khỏi buổi này?`} okText="Gỡ" cancelText="Thôi"
+                  onConfirm={async () => {
+                    try { await q(sb.from('diem_danh').delete().eq('buoi_id', buoi.id).eq('hoc_sinh_id', h.id)); tai() }
+                    catch (e) { message.error((e as Error).message) }
+                  }}>
+                  <Button size="small" danger>Gỡ</Button>
+                </Popconfirm>
+              )}
             </Space>
           </List.Item>
         )

@@ -11,6 +11,7 @@ npx tsc --noEmit && echo "tsc sạch"
 npm run build >/dev/null && echo "build OK"
 node --env-file=.env tests/e2e/don-test.mjs
 set +e
+rm -f tests/e2e/out/ket-qua.txt  # all.py chết giữa chừng thì không in lại kết quả cũ thành PASS
 python -I -X utf8 tests/e2e/all.py "$BREAK_GLASS_PASSWORD" > /dev/null 2>&1; cat tests/e2e/out/ket-qua.txt
 python -I -X utf8 tests/e2e/api.py
 node --env-file=.env tests/e2e/don-test.mjs
