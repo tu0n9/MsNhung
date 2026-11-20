@@ -73,8 +73,9 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
     q(sb.from('anh_buoi').select('duong_dan, buoi_hoc(ngay)').in('buoi_id', buoiIdsCoMat)).then(async (a) => {
       const ds = (a as unknown as { duong_dan: string; buoi_hoc: { ngay: string } }[]).map((x) => ({ duong_dan: x.duong_dan, ngay: x.buoi_hoc.ngay }))
       setAnh(ds); setUrlA(await urlAnh(ds.map((x) => x.duong_dan)))
-    })
-  }, [thang, dd.length])
+    }).catch((e) => message.error(e.message))
+  // theo danh sách buổi có mặt chứ không theo số dòng: đổi vắng ↔ có mặt không đổi số dòng nhưng đổi ảnh được xem
+  }, [thang, buoiIdsCoMat.join()])
 
   const soCoMat = buoiIdsCoMat.length
   const chuaBu = demChuaBu(dd.map((x) => ({ trang_thai: x.trang_thai, loai: x.buoi_hoc.loai })))
@@ -143,7 +144,7 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
           { label: 'Còn phải thu', children: <b>{vnd(th.conPhaiThu)}</b> },
         ]} />
         {ql && <Space wrap style={{ marginTop: 8 }}>
-          <Button onClick={() => navigator.clipboard.writeText(tinNhan).then(() => message.success('Đã sao chép, dán vào Zalo'))}>Sao chép tin nhắn</Button>
+          <Button onClick={() => navigator.clipboard.writeText(tinNhan).then(() => message.success('Đã sao chép, dán vào Zalo')).catch(() => message.error('Không sao chép được, hãy chép tay'))}>Sao chép tin nhắn</Button>
           {hs.sdt_phu_huynh && <Button href={`https://zalo.me/${hs.sdt_phu_huynh}`} target="_blank">Mở Zalo PH</Button>}
           {link && <Button href={link} target="_blank" rel="noreferrer">Mở nhóm Zalo</Button>}
           {hs.sdt_phu_huynh && <Button href={`sms:${hs.sdt_phu_huynh}?body=${encodeURIComponent(tinNhan)}`}>Gửi SMS</Button>}
@@ -258,23 +259,36 @@ function ThuTien({ hs, lop, goi, phieu, buoiDb, daHoan, dong }: {
     id: '', hoc_sinh_id: hs.id, thang_bat_dau: `${thangBd}-01`, so_thang: v.so_thang ?? 1, don_gia: donGia,
     buoi_du_kien: buoi, tien_du_tru: v.tien_du_tru ?? 0, dieu_chinh: v.dieu_chinh ?? 0,
   })
+  // trừ tiền dư không quá tổng gói, không thì gói âm
+  const truToiDa = Math.max(0, Math.min(duCon, tongGoiMoi + (v.tien_du_tru ?? 0)))
+  const noGoi = v.loai === 'no' ? conNoGoi(goi.find((g) => g.id === v.goi_id) ?? dangNo[0], phieu) : 0
 
   const [luu, dangLuu] = useMotLan(async () => {
-    const x = await form.validateFields()
-    try {
-      let goiId = x.goi_id
-      if (x.loai === 'moi') {
+    // form chưa hợp lệ thì antd đã hiện lỗi dưới ô; không để promise bị reject thành lỗi JS không ai bắt
+    const x = await form.validateFields().catch(() => null)
+    if (!x) return
+    let goiId = x.goi_id
+    if (x.loai === 'moi') {
+      try {
         const g = await q(sb.from('goi_hoc').insert({
           hoc_sinh_id: hs.id, thang_bat_dau: `${thangBd}-01`, so_thang: x.so_thang, don_gia: donGia, buoi_du_kien: buoi,
           tien_du_tru: x.tien_du_tru ?? 0, dieu_chinh: x.dieu_chinh ?? 0, ly_do_dieu_chinh: x.ly_do || null,
         }).select().single()) as Goi
         goiId = g.id
+      } catch (e) { message.error((e as Error).message); return }
+    }
+    if (x.so_tien > 0) {
+      try {
+        await q(sb.from('phieu_thu').insert({
+          goi_id: goiId, so_tien: x.so_tien, ngay_thu: x.ngay_thu.format('YYYY-MM-DD'), hinh_thuc: x.hinh_thuc, ghi_chu: x.ghi_chu || null,
+        }))
+      } catch (e) {
+        // gói đã tạo rồi: đóng form để lần sau thu qua "Trả gói đang nợ", giữ form thì bấm Lưu lại sẽ tạo gói thứ hai
+        if (x.loai === 'moi') { message.error(`Đã tạo gói nhưng chưa ghi được tiền thu: ${(e as Error).message}`); dong(); return }
+        message.error((e as Error).message); return
       }
-      if (x.so_tien > 0) await q(sb.from('phieu_thu').insert({
-        goi_id: goiId, so_tien: x.so_tien, ngay_thu: x.ngay_thu.format('YYYY-MM-DD'), hinh_thuc: x.hinh_thuc, ghi_chu: x.ghi_chu || null,
-      }))
-      message.success('Đã lưu'); dong()
-    } catch (e) { message.error((e as Error).message) }
+    }
+    message.success('Đã lưu'); dong()
   })
 
   const tien = O_TIEN
@@ -293,13 +307,18 @@ function ThuTien({ hs, lop, goi, phieu, buoiDb, daHoan, dong }: {
           <Form.Item name="don_gia" label={`Đơn giá/buổi (mặc định ${vnd(hs.don_gia_rieng ?? lop.don_gia)})`}><InputNumber {...tien} placeholder={`${donGia}`} /></Form.Item>
           <Form.Item name="tien_du_tru" label={`Trừ tiền dư (còn lại ${vnd(duCon)})`}
             extra={!duCon && 'Chưa có tiền dư: tiền dư chỉ sinh từ buổi lớp nghỉ của gói đã kết thúc. Tiền dư ngoài app (sổ cũ) nhập ở ô Điều chỉnh bằng số âm.'}>
-            <InputNumber {...tien} max={duCon} disabled={!duCon} />
+            <InputNumber {...tien} max={truToiDa} disabled={!duCon} />
           </Form.Item>
           <Form.Item name="dieu_chinh" label="Điều chỉnh (giảm thì nhập số âm)"><InputNumber {...tien} min={undefined} /></Form.Item>
           {!!v.dieu_chinh && <Form.Item name="ly_do" label="Lý do điều chỉnh" rules={[{ required: true }]}><Input /></Form.Item>}
           <p>Buổi dự kiến: {Object.entries(buoi).map(([t, n]) => `T${t.slice(5)}: ${n}`).join(', ')} → <b>Tổng gói: {vnd(tongGoiMoi)}</b></p>
         </>}
-        <Form.Item name="so_tien" label="Số tiền thu lần này (để 0 nếu chỉ ghi gói, chưa thu)"><InputNumber {...tien} /></Form.Item>
+        {v.loai === 'no'
+          // trả nợ mà không có số tiền thì chẳng ghi gì; thu quá số nợ thì phần dư không thuộc gói nào
+          ? <Form.Item name="so_tien" label={`Số tiền thu lần này (còn nợ ${vnd(noGoi)})`} rules={[{ required: true, message: 'Nhập số tiền thu' },
+            { validator: (_, so) => so > 0 && so <= noGoi ? Promise.resolve() : Promise.reject(new Error(`Số tiền từ 1 đến ${vnd(noGoi)}`)) }]}>
+            <InputNumber {...tien} /></Form.Item>
+          : <Form.Item name="so_tien" label="Số tiền thu lần này (để 0 nếu chỉ ghi gói, chưa thu)"><InputNumber {...tien} /></Form.Item>}
         <Space>
           <Form.Item name="ngay_thu" label="Ngày thu"><DatePicker format="DD/MM/YYYY" allowClear={false} /></Form.Item>
           <Form.Item name="hinh_thuc" label="Hình thức"><Select style={{ width: 140 }} options={[{ value: 'tien_mat', label: 'Tiền mặt' }, { value: 'chuyen_khoan', label: 'Chuyển khoản' }]} /></Form.Item>

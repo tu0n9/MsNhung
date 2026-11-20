@@ -35,7 +35,7 @@ export default function LopHoc() {
   const [luuLop, dangLuuLop] = useMotLan(async (v: Lop) => {
     try {
       const gio_thu = v.gio_thu ?? {}
-      const ban = { ten: v.ten, don_gia: v.don_gia, lich: Object.keys(gio_thu).map(Number), gio_thu, hoat_dong: v.hoat_dong ?? true }
+      const ban = { ten: v.ten.trim(), don_gia: v.don_gia, lich: Object.keys(gio_thu).map(Number), gio_thu, hoat_dong: v.hoat_dong ?? true }
       await q(suaLop?.id ? sb.from('lop').update(ban).eq('id', suaLop.id) : sb.from('lop').insert(ban))
       setSuaLop(null); tai()
     } catch (e) { message.error((e as Error).message) }
@@ -51,7 +51,7 @@ export default function LopHoc() {
         phu_huynh_id = (await goiTaiKhoan({ hanh_dong: 'tao', vai_tro: 'phu_huynh', so_dien_thoai: sdt, ho_ten: v.ten_phu_huynh || sdt })).id
       }
       const ban = {
-        ho_ten: v.ho_ten, lop_id: v.lop_id, ten_phu_huynh: v.ten_phu_huynh || null, sdt_phu_huynh: sdt, phu_huynh_id,
+        ho_ten: v.ho_ten.trim(), lop_id: v.lop_id, ten_phu_huynh: v.ten_phu_huynh || null, sdt_phu_huynh: sdt, phu_huynh_id,
         ngay_vao: v.ngay_vao_d.format('YYYY-MM-DD'), don_gia_rieng: v.don_gia_rieng ?? null, ghi_chu: v.ghi_chu || null,
         sticker_dau_ky: v.sticker_dau_ky ?? 0,
       }
@@ -78,7 +78,7 @@ export default function LopHoc() {
         <p>Xoá luôn {soHs} học sinh của lớp cùng toàn bộ buổi học, điểm danh, ảnh, gói học, phiếu thu của các em. Không lấy
           lại được trong app (chỉ còn trong bản sao lưu đêm). Lớp có dữ liệu ở tháng đã chốt sổ thì phải mở khoá tháng đó trước.</p>
         <Input placeholder="Gõ lại tên lớp để xác nhận" aria-label="Gõ lại tên lớp"
-          onChange={(e) => hop.update({ okButtonProps: { danger: true, disabled: e.target.value.trim() !== l.ten } })} />
+          onChange={(e) => hop.update({ okButtonProps: { danger: true, disabled: e.target.value.trim() !== l.ten?.trim() } })} />
       </>,
       onOk: async () => {
         try {
@@ -92,7 +92,9 @@ export default function LopHoc() {
   }
 
   const doiTrangThai = async (h: HocSinh) => {
-    await q(sb.from('hoc_sinh').update({ trang_thai: h.trang_thai === 'ngung' ? 'dang_hoc' : 'ngung' }).eq('id', h.id))
+    // Popconfirm nuốt lỗi của onConfirm, nên phải tự báo
+    try { await q(sb.from('hoc_sinh').update({ trang_thai: h.trang_thai === 'ngung' ? 'dang_hoc' : 'ngung' }).eq('id', h.id)) }
+    catch (e) { return message.error((e as Error).message) }
     tai()
   }
   const xoaHs = async (h: HocSinh) => {
@@ -140,7 +142,7 @@ export default function LopHoc() {
 
       <Modal open={!!suaLop} title={suaLop?.id ? 'Sửa lớp' : 'Thêm lớp'} onCancel={() => setSuaLop(null)} footer={null} destroyOnHidden>
         <Form layout="vertical" initialValues={suaLop ? { ...suaLop, gio_thu: gioThuSua(suaLop) } : {}} onFinish={luuLop}>
-          <Form.Item name="ten" label="Tên lớp" rules={[{ required: true }]}><Input /></Form.Item>
+          <Form.Item name="ten" label="Tên lớp" rules={[{ required: true, whitespace: true }]}><Input /></Form.Item>
           <Form.Item name="don_gia" label="Đơn giá một buổi (đ)" rules={[{ required: true }]}>
             <InputNumber<number> {...O_TIEN} step={10000} />
           </Form.Item>
@@ -161,7 +163,7 @@ export default function LopHoc() {
 
       <Modal open={!!suaHs} title={suaHs?.id ? 'Sửa học sinh' : 'Thêm học sinh'} onCancel={() => setSuaHs(null)} footer={null} destroyOnHidden>
         <Form layout="vertical" onFinish={luuHs} initialValues={{ ...suaHs, ngay_vao_d: dayjs(suaHs?.ngay_vao) }}>
-          <Form.Item name="ho_ten" label="Họ tên" rules={[{ required: true }]}><Input /></Form.Item>
+          <Form.Item name="ho_ten" label="Họ tên" rules={[{ required: true, whitespace: true }]}><Input /></Form.Item>
           <Form.Item name="lop_id" label="Lớp" rules={[{ required: true }]}><Select options={lops.map((l) => ({ value: l.id, label: l.ten }))} /></Form.Item>
           <Form.Item name="anh" label="Ảnh đại diện" valuePropName="file" getValueFromEvent={(e) => (e?.file?.status === 'removed' ? undefined : e?.file)}>
             <Upload accept="image/*" maxCount={1} beforeUpload={() => false} listType="picture"><Button>Chụp / chọn ảnh</Button></Upload>

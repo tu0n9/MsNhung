@@ -59,7 +59,9 @@ export function chuanSdt(v: unknown): { sdt: string | null; loi?: string } {
 
 /** Link nhóm Zalo: lọc link zalo.me ra khỏi đoạn chữ dán vào (lời mời của Zalo có kèm chữ), thiếu https thì thêm. */
 export function chuanLinkZalo(v: unknown): { link: string | null; loi?: string } {
-  const tho = chu(v)
+  // ô hyperlink có nhãn chữ ("Nhóm lớp 3"): link thật nằm trong .hyperlink, nhãn không có URL
+  const lienKet = typeof v === 'object' && v !== null ? (v as { hyperlink?: unknown }).hyperlink : undefined
+  const tho = `${typeof lienKet === 'string' ? lienKet : ''} ${chu(v)}`.trim()
   if (!tho) return { link: null }
   const m = tho.match(/(?:https?:\/\/)?(?:www\.)?zalo\.me\/\S+/i)
   if (!m) return { link: null, loi: `"${tho.slice(0, 40)}" không có link nhóm Zalo (https://zalo.me/…)` }

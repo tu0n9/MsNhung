@@ -37,6 +37,8 @@ describe('chuẩn hoá ô', () => {
   it('link Zalo: lọc link khỏi lời mời, thêm https, báo lỗi khi không có link', () => {
     expect(chuanLinkZalo('Tham gia nhóm "Lớp Bảo" trên Zalo: https://zalo.me/g/abc123 nhé').link).toBe('https://zalo.me/g/abc123')
     expect(chuanLinkZalo('zalo.me/g/xyz').link).toBe('https://zalo.me/g/xyz')
+    // ô hyperlink có nhãn chữ: link nằm ở .hyperlink
+    expect(chuanLinkZalo({ text: 'Nhóm lớp 3', hyperlink: 'https://zalo.me/g/nhan123' }).link).toBe('https://zalo.me/g/nhan123')
     expect(chuanLinkZalo('http://www.zalo.me/g/xyz').link).toBe('https://zalo.me/g/xyz')
     expect(chuanLinkZalo('').link).toBeNull()
     expect(chuanLinkZalo('https://facebook.com/g/1').loi).toMatch(/zalo\.me/)

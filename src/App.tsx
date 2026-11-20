@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { Button, Grid, Layout, Menu, Spin } from 'antd'
+import { Button, Grid, Layout, Menu, Result, Spin } from 'antd'
 import { BankOutlined, CheckSquareOutlined, DollarOutlined, MoonOutlined, StarOutlined, SunOutlined, TeamOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons'
 import type { Session } from '@supabase/supabase-js'
 import { laQuanLy, q, sb, type TaiKhoan } from './supabase'
@@ -24,6 +24,7 @@ export const useToi = () => useContext(NguoiDung)
 export default function App() {
   const [phien, setPhien] = useState<Session | null | undefined>(undefined)
   const [toi, setToi] = useState<TaiKhoan | null>(null)
+  const [loiToi, setLoiToi] = useState<string | null>(null)
   const nav = useNavigate()
   const { cheDo, doi } = useCheDo()
   const loc = useLocation()
@@ -35,12 +36,19 @@ export default function App() {
     return () => data.subscription.unsubscribe()
   }, [])
 
-  const taiToi = () =>
-    phien && q(sb.from('tai_khoan').select('*').eq('id', phien.user.id).single()).then((t) => setToi(t as TaiKhoan))
+  // lỗi mạng lúc mở app thì báo và cho thử lại / thoát, không quay Spin mãi
+  const taiToi = () => {
+    if (!phien) return
+    setLoiToi(null)
+    return q(sb.from('tai_khoan').select('*').eq('id', phien.user.id).single()).then((t) => setToi(t as TaiKhoan))
+      .catch((e: Error) => setLoiToi(e.message))
+  }
   useEffect(() => { setToi(null); taiToi() }, [phien?.user.id])
 
   // phiếu đánh giá: học sinh mở link từ Zalo, không đăng nhập
   if (loc.pathname.startsWith('/danh-gia/')) return <PhieuDanhGia ma={loc.pathname.slice('/danh-gia/'.length)} />
+  if (phien && loiToi) return <Result status="warning" title="Không tải được tài khoản" subTitle={`Kiểm tra mạng rồi thử lại. (${loiToi})`}
+    extra={[<Button key="t" type="primary" onClick={taiToi}>Thử lại</Button>, <Button key="x" onClick={() => sb.auth.signOut()}>Thoát</Button>]} />
   if (phien === undefined || (phien && !toi)) return <Spin fullscreen />
   if (!phien) return <DangNhap />
   if (!toi) return null

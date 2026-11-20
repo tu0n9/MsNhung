@@ -9,9 +9,11 @@ export default function DangNhap() {
   const dangNhap = async (v: { dinh_danh: string; mat_khau: string }) => {
     setDang(true)
     try {
-      const { data: email } = await sb.rpc('email_dang_nhap', { dinh_danh: v.dinh_danh })
+      // lỗi mạng phải báo khác "sai mật khẩu", không thì người dùng đi đặt lại mật khẩu vô ích
+      const { data: email, error: loiTim } = await sb.rpc('email_dang_nhap', { dinh_danh: v.dinh_danh.trim() })
+      if (loiTim) return void message.error('Không kết nối được máy chủ, kiểm tra mạng rồi thử lại')
       const { error } = await sb.auth.signInWithPassword({ email: email ?? 'khong-co@msnhung.local', password: v.mat_khau })
-      if (error) message.error('Sai tên đăng nhập/số điện thoại hoặc mật khẩu')
+      if (error) message.error(error.status === 400 ? 'Sai tên đăng nhập/số điện thoại hoặc mật khẩu' : `Không đăng nhập được: ${error.message}`)
     } finally {
       setDang(false)
     }

@@ -339,6 +339,13 @@ Link nhóm Zalo của từng học sinh (grill 2026-11-20):
   phí 500 MB.
 - Làm **sau** tính năng sticker ngoài buổi, migration và commit riêng.
 
+### Sửa lỗi sau review ngoài (2026-11-21)
+
+- Gõ SĐT phụ huynh trùng một tài khoản phụ huynh **đang khoá** thì **mở lại** tài khoản đó (trước đây gắn con vào tài
+  khoản khoá, phụ huynh không đăng nhập được). Xoá trắng SĐT của học sinh thì gỡ liên kết tài khoản phụ huynh.
+- Thu "Trả gói đang nợ": số tiền bắt buộc, từ 1 đến số còn nợ. "Trừ tiền dư" không vượt tổng gói.
+- Excel: học 2 buổi cùng ngày ghi "C+B" trong một ô; cột "Có mặt" đếm từng chữ C / B.
+
 ## Câu hỏi còn mở
 
 Không còn.

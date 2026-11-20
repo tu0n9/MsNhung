@@ -43,7 +43,8 @@ Deno.serve(async (req) => {
   const { data: toi } = await sb.from('tai_khoan').select('vai_tro, hoat_dong').eq('id', u.user.id).single()
   if (!toi?.hoat_dong || !['admin', 'giao_vien'].includes(toi.vai_tro)) return tra({ loi: 'Chỉ giáo viên được tóm tắt' }, 403)
 
-  const { thang, lop_id } = await req.json()
+  let thang, lop_id
+  try { ({ thang, lop_id } = await req.json()) } catch { return tra({ loi: 'Dữ liệu gửi lên không hợp lệ' }, 400) }
   if (!/^\d{4}-\d{2}$/.test(thang ?? '') || !lop_id) return tra({ loi: 'Thiếu tháng hoặc lớp' }, 400)
   const { data: phieus, error } = await sb.from('danh_gia').select('khoa_hoc, kho_khan, tro_giang').eq('thang', `${thang}-01`).eq('lop_id', lop_id)
   if (error) return tra({ loi: error.message }, 400)
@@ -96,7 +97,9 @@ Deno.serve(async (req) => {
   if (!chu) return tra({ loi: 'Gemini không trả lời, thử lại sau' }, 502)
 
   // đổi mã về tên thật, kể cả chỗ "TG1" nằm trong câu; TG10 thay trước TG1 để không ăn nhầm
-  const doiTen = (s: string) => [...ma.values()].sort((a, b) => b.ma.length - a.ma.length).reduce((x, m) => x.replaceAll(m.ma, m.ten), s)
+  // thay trên chuỗi JSON nên tên phải escape (tên có " hoặc \ làm vỡ JSON)
+  const doiTen = (s: string) => [...ma.values()].sort((a, b) => b.ma.length - a.ma.length)
+    .reduce((x, m) => x.replaceAll(m.ma, JSON.stringify(m.ten).slice(1, -1)), s)
   let noiDung
   try {
     const x = JSON.parse(chu)

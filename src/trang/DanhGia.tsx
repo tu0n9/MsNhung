@@ -1,5 +1,5 @@
 // Kết quả phiếu đánh giá của học sinh, chỉ giáo viên (docs/YEU-CAU.md mục "Đánh giá từ học sinh").
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { App, Button, Card, Collapse, DatePicker, Select, Space, Table, Tag } from 'antd'
 import dayjs from 'dayjs'
 import { CAU_VIET, hanNhan, taoMa, TIEU_CHI, tongHop, urlPhieu, type PhieuDanhGia } from '../danh-gia'
@@ -48,18 +48,29 @@ export default function DanhGia() {
   }
   useEffect(() => { tai().catch((e) => message.error(e.message)) }, [thang])
   // bản tóm tắt theo (tháng, lớp): lọc "Tất cả lớp" thì không có
+  // dangXem: AI trả lời chậm (tới vài chục giây); đổi lớp / tháng trong lúc chờ thì không hiện tóm tắt của lớp cũ
+  const dangXem = useRef({ thang, lopId })
+  dangXem.current = { thang, lopId }
   useEffect(() => {
     setTomTat(null)
-    if (lopId) sb.from('tom_tat_danh_gia').select('*').eq('thang', `${thang}-01`).eq('lop_id', lopId).maybeSingle().then(({ data }) => setTomTat(data))
+    let huy = false
+    if (lopId) q(sb.from('tom_tat_danh_gia').select('*').eq('thang', `${thang}-01`).eq('lop_id', lopId).maybeSingle())
+      .then((data) => { if (!huy) setTomTat(data as never) }).catch((e) => message.error(e.message))
+    return () => { huy = true }
   }, [thang, lopId])
   const [tomTatAi, dangTomTat] = useMotLan(async () => {
-    try { setTomTat(await goiHam('tom-tat-danh-gia', { thang, lop_id: lopId })) } catch (e) { message.error((e as Error).message) }
+    const hoi = { thang, lopId }
+    try {
+      const kq = await goiHam('tom-tat-danh-gia', { thang, lop_id: lopId })
+      if (dangXem.current.thang === hoi.thang && dangXem.current.lopId === hoi.lopId) setTomTat(kq)
+      else message.success('Đã tóm tắt xong lớp trước, mở lại lớp đó để xem')
+    } catch (e) { message.error((e as Error).message) }
   })
 
   // tạo và đổi link là một lệnh: ghi mã mới cho tháng, link cũ hết hiệu lực
-  const ghiMa = () => q(sb.from('link_danh_gia').upsert({ thang: `${thang}-01`, ma: taoMa() })).then(tai).catch((e) => message.error(e.message))
+  const [ghiMa, dangGhiMa] = useMotLan(() => q(sb.from('link_danh_gia').upsert({ thang: `${thang}-01`, ma: taoMa() })).then(tai).catch((e) => message.error(e.message)))
   const doiLink = () => modal.confirm({
-    title: 'Đổi link?', content: 'Link cũ sẽ không mở được nữa. Phiếu đã gửi vẫn giữ nguyên.', okText: 'Đổi link', onOk: ghiMa,
+    title: 'Đổi link?', content: 'Link cũ sẽ không mở được nữa. Phiếu đã gửi vẫn giữ nguyên.', okText: 'Đổi link', onOk: () => ghiMa(),
   })
   const xoa = (p: PhieuDanhGia) => modal.confirm({
     title: `Xoá phiếu của ${p.ten_hoc_sinh}?`, content: 'Xoá rồi em đó gửi lại được.', okText: 'Xoá', okButtonProps: { danger: true },
@@ -93,11 +104,11 @@ export default function DanhGia() {
               {conNhan ? `Nhận phiếu tới hết ngày ${han.slice(8)}/${han.slice(5, 7)}` : 'Link đã hết hạn nhận phiếu'}
             </div>
             <Space wrap>
-              <Button type="primary" onClick={() => navigator.clipboard.writeText(urlPhieu(ma)).then(() => message.success('Đã sao chép, dán vào Zalo'))}>Sao chép link</Button>
+              <Button type="primary" onClick={() => navigator.clipboard.writeText(urlPhieu(ma)).then(() => message.success('Đã sao chép, dán vào Zalo')).catch(() => message.error('Không sao chép được, hãy chép tay'))}>Sao chép link</Button>
               <Button onClick={doiLink}>Đổi link</Button>
             </Space>
           </Space>
-        ) : <Button type="primary" onClick={ghiMa}>Tạo link tháng {thang.slice(5)}/{thang.slice(0, 4)}</Button>}
+        ) : <Button type="primary" loading={dangGhiMa} onClick={() => ghiMa()}>Tạo link tháng {thang.slice(5)}/{thang.slice(0, 4)}</Button>}
       </Card>
 
       <Card size="small" title={`Đã gửi ${k.soPhieu} / ${tongEm} em`}>

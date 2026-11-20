@@ -6,17 +6,28 @@ import { TIEU_CHI, tongHop } from './danh-gia'
 
 const TIEN = '#,##0'
 const tenSheet = (s: string, daDung: Set<string>) => {
-  let t = s.replace(/[[\]:*?/\\]/g, ' ').slice(0, 28) || 'Lop'
+  // dấu ' cũng bỏ: tên sheet nằm trong '...' ở công thức trang Tổng hợp, và Excel cấm ' ở đầu / cuối tên
+  let t = s.replace(/[[\]:*?/\\']/g, ' ').trim().slice(0, 28) || 'Lop'
   while (daDung.has(t)) t = t.slice(0, 26) + '_' + daDung.size
   daDung.add(t)
   return t
 }
+
+// bảng rỗng thì dòng TỔNG nằm ở dòng 2, SUM(X2:X1) tự trỏ vào chính nó (Excel báo circular reference)
+const tongCot = (c: string, cuoi: number) => (cuoi < 2 ? 0 : { formula: `SUM(${c}2:${c}${cuoi})` })
 
 function tieuDe(ws: ExcelJS.Worksheet, cot: { header: string; key: string; width: number; tien?: boolean }[]) {
   ws.columns = cot.map((c) => ({ header: c.header, key: c.key, width: c.width, style: c.tien ? { numFmt: TIEN } : {} }))
   ws.getRow(1).font = { bold: true }
   ws.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFE7BA' } }
   ws.views = [{ state: 'frozen', ySplit: 1 }]
+}
+
+// học 2 buổi cùng ngày (buổi bù, học ghép lớp khác): gộp ký hiệu thay vì buổi sau ghi đè buổi trước
+export const gopTheoNgay = (ds: [string, string][]) => {
+  const o: Record<string, string> = {}
+  for (const [ngay, k] of ds) o[ngay] = o[ngay] ? `${o[ngay]}+${k}` : k
+  return o
 }
 
 export async function xuatExcel(d: DuLieuThang) {
@@ -55,7 +66,7 @@ export async function xuatExcel(d: DuLieuThang) {
     })
     const cuoi = ds.length + 1, dt = cuoi + 1
     const r = ws.addRow({ ten: 'TỔNG' })
-    for (const c of ['E', 'F', 'G', 'H', 'I', 'J']) r.getCell(c).value = { formula: `SUM(${c}2:${c}${cuoi})` }
+    for (const c of ['E', 'F', 'G', 'H', 'I', 'J']) r.getCell(c).value = tongCot(c, cuoi)
     r.font = { bold: true }
     tongLop.push({ ten: l.ten, sheet: ten, dongTong: dt })
   }
@@ -74,12 +85,14 @@ export async function xuatExcel(d: DuLieuThang) {
     if (!cua.length && !ngoai.length) continue
     // em chỉ được cộng/trừ ngoài buổi (tháng này không đi học) vẫn cần dòng để cột Sticker khớp với app
     const row = wsDd.addRow({ lop: d.lops.find((l) => l.id === r.hs.lop_id)?.ten, ten: r.hs.ho_ten,
-      ...Object.fromEntries(cua.map((x) => [x.ngay, kyHieu[x.trang_thai]])),
+      ...gopTheoNgay(cua.map((x) => [x.ngay, kyHieu[x.trang_thai]])),
       st: cua.reduce((s, x) => s + x.sticker, 0) + ngoai.reduce((s, x) => s + x.so, 0) })
     const n = row.number
-    row.getCell('tong').value = ngays.length ? { formula: `COUNTIF(C${n}:${cotCuoi}${n},"C")+COUNTIF(C${n}:${cotCuoi}${n},"B")` } : 0
+    // đếm từng chữ C / B (một ô có thể là "C+B" khi học 2 buổi cùng ngày), không đếm ô
+    const vung = `C${n}:${cotCuoi}${n}`
+    row.getCell('tong').value = ngays.length ? { formula: `SUMPRODUCT(LEN(${vung})-LEN(SUBSTITUTE(SUBSTITUTE(${vung},"C",""),"B","")))` } : 0
   }
-  wsDd.addRow({}); wsDd.addRow({ ten: 'C = có mặt, V = vắng, B = học bù' })
+  wsDd.addRow({}); wsDd.addRow({ ten: 'C = có mặt, V = vắng, B = học bù; "C+B" = 2 buổi trong ngày' })
 
   // ---- Sổ thu ----
   const wsThu = wb.addWorksheet('Sổ thu')
@@ -94,7 +107,7 @@ export async function xuatExcel(d: DuLieuThang) {
       ht: p.hinh_thuc === 'tien_mat' ? 'Tiền mặt' : 'Chuyển khoản', gc: p.ghi_chu })
   }
   const thuCuoi = d.phieu.length + 1
-  const rThu = wsThu.addRow({ ten: 'TỔNG' }); rThu.getCell('tien').value = { formula: `SUM(E2:E${thuCuoi})` }; rThu.font = { bold: true }
+  const rThu = wsThu.addRow({ ten: 'TỔNG' }); rThu.getCell('tien').value = tongCot('E', thuCuoi); rThu.font = { bold: true }
 
   // ---- Chi phí ----
   const tgCuoi = d.luongTg.length + 1
@@ -112,14 +125,14 @@ export async function xuatExcel(d: DuLieuThang) {
     { header: 'SĐT', key: 'sdt', width: 13 }, { header: 'Còn nợ', key: 'no', width: 13, tien: true }])
   const no = d.dong.filter((r) => r.conPhaiThu > 0)
   no.forEach((r) => wsNo.addRow({ ten: r.hs.ho_ten, lop: d.lops.find((l) => l.id === r.hs.lop_id)?.ten, ph: r.hs.ten_phu_huynh, sdt: r.hs.sdt_phu_huynh, no: r.conPhaiThu }))
-  const rNo = wsNo.addRow({ ten: 'TỔNG' }); rNo.getCell('no').value = { formula: `SUM(E2:E${no.length + 1})` }; rNo.font = { bold: true }
+  const rNo = wsNo.addRow({ ten: 'TỔNG' }); rNo.getCell('no').value = tongCot('E', no.length + 1); rNo.font = { bold: true }
 
   // ---- Trợ giảng ----
   const wsTg = wb.addWorksheet('Trợ giảng')
   tieuDe(wsTg, [{ header: 'Trợ giảng', key: 'ten', width: 24 }, { header: 'Số ca', key: 'buoi', width: 9 }, { header: 'Thành tiền', key: 'tien', width: 14, tien: true }])
   d.luongTg.forEach((x) => wsTg.addRow({ ten: x.tg.ho_ten, buoi: x.soBuoi, tien: x.thanhTien }))
   const rTg = wsTg.addRow({ ten: 'TỔNG' })
-  rTg.getCell('buoi').value = { formula: `SUM(B2:B${tgCuoi})` }; rTg.getCell('tien').value = { formula: `SUM(C2:C${tgCuoi})` }; rTg.font = { bold: true }
+  rTg.getCell('buoi').value = tongCot('B', tgCuoi); rTg.getCell('tien').value = tongCot('C', tgCuoi); rTg.font = { bold: true }
 
   // ---- Đánh giá của học sinh: tổng hợp trợ giảng ở trên, chi tiết mỗi dòng một cặp (phiếu, trợ giảng) ở dưới ----
   if (d.danhGia.length) {
@@ -151,7 +164,7 @@ export async function xuatExcel(d: DuLieuThang) {
   }
   const lopCuoi = tongLop.length + 1
   const rT = tong.addRow({ lop: 'TỔNG CÁC LỚP' })
-  for (const c of ['B', 'C', 'D', 'E', 'F']) rT.getCell(c).value = { formula: `SUM(${c}2:${c}${lopCuoi})` }
+  for (const c of ['B', 'C', 'D', 'E', 'F']) rT.getCell(c).value = tongCot(c, lopCuoi)
   rT.font = { bold: true }
   tong.addRow({})
   const rThuc = tong.addRow({ lop: 'Thực thu trong tháng' }); rThuc.getCell('hp').value = { formula: `'Sổ thu'!E${thuCuoi + 1}`, result: t.thucThu }

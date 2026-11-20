@@ -30,7 +30,8 @@ Deno.serve(async (req) => {
   const { data: toi } = await sb.from('tai_khoan').select('vai_tro, hoat_dong').eq('id', u.user.id).single()
   if (!toi?.hoat_dong) return tra({ loi: 'Tài khoản bị khoá' }, 403)
 
-  const b = await req.json()
+  let b
+  try { b = await req.json() } catch { return tra({ loi: 'Dữ liệu gửi lên không hợp lệ' }, 400) }
 
   if (b.hanh_dong === 'tao') {
     if (!(QUYEN_TAO[toi.vai_tro] ?? []).includes(b.vai_tro)) return tra({ loi: 'Không có quyền tạo vai trò này' }, 403)
@@ -39,8 +40,15 @@ Deno.serve(async (req) => {
     if (!sdt && !ten) return tra({ loi: 'Cần tên đăng nhập hoặc số điện thoại' }, 400)
     // Phụ huynh nhiều con dùng chung một số: trả lại tài khoản sẵn có thay vì báo lỗi
     if (b.vai_tro === 'phu_huynh' && sdt) {
-      const { data: co } = await sb.from('tai_khoan').select('id, vai_tro').eq('so_dien_thoai', sdt).maybeSingle()
-      if (co?.vai_tro === 'phu_huynh') return tra({ id: co.id, da_co: true })
+      const { data: co } = await sb.from('tai_khoan').select('id, vai_tro, hoat_dong').eq('so_dien_thoai', sdt).maybeSingle()
+      if (co?.vai_tro === 'phu_huynh') {
+        // tài khoản đang khoá thì mở lại: gắn con mới vào tài khoản khoá thì phụ huynh không đăng nhập xem được
+        if (!co.hoat_dong) {
+          const { error: e } = await sb.from('tai_khoan').update({ hoat_dong: true }).eq('id', co.id)
+          if (e) return tra({ loi: e.message }, 400)
+        }
+        return tra({ id: co.id, da_co: true })
+      }
     }
     const matKhau = b.mat_khau || sdt
     if (!matKhau || matKhau.length < 6) return tra({ loi: 'Mật khẩu tối thiểu 6 ký tự' }, 400)
@@ -62,10 +70,12 @@ Deno.serve(async (req) => {
     const { data: tk } = await sb.from('tai_khoan').select('id, vai_tro, so_dien_thoai').eq('id', b.id).single()
     if (!tk || !(QUYEN_DAT_LAI[toi.vai_tro] ?? []).includes(tk.vai_tro)) return tra({ loi: 'Không có quyền đặt lại tài khoản này' }, 403)
     const matKhau = b.mat_khau || tk.so_dien_thoai
-    if (!matKhau || matKhau.length < 6) return tra({ loi: 'Tài khoản không có số điện thoại, hãy nhập mật khẩu mới' }, 400)
+    if (!matKhau) return tra({ loi: 'Tài khoản không có số điện thoại, hãy nhập mật khẩu mới' }, 400)
+    if (matKhau.length < 6) return tra({ loi: 'Mật khẩu tối thiểu 6 ký tự' }, 400)
     const { error } = await sb.auth.admin.updateUserById(tk.id, { password: matKhau })
     if (error) return tra({ loi: error.message }, 400)
-    await sb.from('tai_khoan').update({ phai_doi_mat_khau: true }).eq('id', tk.id)
+    const { error: e3 } = await sb.from('tai_khoan').update({ phai_doi_mat_khau: true }).eq('id', tk.id)
+    if (e3) return tra({ loi: `Đã đặt lại mật khẩu nhưng chưa bật bắt đổi mật khẩu: ${e3.message}` }, 500)
     return tra({ ok: true })
   }
 

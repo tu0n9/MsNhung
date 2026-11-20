@@ -1,5 +1,5 @@
 import { App, Button, Card, Form, Input } from 'antd'
-import { sb, useMotLan } from '../supabase'
+import { q, sb, useMotLan } from '../supabase'
 
 export default function DoiMatKhau({ batBuoc, xong }: { batBuoc?: boolean; xong: () => void }) {
   const { message } = App.useApp()
@@ -7,7 +7,8 @@ export default function DoiMatKhau({ batBuoc, xong }: { batBuoc?: boolean; xong:
   const [doi, dangDoi] = useMotLan(async (v: { mat_khau: string }) => {
     const { error } = await sb.auth.updateUser({ password: v.mat_khau })
     if (error) return message.error(error.message)
-    await sb.rpc('da_doi_mat_khau')
+    // mật khẩu đã đổi, nhưng cờ bắt đổi chưa tắt thì lần sau vẫn bị đòi đổi: báo để bấm Lưu lại
+    try { await q(sb.rpc('da_doi_mat_khau')) } catch (e) { return message.error(`Đã đổi mật khẩu nhưng chưa lưu xong, bấm Lưu lại: ${(e as Error).message}`) }
     message.success('Đã đổi mật khẩu')
     xong()
   })

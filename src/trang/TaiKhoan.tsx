@@ -61,7 +61,7 @@ export default function TaiKhoan() {
       <Modal open={tao} title="Tạo tài khoản" onCancel={() => setTao(false)} footer={null} destroyOnHidden>
         <Form layout="vertical" onFinish={taoMoi} initialValues={{ vai_tro: 'tro_giang' }}>
           <Form.Item name="vai_tro" label="Vai trò"><Select options={quanLy.map((v) => ({ value: v, label: TEN_VAI[v] }))} /></Form.Item>
-          <Form.Item name="ho_ten" label="Họ tên" rules={[{ required: true }]}><Input /></Form.Item>
+          <Form.Item name="ho_ten" label="Họ tên" rules={[{ required: true, whitespace: true }]}><Input /></Form.Item>
           <Form.Item name="ten_dang_nhap" label="Tên đăng nhập"><Input autoCapitalize="none" /></Form.Item>
           <Form.Item name="so_dien_thoai" label="Số điện thoại"><Input inputMode="tel" /></Form.Item>
           <Form.Item name="mat_khau" label="Mật khẩu ban đầu (để trống = số điện thoại)"><Input.Password /></Form.Item>

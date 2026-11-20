@@ -18,15 +18,21 @@ export default function DiemDanh() {
   const [mo, setMo] = useState<BuoiHoc[] | null>(null)
   const [themBuoi, setThemBuoi] = useState<ThemBuoi | null>(null)
 
-  const tai = async () => {
-    await sb.rpc('sinh_buoi_thang', { thang: ngay })
+  // daHuy: đổi ngày nhanh thì kết quả của ngày cũ về muộn không được ghi đè danh sách ngày mới
+  const tai = async (daHuy = () => false) => {
+    await q(sb.rpc('sinh_buoi_thang', { thang: ngay }))
     const [l, b] = await Promise.all([
       q(sb.from('lop').select('*').order('ten')),
       q(sb.from('buoi_hoc').select('*').eq('ngay', ngay)),
     ])
+    if (daHuy()) return
     setLops(l as Lop[]); setBuois(b as BuoiHoc[])
   }
-  useEffect(() => { tai().catch((e) => message.error(e.message)) }, [ngay])
+  useEffect(() => {
+    let huy = false
+    tai(() => huy).catch((e) => message.error(e.message))
+    return () => { huy = true }
+  }, [ngay])
 
   const [luuBuoi, dangLuuBuoi] = useMotLan(async () => {
     try {
@@ -121,7 +127,7 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
   useEffect(() => { tai().catch((e) => message.error(e.message)) }, [])
 
   const doiNghi = async (b: BuoiHoc, v: boolean) => {
-    try { await q(sb.from('buoi_hoc').update({ lop_nghi: v }).eq('id', b.id)); setBuois(buois.map((x) => (x.id === b.id ? { ...x, lop_nghi: v } : x))) }
+    try { await q(sb.from('buoi_hoc').update({ lop_nghi: v }).eq('id', b.id)); setBuois((ds) => ds.map((x) => (x.id === b.id ? { ...x, lop_nghi: v } : x))) }
     catch (e) { message.error((e as Error).message) }
   }
   const lopCua = (b: BuoiHoc) => lops.find((l) => l.id === b.lop_id)!
@@ -216,22 +222,24 @@ function DsHocSinh({ buoi, lop, tatCaHs, tatCaLan, nhieuLop, doiNghi }: {
   ddRef.current = dd
   // buổi bù riêng: có dòng điểm danh = đã học bù; không đến thì không có dòng nào (không sinh thêm buổi chưa bù)
   const buoiBu = buoi.loai === 'bu'
-  const luu = async (hsId: string, thayDoi: Partial<DD>) => {
+  // ghi lần lượt: gõ sticker "12" sinh 2 lần lưu (1 rồi 12), chạy song song thì lần "1" về sau có thể đè mất "12"
+  const hangDoi = useRef<Promise<unknown>>(Promise.resolve())
+  const ghi = (viec: () => PromiseLike<unknown>) => {
+    hangDoi.current = hangDoi.current.then(viec).catch((e) => { message.error((e as Error).message); return tai() })
+  }
+  const luu = (hsId: string, thayDoi: Partial<DD>) => {
     const cu = ddRef.current[hsId] ?? { buoi_id: buoi.id, hoc_sinh_id: hsId, trang_thai: buoiBu ? 'hoc_bu' : 'co_mat', sticker: 0 }
     const moi = { ...cu, ...thayDoi } as DD
     ddRef.current = { ...ddRef.current, [hsId]: moi }
     setDd(ddRef.current)
-    try {
-      await q(sb.from('diem_danh').upsert(moi))
-    } catch (e) { message.error((e as Error).message); tai() }
+    ghi(() => q(sb.from('diem_danh').upsert(moi)))
   }
 
-  const boDiemDanh = async (hsId: string) => {
+  const boDiemDanh = (hsId: string) => {
     const { [hsId]: _bo, ...con } = ddRef.current
     ddRef.current = con
     setDd(con)
-    try { await q(sb.from('diem_danh').delete().eq('buoi_id', buoi.id).eq('hoc_sinh_id', hsId)) }
-    catch (e) { message.error((e as Error).message); tai() }
+    ghi(() => q(sb.from('diem_danh').delete().eq('buoi_id', buoi.id).eq('hoc_sinh_id', hsId)))
   }
 
   const tatCaCoMat = () => Promise.all(hs.filter((h) => !ddRef.current[h.id]).map((h) =>
@@ -246,7 +254,7 @@ function DsHocSinh({ buoi, lop, tatCaHs, tatCaLan, nhieuLop, doiNghi }: {
   const dem = `(${Object.values(dd).filter((x) => x.trang_thai !== 'vang').length}/${hs.length} ${buoiBu ? 'học bù' : 'có mặt'})`
   return (
     <Card size="small" title={nhieuLop ? `${lop.ten} ${dem}` : `Học sinh ${dem}`}
-      extra={<Space>{nghi}{!buoiBu && !nhieuLop && <Button size="small" onClick={() => tatCaCoMat()}>Tất cả có mặt</Button>}</Space>}>
+      extra={<Space>{nghi}{!buoiBu && !nhieuLop && <Button size="small" onClick={() => tatCaCoMat().catch((e) => message.error(e.message))}>Tất cả có mặt</Button>}</Space>}>
       {buoiBu && <p style={{ marginTop: 0, color: MAU.chuPhu, fontSize: 13 }}>Buổi bù riêng: em nào đến thì chọn "Học bù" (trừ 1 buổi chưa bù). Em không đến thì để "Không đến", không bị tính thêm buổi chưa bù.</p>}
       <List dataSource={hs} renderItem={(h) => {
         const x = dd[h.id]
@@ -269,7 +277,7 @@ function DsHocSinh({ buoi, lop, tatCaHs, tatCaLan, nhieuLop, doiNghi }: {
                   options={laBu ? [{ value: 'hoc_bu', label: 'Học bù' }, { value: 'vang', label: 'Vắng' }]
                     : [{ value: 'co_mat', label: 'Có mặt' }, { value: 'vang', label: 'Vắng' }]} />
               )}
-              <InputNumber addonBefore="⭐" style={{ width: 110 }} value={x?.sticker ?? 0}
+              <InputNumber addonBefore="⭐" style={{ width: 110 }} precision={0} value={x?.sticker ?? 0}
                 onChange={(v) => v !== null && luu(h.id, { sticker: v })} />
               {/* em lớp khác thêm nhầm: "Vắng" sẽ cộng buổi chưa bù sai, nên phải xoá hẳn dòng điểm danh */}
               {laBu && (

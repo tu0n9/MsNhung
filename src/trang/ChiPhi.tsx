@@ -27,13 +27,14 @@ export default function ChiPhi() {
 
   const [luu, dangLuu] = useMotLan(async (v: CP & { ngay_d: dayjs.Dayjs; hoc_sinh_id?: string }) => {
     // hoàn học phí gắn với học sinh để tiền dư còn lại của em đó trừ đi khoản đã hoàn (spec vòng 3)
+    const danh_muc = v.danh_muc.trim()
     const ban = {
-      ngay: v.ngay_d.format('YYYY-MM-DD'), danh_muc: v.danh_muc, so_tien: v.so_tien, ghi_chu: v.ghi_chu || null,
-      hoc_sinh_id: v.danh_muc === HOAN ? v.hoc_sinh_id ?? null : null,
+      ngay: v.ngay_d.format('YYYY-MM-DD'), danh_muc, so_tien: v.so_tien, ghi_chu: v.ghi_chu || null,
+      hoc_sinh_id: danh_muc === HOAN ? v.hoc_sinh_id ?? null : null,
     }
     try {
       await q(sua?.id ? sb.from('chi_phi').update(ban).eq('id', sua.id) : sb.from('chi_phi').insert(ban))
-      setSua(null); tai()
+      setSua(null); tai().catch((e) => message.error(e.message))
     } catch (e) { message.error((e as Error).message) }
   })
   if (!d) return null
@@ -62,19 +63,19 @@ export default function ChiPhi() {
           { title: 'Số tiền', render: (_, r) => vnd(r.so_tien) },
           { title: 'Ghi chú', dataIndex: 'ghi_chu' },
           { title: '', render: (_, r) => <Popconfirm title="Xoá khoản chi?" onPopupClick={(e) => e.stopPropagation()} onConfirm={async () => {
-            const { error } = await sb.from('chi_phi').delete().eq('id', r.id); if (error) message.error(error.message); else tai()
+            const { error } = await sb.from('chi_phi').delete().eq('id', r.id); if (error) message.error(error.message); else tai().catch((e) => message.error(e.message))
           }}><a style={{ color: 'red' }} onClick={(e) => e.stopPropagation()}>Xoá</a></Popconfirm> },
         ]} />
 
       <Modal open={!!sua} title={sua?.id ? 'Sửa khoản chi' : 'Thêm khoản chi'} onCancel={() => setSua(null)} footer={null} destroyOnHidden>
         <Form layout="vertical" onFinish={luu} initialValues={{ ...sua, ngay_d: dayjs(sua?.ngay) }}>
           <Form.Item name="ngay_d" label="Ngày chi" rules={[{ required: true }]}><DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} /></Form.Item>
-          <Form.Item name="danh_muc" label="Mục (gõ tên mới để thêm mục)" rules={[{ required: true }]}>
+          <Form.Item name="danh_muc" label="Mục (gõ tên mới để thêm mục)" rules={[{ required: true, whitespace: true }]}>
             <AutoComplete options={danhMuc.map((x) => ({ value: x }))} filterOption={(i, o) => !!o?.value.toLowerCase().includes(i.toLowerCase())} />
           </Form.Item>
-          <Form.Item noStyle shouldUpdate={(a, b) => a.danh_muc !== b.danh_muc}>{({ getFieldValue }) => getFieldValue('danh_muc') === HOAN &&
+          <Form.Item noStyle shouldUpdate={(a, b) => a.danh_muc !== b.danh_muc}>{({ getFieldValue }) => getFieldValue('danh_muc')?.trim() === HOAN &&
             <Form.Item name="hoc_sinh_id" label="Hoàn cho học sinh" rules={[{ required: true }]}>
-              <Select showSearch optionFilterProp="label" options={d.dong.map((r) => ({ value: r.hs.id, label: r.hs.ho_ten }))} />
+              <Select showSearch optionFilterProp="label" options={d.hocSinh.map((h) => ({ value: h.id, label: h.trang_thai === 'ngung' ? `${h.ho_ten} (đã ngừng)` : h.ho_ten }))} />
             </Form.Item>}</Form.Item>
           <Form.Item name="so_tien" label="Số tiền" rules={[{ required: true }]}>
             <InputNumber<number> {...O_TIEN} min={1} step={10000} />
