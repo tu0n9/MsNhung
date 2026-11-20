@@ -20,7 +20,10 @@ export default function TaiKhoan() {
   const [loc, setLoc] = useState<VaiTro | 'tat_ca'>('tat_ca')
   const quanLy = DUOC_QUAN_LY[toi.vai_tro]
 
-  const tai = () => q(sb.from('tai_khoan').select('*').order('vai_tro').order('ho_ten')).then((x) => setDs(x as TK[])).catch((e) => message.error(e.message))
+  // tăng sau mỗi lần tải để ô đơn giá (không kiểm soát) dựng lại theo số trong database, kể cả khi lưu lỗi hay bị xoá trắng
+  const [lanTai, setLanTai] = useState(0)
+  const tai = () => q(sb.from('tai_khoan').select('*').order('vai_tro').order('ho_ten'))
+    .then((x) => { setDs(x as TK[]); setLanTai((n) => n + 1) }).catch((e) => message.error(e.message))
   useEffect(() => { tai() }, [])
 
   const [taoMoi, dangTao] = useMotLan(async (v: Record<string, unknown>) => {
@@ -28,7 +31,7 @@ export default function TaiKhoan() {
     catch (e) { message.error((e as Error).message) }
   })
   const datLai = (id: string) => goiTaiKhoan({ hanh_dong: 'dat_lai', id }).then(() => message.success('Đã đặt lại mật khẩu về số điện thoại')).catch((e) => message.error(e.message))
-  const sua = (id: string, ban: Partial<TK>) => q(sb.from('tai_khoan').update(ban).eq('id', id)).then(tai).catch((e) => message.error(e.message))
+  const sua = (id: string, ban: Partial<TK>) => q(sb.from('tai_khoan').update(ban).eq('id', id)).then(tai).catch((e) => { message.error(e.message); tai() })
 
   return (
     <Space direction="vertical" style={{ width: '100%' }}>
@@ -42,7 +45,12 @@ export default function TaiKhoan() {
         { title: 'Đăng nhập', render: (_, r) => [r.ten_dang_nhap, r.so_dien_thoai].filter(Boolean).join(' / ') },
         { title: 'Vai trò', render: (_, r) => <Tag>{TEN_VAI[r.vai_tro]}</Tag> },
         { title: 'Đơn giá/ca', render: (_, r) => r.vai_tro === 'tro_giang' && (laQuanLy(toi.vai_tro)
-          ? <InputNumber size="small" min={0} precision={0} step={10000} defaultValue={r.don_gia_buoi} onBlur={(e) => sua(r.id, { don_gia_buoi: Number(e.target.value.replace(/\D/g, '')) })} />
+          ? <InputNumber key={`${r.id}-${lanTai}`} size="small" min={0} precision={0} step={10000} defaultValue={r.don_gia_buoi} onBlur={(e) => {
+            // xoá trắng thì Number('') = 0: trợ giảng thành 0đ/ca mà không ai thấy, nên trả lại số cũ thay vì lưu
+            const so = e.target.value.replace(/\D/g, '')
+            if (!so) { message.warning('Đơn giá không được để trống'); tai(); return }
+            if (Number(so) !== r.don_gia_buoi) sua(r.id, { don_gia_buoi: Number(so) })
+          }} />
           : vnd(r.don_gia_buoi)) },
         { title: 'Hoạt động', render: (_, r) => <Switch size="small" checked={r.hoat_dong} disabled={!quanLy.includes(r.vai_tro) || toi.vai_tro === 'tro_giang'}
           onChange={(v) => sua(r.id, { hoat_dong: v })} /> },

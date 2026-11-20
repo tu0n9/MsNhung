@@ -32,6 +32,17 @@ export async function taiTongSticker(ids?: string[]): Promise<Record<string, num
 export const laQuanLy = (v?: VaiTro) => v === 'admin' || v === 'giao_vien'
 
 /** Ném lỗi của Supabase ra để chỗ gọi hiện message.error, khỏi kiểm `error` ở mọi nơi. */
+// PostgREST trả tối đa 1000 dòng mỗi lần và cắt im lặng, nên bảng có thể vượt mốc đó phải đọc theo trang.
+// Truy vấn phải order theo khoá chính (hoặc có khoá chính ở cuối) để các trang không trùng / sót dòng.
+export async function taiHet<T>(trang: (tu: number, den: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>): Promise<T[]> {
+  const kq: T[] = []
+  for (let tu = 0; ; tu += 1000) {
+    const d = await q(trang(tu, tu + 999)) ?? []
+    kq.push(...d)
+    if (d.length < 1000) return kq
+  }
+}
+
 export async function q<T>(p: PromiseLike<{ data: T; error: { message: string } | null }>): Promise<T> {
   const { data, error } = await p
   if (error) throw new Error(error.message)

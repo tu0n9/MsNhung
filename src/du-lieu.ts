@@ -1,8 +1,8 @@
 // Nạp mọi thứ tab Học phí và file Excel cần cho một tháng. Quy mô một trung tâm (vài trăm học sinh)
 // nên tải hết về rồi tính trên máy cho gọn.
-// ponytail: tải toàn bộ goi_hoc/phieu_thu; khi lên hàng chục nghìn phiếu thì chuyển sang view tổng hợp trong Postgres.
+// ponytail: tải toàn bộ goi_hoc/phieu_thu (theo trang 1000); khi lên hàng chục nghìn phiếu thì chuyển sang view tổng hợp trong Postgres.
 import { congThang, hocPhiGocThang, tongHopHocSinh, type Goi, type PhieuThu, type Thang, type TongHopThang } from './hoc-phi'
-import { q, sb, type HocSinh, type Lop, type TaiKhoan } from './supabase'
+import { q, sb, taiHet, type HocSinh, type Lop, type TaiKhoan } from './supabase'
 import type { PhieuDanhGia } from './danh-gia'
 
 export interface ChiPhi { id: string; ngay: string; danh_muc: string; so_tien: number; ghi_chu: string | null }
@@ -21,15 +21,16 @@ export async function taiDuLieuThang(thang: Thang): Promise<DuLieuThang> {
   const dau = `${thang}-01`, sau = `${congThang(thang, 1)}-01`
   const [lops, hs, goi, phieu, chi, luong, dd, dg, sn] = await Promise.all([
     q(sb.from('lop').select('*').order('ten')),
-    q(sb.from('hoc_sinh').select('*').order('ho_ten')),
-    q(sb.from('goi_hoc').select('*')),
-    q(sb.from('phieu_thu').select('*').order('ngay_thu')),
+    taiHet((a, b) => sb.from('hoc_sinh').select('*').order('ho_ten').order('id').range(a, b)),
+    taiHet((a, b) => sb.from('goi_hoc').select('*').order('id').range(a, b)),
+    taiHet((a, b) => sb.from('phieu_thu').select('*').order('ngay_thu').order('id').range(a, b)),
     q(sb.from('chi_phi').select('*').gte('ngay', dau).lt('ngay', sau).order('ngay')),
     // cột đơn giá của tro_giang_buoi không cấp cho client; lương tính trong hàm chỉ giáo viên gọi được
     q(sb.rpc('luong_tro_giang', { tu: dau, den: sau })),
-    q(sb.from('diem_danh').select('hoc_sinh_id, trang_thai, sticker, buoi_hoc!inner(ngay, lop_id)').gte('buoi_hoc.ngay', dau).lt('buoi_hoc.ngay', sau)),
+    taiHet((a, b) => sb.from('diem_danh').select('hoc_sinh_id, trang_thai, sticker, buoi_hoc!inner(ngay, lop_id)')
+      .gte('buoi_hoc.ngay', dau).lt('buoi_hoc.ngay', sau).order('buoi_id').order('hoc_sinh_id').range(a, b)),
     q(sb.from('danh_gia').select('*').eq('thang', dau).order('gui_luc')),
-    q(sb.from('sticker_cong_tru').select('hoc_sinh_id, so').gte('ngay', dau).lt('ngay', sau)),
+    taiHet((a, b) => sb.from('sticker_cong_tru').select('hoc_sinh_id, so').gte('ngay', dau).lt('ngay', sau).order('id').range(a, b)),
   ])
   const goiL = goi as Goi[], phieuL = phieu as DuLieuThang['phieu']
   const diemDanh = (dd as unknown as { hoc_sinh_id: string; trang_thai: string; sticker: number; buoi_hoc: { ngay: string; lop_id: string } }[])

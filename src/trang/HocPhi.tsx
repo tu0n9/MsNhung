@@ -4,16 +4,26 @@ import dayjs from 'dayjs'
 import { useNavigate } from 'react-router-dom'
 import { taiDuLieuThang, tongCong, type DongHs, type DuLieuThang } from '../du-lieu'
 import { demBuoiDuKien, tinhTrangGoi, tinNhanGiaHan, trangThaiThang, vnd, type Thang } from '../hoc-phi'
-import { homNay, q, sb, urlAnh, type HocSinh } from '../supabase'
+import { homNay, q, sb, taiHet, urlAnh, type HocSinh } from '../supabase'
 import HocSinhChiTiet from './HocSinhChiTiet'
 import { CHU_SO, MAU } from '../giao-dien'
 
-const BANG = ['tai_khoan', 'lop', 'hoc_sinh', 'buoi_hoc', 'diem_danh', 'tro_giang_buoi', 'anh_buoi', 'goi_hoc', 'phieu_thu', 'chi_phi', 'khoa_so', 'nhat_ky_chot_so', 'link_danh_gia', 'danh_gia', 'tom_tat_danh_gia']
+// bảng → khoá chính, để đọc theo trang không trùng / sót dòng
+const BANG: Record<string, string[]> = {
+  tai_khoan: ['id'], lop: ['id'], hoc_sinh: ['id'], buoi_hoc: ['id'], diem_danh: ['buoi_id', 'hoc_sinh_id'],
+  tro_giang_buoi: ['buoi_id', 'tro_giang_id'], anh_buoi: ['id'], goi_hoc: ['id'], phieu_thu: ['id'], chi_phi: ['id'],
+  sticker_cong_tru: ['id'], khoa_so: ['id'], nhat_ky_chot_so: ['id'], link_danh_gia: ['thang'], danh_gia: ['id'],
+  tom_tat_danh_gia: ['thang', 'lop_id'],
+}
 
 export async function saoLuuToanBo() {
   const du: Record<string, unknown> = { luc: new Date().toISOString() }
   // tro_giang_buoi: client không được đọc cột đơn giá; bản sao lưu đêm (pg_dump) mới có đủ
-  for (const b of BANG) du[b] = await q(sb.from(b).select(b === 'tro_giang_buoi' ? 'buoi_id, tro_giang_id' : '*'))
+  for (const [b, khoa] of Object.entries(BANG)) du[b] = await taiHet((tu, den) => {
+    let r = sb.from(b).select(b === 'tro_giang_buoi' ? 'buoi_id, tro_giang_id' : '*')
+    for (const k of khoa) r = r.order(k)
+    return r.range(tu, den)
+  })
   const a = document.createElement('a')
   a.href = URL.createObjectURL(new Blob([JSON.stringify(du)], { type: 'application/json' }))
   a.download = `sao-luu-msnhung-${dayjs().format('YYYY-MM-DD-HHmm')}.json`

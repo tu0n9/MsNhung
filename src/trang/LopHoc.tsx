@@ -43,8 +43,9 @@ export default function LopHoc() {
 
   const [luuHs, dangLuuHs] = useMotLan(async (v: HocSinh & { ngay_vao_d: dayjs.Dayjs; anh?: File }) => {
     try {
-      let phu_huynh_id = suaHs?.phu_huynh_id ?? null
       const sdt = v.sdt_phu_huynh?.replace(/\D/g, '') || null
+      // xoá SĐT thì gỡ luôn tài khoản phụ huynh cũ, không thì họ vẫn đăng nhập xem được em này (RLS theo phu_huynh_id)
+      let phu_huynh_id = sdt ? suaHs?.phu_huynh_id ?? null : null
       if (sdt && sdt !== suaHs?.sdt_phu_huynh) {
         // tạo (hoặc lấy lại) tài khoản phụ huynh theo số điện thoại; mật khẩu đầu = số điện thoại
         phu_huynh_id = (await goiTaiKhoan({ hanh_dong: 'tao', vai_tro: 'phu_huynh', so_dien_thoai: sdt, ho_ten: v.ten_phu_huynh || sdt })).id
@@ -57,11 +58,14 @@ export default function LopHoc() {
       const luu = await q(suaHs?.id
         ? sb.from('hoc_sinh').update(ban).eq('id', suaHs.id).select().single()
         : sb.from('hoc_sinh').insert(ban).select().single()) as HocSinh
-      if (v.anh) {
-        const duong = await taiAnhLen(`avatar/${luu.id}-${Date.now()}.jpg`, v.anh, 400)
-        await q(sb.from('hoc_sinh').update({ avatar: duong }).eq('id', luu.id))
-      }
       setSuaHs(null); tai()
+      // học sinh đã lưu xong: lỗi ảnh chỉ báo, không giữ form mở, vì bấm Lưu lại sẽ tạo trùng học sinh
+      if (v.anh) {
+        try {
+          const duong = await taiAnhLen(`avatar/${luu.id}-${Date.now()}.jpg`, v.anh, 400)
+          await q(sb.from('hoc_sinh').update({ avatar: duong }).eq('id', luu.id)); tai()
+        } catch (e) { message.error(`Đã lưu học sinh nhưng chưa tải được ảnh: ${(e as Error).message}`) }
+      }
     } catch (e) { message.error((e as Error).message) }
   })
 
@@ -159,7 +163,7 @@ export default function LopHoc() {
         <Form layout="vertical" onFinish={luuHs} initialValues={{ ...suaHs, ngay_vao_d: dayjs(suaHs?.ngay_vao) }}>
           <Form.Item name="ho_ten" label="Họ tên" rules={[{ required: true }]}><Input /></Form.Item>
           <Form.Item name="lop_id" label="Lớp" rules={[{ required: true }]}><Select options={lops.map((l) => ({ value: l.id, label: l.ten }))} /></Form.Item>
-          <Form.Item name="anh" label="Ảnh đại diện" valuePropName="file" getValueFromEvent={(e) => e?.file}>
+          <Form.Item name="anh" label="Ảnh đại diện" valuePropName="file" getValueFromEvent={(e) => (e?.file?.status === 'removed' ? undefined : e?.file)}>
             <Upload accept="image/*" maxCount={1} beforeUpload={() => false} listType="picture"><Button>Chụp / chọn ảnh</Button></Upload>
           </Form.Item>
           <Form.Item name="ten_phu_huynh" label="Tên phụ huynh"><Input /></Form.Item>

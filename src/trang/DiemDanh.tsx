@@ -92,6 +92,9 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
   const [buois, setBuois] = useState(b0)
   const [tgs, setTgs] = useState<TaiKhoan[]>([])
   const [tgCo, setTgCo] = useState<string[]>([])
+  const tgRef = useRef(tgCo)
+  tgRef.current = tgCo
+  const hangDoiTg = useRef<Promise<void>>(Promise.resolve())
   const [anh, setAnh] = useState<{ id: string; duong_dan: string }[]>([])
   const [url, setUrl] = useState<Record<string, string>>({})
   // null = chưa tải: thẻ học sinh chỉ dựng khi đã có, để mỗi thẻ tải đúng một lần. Tải hai lần (lần đầu với danh sách
@@ -134,14 +137,16 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
       </Space>
 
       {dangHoc.length > 0 && <Card size="small" title="Trợ giảng có mặt">
-        <Checkbox.Group value={tgCo} options={tgs.map((t) => ({ value: t.id, label: t.ho_ten }))} onChange={async (v) => {
-          const them = v.filter((x) => !tgCo.includes(x)), bot = tgCo.filter((x) => !v.includes(x))
-          try {
+        <Checkbox.Group value={tgCo} options={tgs.map((t) => ({ value: t.id, label: t.ho_ten }))} onChange={(v) => {
+          // tick nhanh liên tiếp: so với bản mới nhất (ref) chứ không phải state cũ của lần render trước, hiện ngay, rồi
+          // ghi lần lượt qua hàng đợi để "tick rồi bỏ" không bị lệnh xoá chạy trước lệnh thêm
+          const them = v.filter((x) => !tgRef.current.includes(x)), bot = tgRef.current.filter((x) => !v.includes(x))
+          tgRef.current = v; setTgCo(v)
+          hangDoiTg.current = hangDoiTg.current.then(async () => {
             // ghi cho mọi lớp đang học trong ca; lương tính theo (ngày, giờ bắt đầu) nên lớp gộp vẫn chỉ 1 ca
             if (them.length) await q(sb.from('tro_giang_buoi').insert(dangHoc.flatMap((b) => them.map((id) => ({ buoi_id: b.id, tro_giang_id: id })))))
             if (bot.length) await q(sb.from('tro_giang_buoi').delete().in('buoi_id', ids).in('tro_giang_id', bot))
-            setTgCo(v)
-          } catch (e) { message.error((e as Error).message) }
+          }).catch((e) => { message.error((e as Error).message); tai().catch((x) => message.error(x.message)) })
         }} />
         {tgs.length === 0 && <i>Chưa có tài khoản trợ giảng</i>}
       </Card>}
