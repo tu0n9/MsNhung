@@ -8,7 +8,7 @@ import { MAU } from '../giao-dien'
 // Mỗi vai trò chỉ thấy video về việc mình làm được.
 const VIDEO: { file: string; ten: string; mo_ta: string; ai: ('ql' | 'tg' | 'ph')[] }[] = [
   { file: '01-dang-nhap', ten: '1. Đăng nhập và làm quen', mo_ta: 'Đăng nhập lần đầu, đổi mật khẩu, các mục chính, giao diện sáng / tối, cài lên điện thoại.', ai: ['ql', 'tg'] },
-  { file: '02-lop-va-hoc-sinh', ten: '2. Lớp và học sinh', mo_ta: 'Tạo lớp, lịch tuần có giờ từng thứ, thêm học sinh có ảnh và số phụ huynh, sửa, ngừng học.', ai: ['ql'] },
+  { file: '02-lop-va-hoc-sinh', ten: '2. Lớp và học sinh', mo_ta: 'Tạo lớp, lịch tuần có giờ từng thứ, thêm học sinh có ảnh và số phụ huynh, sửa, ngừng học. Cộng / trừ sticker ngoài buổi: bấm nút ⭐ cạnh tên em ở trang Lớp (trợ giảng cũng làm được).', ai: ['ql'] },
   { file: '03-import-excel', ten: '3. Import bằng Excel', mo_ta: 'Tải file mẫu, điền, chọn file, xem lỗi, nhập.', ai: ['ql'] },
   { file: '04-diem-danh', ten: '4. Điểm danh', mo_ta: 'Lớp gộp cùng giờ, có mặt / vắng, sticker, trợ giảng, ảnh lớp, lớp nghỉ, buổi bù, lưới điểm danh tháng.', ai: ['ql', 'tg'] },
   { file: '05-thu-hoc-phi', ten: '5. Học phí và thu tiền', mo_ta: 'Nguyên tắc tính tiền, gói 1 / 2 / 3 tháng, thu nhiều đợt, đóng trước, tiền dư lớp nghỉ, điều chỉnh, các trường hợp khác.', ai: ['ql'] },

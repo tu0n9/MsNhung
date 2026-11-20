@@ -305,6 +305,40 @@ with sync_playwright() as pw:
         p.get_by_role("button", name="← Quay lại").click()
     buoc("gỡ em lớp khác thêm nhầm vào buổi thường: chỉ em lớp khác có nút Gỡ, gỡ xong biến khỏi danh sách", b_go_hoc_bu)
 
+    def b_sticker():
+        nav("Lớp")
+        chip = p.get_by_role("button", name="Sticker của TEST Nguyễn Bảo An")
+        expect(chip).to_be_visible(timeout=15000)
+        truoc = int(re.search(r"-?\d+", chip.inner_text()).group())
+
+        def ghi(so, ly_do):
+            chip.click()
+            m = p.locator(".ant-modal", has_text="Sticker: TEST Nguyễn Bảo An")
+            m.get_by_label("Cộng (số dương) hoặc trừ (số âm)").fill(str(so))
+            if so < 0:  # trừ mà chưa ghi lý do thì bị chặn
+                m.get_by_role("button", name="Lưu").click()
+                expect(m.get_by_text("Trừ sticker phải ghi lý do")).to_be_visible()
+            m.get_by_role("button", name=ly_do).click()
+            m.get_by_role("button", name="Lưu").click()
+            expect(m).to_have_count(0, timeout=10000)
+
+        ghi(-2, "Đổi quà")
+        expect(chip).to_have_text(f"⭐ {truoc - 2}", timeout=10000)
+        p.locator(".ant-list-item", has_text="TEST Nguyễn Bảo An").get_by_text("TEST Nguyễn Bảo An").click()
+        the = p.locator(".ant-card", has_text="Sticker ngoài buổi")
+        expect(the).to_contain_text("-2", timeout=10000)
+        expect(the).to_contain_text("Đổi quà")
+        expect(the).to_contain_text("Người ghi")
+        the.get_by_text("Xoá").click()
+        p.locator(".ant-popconfirm .ant-btn-primary").click()
+        expect(the).to_have_count(0, timeout=10000)  # hết lần cộng/trừ thì ẩn cả mục
+        p.get_by_role("button", name="← Quay lại").click()
+        expect(chip).to_have_text(f"⭐ {truoc}", timeout=10000)
+        ghi(1, "Thưởng")  # để lại cho bước phụ huynh xem
+        expect(chip).to_have_text(f"⭐ {truoc + 1}", timeout=10000)
+        p.screenshot(path=os.path.join(OUT, "a-sticker.png"), full_page=True)
+    buoc("sticker ngoài buổi: chip ⭐ ở trang Lớp, trừ phải có lý do, lịch sử ở trang học sinh, xoá thì tổng trở lại", b_sticker)
+
     def b_xoa_lop():
         nav("Lớp")
         p.locator(".ant-collapse-item", has_text="TEST Movers 2").get_by_role("button", name="Sửa lớp", exact=True).click()
@@ -375,6 +409,9 @@ with sync_playwright() as pw:
         expect(p.get_by_text("TEST Nguyễn Bảo An").first).to_be_visible(timeout=15000)
         p.wait_for_timeout(3000)
         expect(p.get_by_text("Tổng sticker")).to_be_visible()
+        the_st = p.locator(".ant-card", has_text="Sticker ngoài buổi")
+        expect(the_st).to_contain_text("Thưởng")
+        assert the_st.get_by_text("Người ghi").count() == 0, "phụ huynh thấy tên người ghi sticker"
         expect(p.get_by_text("Ảnh lớp")).to_be_visible()
         assert p.get_by_text("Học phí", exact=True).count() == 0 or p.locator("nav").count() == 0
         # ô "chưa điểm danh" chỉ có khi phụ huynh đọc được buoi_hoc của lớp con (RLS), ô học bù khi đọc được buổi bù
@@ -384,7 +421,7 @@ with sync_playwright() as pw:
         p.screenshot(path=os.path.join(OUT, "a-phu-huynh.png"), full_page=True)
         huong_dan(lambda: p.get_by_text("Xem hướng dẫn").click(), 1)
         thoat()
-    buoc("phụ huynh: SĐT, bắt đổi mật khẩu, thấy con + ảnh lớp + lưới tháng + giờ học + 1 video hướng dẫn, không có tab quản lý", b_phu_huynh)
+    buoc("phụ huynh: SĐT, bắt đổi mật khẩu, thấy con + sticker ngoài buổi (không tên người ghi) + ảnh lớp + lưới tháng + giờ học + 1 video hướng dẫn, không có tab quản lý", b_phu_huynh)
 
     def b_tro_giang():
         dang_nhap(p, "testlan", "0911000001")
@@ -394,6 +431,8 @@ with sync_playwright() as pw:
         p.get_by_role("button", name="Lưu").click()
         expect(p.get_by_text("Thoát")).to_be_visible(timeout=15000)
         assert p.locator("nav").get_by_text("Học phí", exact=True).count() == 0, "trợ giảng thấy tab Học phí"
+        nav("Lớp")
+        expect(p.get_by_role("button", name="Sticker của TEST Nguyễn Bảo An")).to_be_visible(timeout=15000)
         nav("Tài khoản")
         p.wait_for_timeout(2000)
         vai = p.locator(".ant-table-tbody .ant-tag").all_inner_texts()

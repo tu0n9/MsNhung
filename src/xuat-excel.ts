@@ -70,9 +70,12 @@ export async function xuatExcel(d: DuLieuThang) {
   const cotCuoi = wsDd.getColumn(ngays.length + 2).letter
   for (const r of d.dong) {
     const cua = d.diemDanh.filter((x) => x.hoc_sinh_id === r.hs.id)
-    if (!cua.length) continue
+    const ngoai = d.stickerNgoai.filter((x) => x.hoc_sinh_id === r.hs.id)
+    if (!cua.length && !ngoai.length) continue
+    // em chỉ được cộng/trừ ngoài buổi (tháng này không đi học) vẫn cần dòng để cột Sticker khớp với app
     const row = wsDd.addRow({ lop: d.lops.find((l) => l.id === r.hs.lop_id)?.ten, ten: r.hs.ho_ten,
-      ...Object.fromEntries(cua.map((x) => [x.ngay, kyHieu[x.trang_thai]])), st: cua.reduce((s, x) => s + x.sticker, 0) })
+      ...Object.fromEntries(cua.map((x) => [x.ngay, kyHieu[x.trang_thai]])),
+      st: cua.reduce((s, x) => s + x.sticker, 0) + ngoai.reduce((s, x) => s + x.so, 0) })
     const n = row.number
     row.getCell('tong').value = ngays.length ? { formula: `COUNTIF(C${n}:${cotCuoi}${n},"C")+COUNTIF(C${n}:${cotCuoi}${n},"B")` } : 0
   }

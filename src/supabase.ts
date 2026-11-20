@@ -21,6 +21,13 @@ export interface BuoiHoc {
   bat_dau: string | null; ket_thuc: string | null // cột time: '16:45:00'
 }
 export interface DiemDanh { buoi_id: string; hoc_sinh_id: string; trang_thai: 'co_mat' | 'vang' | 'hoc_bu'; sticker: number }
+export interface StickerCongTru { id: string; hoc_sinh_id: string; so: number; ly_do: string | null; ngay: string; ten_nguoi: string | null }
+
+// một công thức tổng duy nhất ở view tong_sticker: thêm nguồn sticker mới chỉ sửa view, mọi màn hình tự đúng
+export async function taiTongSticker(ids?: string[]): Promise<Record<string, number>> {
+  const r = ids ? sb.from('tong_sticker').select('*').in('hoc_sinh_id', ids) : sb.from('tong_sticker').select('*')
+  return Object.fromEntries((await q(r) as { hoc_sinh_id: string; tong: number }[]).map((x) => [x.hoc_sinh_id, Number(x.tong)]))
+}
 
 export const laQuanLy = (v?: VaiTro) => v === 'admin' || v === 'giao_vien'
 

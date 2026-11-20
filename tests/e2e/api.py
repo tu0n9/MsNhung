@@ -1,6 +1,6 @@
 """Kiểm RLS và khoá sổ ở tầng database (không qua giao diện). Chạy sau all.py, dùng dữ liệu TEST nó tạo."""
 import json, os, sys, urllib.request, urllib.error
-from datetime import date
+from datetime import date, timedelta
 
 env = dict(l.split("=", 1) for l in open(r"C:\Users\TIENTUONG\MsNhung\.env", encoding="utf-8").read().splitlines() if "=" in l and not l.startswith("#"))
 U, K, S = env["VITE_SUPABASE_URL"].strip(), env["VITE_SUPABASE_PUBLISHABLE_KEY"].strip(), env["SUPABASE_SECRET_KEY"].strip()
@@ -179,6 +179,29 @@ finally:
         SV("DELETE", f"/rest/v1/link_danh_gia?thang=eq.{thang_nay}")
     SV("DELETE", "/rest/v1/link_danh_gia?thang=eq.2020-01-01")
 
+# --- cộng/trừ sticker ngoài buổi (migration sticker_cong_tru) ---
+R = "return=representation"
+c, st = goi("POST", "/rest/v1/sticker_cong_tru", T, {"hoc_sinh_id": hs_id, "so": 3, "ly_do": "Thưởng", "ten_nguoi": "Giả mạo"}, prefer=R)
+ok("sticker: trợ giảng cộng được, người ghi lấy từ phiên đăng nhập (tên gửi lên bị bỏ)",
+   c == 201 and st[0]["ten_nguoi"] == "TEST Trợ giảng Lan" and st[0]["ngay"] == HN)
+st_id = st[0]["id"] if c == 201 else None
+ok("sticker: trừ không lý do bị từ chối", goi("POST", "/rest/v1/sticker_cong_tru", T, {"hoc_sinh_id": hs_id, "so": -2, "ly_do": " "})[0] == 400)
+ok("sticker: số 0 bị từ chối", goi("POST", "/rest/v1/sticker_cong_tru", T, {"hoc_sinh_id": hs_id, "so": 0})[0] == 400)
+# ngày mai: tháng chưa chốt, nên bị chặn là do luật "chỉ hôm nay" chứ không phải khoá sổ
+ok("sticker: ghi cho ngày khác hôm nay bị từ chối", goi("POST", "/rest/v1/sticker_cong_tru", T,
+   {"hoc_sinh_id": hs_id, "so": 1, "ngay": (date.today() + timedelta(days=1)).isoformat()})[0] >= 400)
+ok("sticker: phụ huynh không ghi được", goi("POST", "/rest/v1/sticker_cong_tru", P, {"hoc_sinh_id": hs_id, "so": 5})[0] >= 400)
+goi("DELETE", f"/rest/v1/sticker_cong_tru?id=eq.{st_id}", P)
+ok("sticker: phụ huynh không xoá được, đọc được của con", {"id": st_id} in goi("GET", "/rest/v1/sticker_cong_tru?select=id", P)[1])
+c, st2 = goi("POST", "/rest/v1/sticker_cong_tru", T, {"hoc_sinh_id": hs_id, "so": -1, "ly_do": "Sửa sai"}, prefer=R)
+ok("sticker: trợ giảng xoá được lần cộng/trừ", c == 201 and goi("DELETE", f"/rest/v1/sticker_cong_tru?id=eq.{st2[0]['id']}", T, prefer=R)[1] == st2)
+_, h0 = SV("GET", f"/rest/v1/hoc_sinh?select=sticker_dau_ky&id=eq.{hs_id}")
+_, dd0 = SV("GET", f"/rest/v1/diem_danh?select=sticker&hoc_sinh_id=eq.{hs_id}")
+_, ct0 = SV("GET", f"/rest/v1/sticker_cong_tru?select=so&hoc_sinh_id=eq.{hs_id}")  # gồm cả lần all.py để lại
+mong = h0[0]["sticker_dau_ky"] + sum(x["sticker"] for x in dd0) + sum(x["so"] for x in ct0)
+_, tg_p = goi("GET", "/rest/v1/tong_sticker?select=hoc_sinh_id,tong", P)
+ok(f"sticker: tong_sticker đúng ({mong}) và phụ huynh chỉ thấy con mình", tg_p == [{"hoc_sinh_id": hs_id, "tong": mong}])
+
 _, khoa_truoc = SV("GET", "/rest/v1/khoa_so?select=khoa_den")
 # chỉ xoá nhật ký do test ghi: lọc theo id, không theo tháng (người dùng có thể đã chốt / mở khoá thật tháng 11)
 _, nk = SV("GET", "/rest/v1/nhat_ky_chot_so?select=id&order=id.desc&limit=1")
@@ -188,6 +211,8 @@ try:
     ok("khoá: không thêm chi phí tháng 11", goi("POST", "/rest/v1/chi_phi", A, {"ngay": "2026-11-20", "danh_muc": "x", "so_tien": 1, "ghi_chu": "TEST e2e"})[0] == 400)
     ok("khoá: không sửa điểm danh tháng 11", goi("PATCH", f"/rest/v1/diem_danh?sticker=eq.3&hoc_sinh_id=eq.{hs_id}", A, {"sticker": 4})[0] == 400)
     ok("khoá: không xoá phiếu thu tháng 11", goi("DELETE", "/rest/v1/phieu_thu?so_tien=eq.2000000", A)[0] == 400)
+    ok("khoá: không cộng sticker tháng 11", goi("POST", "/rest/v1/sticker_cong_tru", T, {"hoc_sinh_id": hs_id, "so": 1})[0] == 400)
+    ok("khoá: không xoá lần cộng sticker tháng 11", goi("DELETE", f"/rest/v1/sticker_cong_tru?id=eq.{st_id}", T)[0] == 400)
     ok("khoá: trợ giảng không mở khoá được", goi("POST", "/rest/v1/rpc/mo_khoa", T, {"thang": "2026-11-01", "ly_do": "x"})[0] == 400)
     ok("mở khoá thiếu lý do bị từ chối", goi("POST", "/rest/v1/rpc/mo_khoa", A, {"thang": "2026-11-01", "ly_do": " "})[0] == 400)
     ok("mở khoá có lý do", goi("POST", "/rest/v1/rpc/mo_khoa", A, {"thang": "2026-11-01", "ly_do": "TEST"})[0] == 204)
@@ -216,6 +241,7 @@ con_lai = {
     "diem_danh": SV("GET", f"/rest/v1/diem_danh?select=buoi_id&buoi_id=in.({bids})")[1],
     "goi_hoc": SV("GET", f"/rest/v1/goi_hoc?select=id&hoc_sinh_id=eq.{hs_id}")[1],
     "anh_buoi": SV("GET", f"/rest/v1/anh_buoi?select=id&buoi_id=in.({bids})")[1],
+    "sticker_cong_tru": SV("GET", f"/rest/v1/sticker_cong_tru?select=id&hoc_sinh_id=eq.{hs_id}")[1],
 }
 ok(f"xoá lớp có dữ liệu: sạch mọi bảng, trả {len(anh_xoa) if c == 200 else '?'} đường dẫn ảnh",
    c == 200 and not any(con_lai.values()) and len(anh_xoa) >= 2)

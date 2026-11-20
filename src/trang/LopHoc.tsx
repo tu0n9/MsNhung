@@ -4,7 +4,7 @@ import { App, Avatar, Button, Checkbox, Collapse, DatePicker, Form, Input, Input
 import { PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useToi } from '../App'
-import { goiTaiKhoan, laQuanLy, q, sb, useMotLan, taiAnhLen, THU, urlAnh, type HocSinh, type Lop } from '../supabase'
+import { goiTaiKhoan, laQuanLy, q, sb, useMotLan, taiAnhLen, taiTongSticker, THU, urlAnh, type HocSinh, type Lop } from '../supabase'
 import { vnd } from '../hoc-phi'
 import { cong2Gio, moTaLich, thieuGio, type GioThu } from '../gio-hoc'
 import { O_TIEN } from '../giao-dien'
@@ -22,10 +22,12 @@ export default function LopHoc() {
   const [suaHs, setSuaHs] = useState<Partial<HocSinh> | null>(null)
   const [xem, setXem] = useState<HocSinh | null>(null)
   const [hienNgung, setHienNgung] = useState(false)
+  const [tong, setTong] = useState<Record<string, number>>({})
+  const [hsSticker, setHsSticker] = useState<HocSinh | null>(null)
 
   const tai = async () => {
-    const [l, h] = await Promise.all([q(sb.from('lop').select('*').order('ten')), q(sb.from('hoc_sinh').select('*').order('ho_ten'))])
-    setLops(l as Lop[]); setHs(h as HocSinh[])
+    const [l, h, t] = await Promise.all([q(sb.from('lop').select('*').order('ten')), q(sb.from('hoc_sinh').select('*').order('ho_ten')), taiTongSticker()])
+    setLops(l as Lop[]); setHs(h as HocSinh[]); setTong(t)
     setUrl(await urlAnh((h as HocSinh[]).map((x) => x.avatar!).filter(Boolean)))
   }
   useEffect(() => { tai().catch((e) => message.error(e.message)) }, [])
@@ -122,7 +124,10 @@ export default function LopHoc() {
             ] : []}>
               <List.Item.Meta
                 avatar={<Avatar shape="square" size={48} src={h.avatar && url[h.avatar]}>{h.ho_ten.split(' ').pop()?.[0]}</Avatar>}
-                title={<>{h.ho_ten} {h.trang_thai === 'ngung' && <Tag>Ngừng học</Tag>}</>}
+                // tên một phần tử riêng, chip cách ra: bấm vào tên mở chi tiết, không trúng nhầm chip sticker
+                title={<><span>{h.ho_ten}</span> {h.trang_thai === 'ngung' && <Tag>Ngừng học</Tag>}
+                  <Button size="small" style={{ marginLeft: 8 }} aria-label={`Sticker của ${h.ho_ten}`}
+                    onClick={(e) => { e.stopPropagation(); setHsSticker(h) }}>⭐ {tong[h.id] ?? 0}</Button></>}
                 description={[h.ten_phu_huynh, h.sdt_phu_huynh].filter(Boolean).join(' · ')} />
             </List.Item>
           )} />,
@@ -144,6 +149,11 @@ export default function LopHoc() {
           {suaLop?.id && <Button danger block style={{ marginTop: 8 }} onClick={() => xoaLop(suaLop)}>Xoá lớp</Button>}
         </Form>
       </Modal>
+
+      {hsSticker && <CongTruSticker hs={hsSticker} tong={tong[hsSticker.id] ?? 0} dong={(daLuu) => {
+        setHsSticker(null)
+        if (daLuu) taiTongSticker().then(setTong).catch((e) => message.error(`Đã lưu nhưng chưa tải lại được tổng: ${e.message}`))
+      }} />}
 
       <Modal open={!!suaHs} title={suaHs?.id ? 'Sửa học sinh' : 'Thêm học sinh'} onCancel={() => setSuaHs(null)} footer={null} destroyOnHidden>
         <Form layout="vertical" onFinish={luuHs} initialValues={{ ...suaHs, ngay_vao_d: dayjs(suaHs?.ngay_vao) }}>
@@ -201,5 +211,41 @@ function LichTuan({ value = {}, onChange }: { value?: GioThu; onChange?: (v: Gio
         )
       })}
     </div>
+  )
+}
+
+const LY_DO_NHANH = ['Đổi quà', 'Thưởng', 'Sửa sai']
+
+// Cộng / trừ sticker ngoài buổi học: mỗi lần lưu là một dòng sticker_cong_tru, ngày = hôm nay (database tự điền).
+function CongTruSticker({ hs, tong, dong }: { hs: HocSinh; tong: number; dong: (daLuu: boolean) => void }) {
+  const { message } = App.useApp()
+  const [form] = Form.useForm<{ so: number; ly_do?: string }>()
+  const so = Form.useWatch('so', form)
+  const [luu, dangLuu] = useMotLan(async () => {
+    // form chưa hợp lệ thì antd đã hiện lỗi dưới ô; nuốt promise bị reject để không thành lỗi JS không ai bắt
+    const v = await form.validateFields().catch(() => null)
+    if (!v) return
+    try {
+      await q(sb.from('sticker_cong_tru').insert({ hoc_sinh_id: hs.id, so: v.so, ly_do: v.ly_do?.trim() || null }))
+      message.success(`Đã ${v.so > 0 ? 'cộng' : 'trừ'} ${Math.abs(v.so)} sticker`); dong(true)
+    } catch (e) { message.error((e as Error).message) }
+  })
+  return (
+    <Modal open title={`Sticker: ${hs.ho_ten}`} onCancel={() => dong(false)} onOk={() => luu()} okText="Lưu" cancelText="Thôi" confirmLoading={dangLuu} destroyOnHidden>
+      <p>Đang có <b>⭐ {tong}</b>{so ? <> → sau khi lưu <b>⭐ {tong + so}</b></> : null}</p>
+      <Form form={form} layout="vertical">
+        <Form.Item name="so" label="Cộng (số dương) hoặc trừ (số âm)" rules={[{ required: true, message: 'Nhập số sticker' },
+          { validator: (_, v) => v === 0 ? Promise.reject(new Error('Số phải khác 0')) : Promise.resolve() }]}>
+          <InputNumber<number> precision={0} style={{ width: '100%' }} placeholder="Ví dụ: 5 hoặc -10" />
+        </Form.Item>
+        <Space wrap style={{ marginBottom: 8 }}>
+          {LY_DO_NHANH.map((t) => <Button key={t} size="small" onClick={() => form.setFieldValue('ly_do', t)}>{t}</Button>)}
+        </Space>
+        <Form.Item name="ly_do" label={(so ?? 0) < 0 ? 'Lý do (bắt buộc khi trừ)' : 'Lý do'}
+          rules={[{ required: (so ?? 0) < 0, whitespace: true, message: 'Trừ sticker phải ghi lý do' }]}>
+          <Input />
+        </Form.Item>
+      </Form>
+    </Modal>
   )
 }

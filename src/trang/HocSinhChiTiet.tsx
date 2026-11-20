@@ -3,7 +3,7 @@ import { App, Avatar, Button, Card, DatePicker, Descriptions, Form, Input, Input
 import dayjs from 'dayjs'
 import { useToi } from '../App'
 import { MAU, O_TIEN } from '../giao-dien'
-import { goiTaiKhoan, homNay, laQuanLy, q, sb, useMotLan, urlAnh, type BuoiHoc, type HocSinh, type Lop } from '../supabase'
+import { goiTaiKhoan, homNay, laQuanLy, q, sb, taiTongSticker, useMotLan, urlAnh, type BuoiHoc, type HocSinh, type Lop, type StickerCongTru } from '../supabase'
 import {
   congThang, conNoGoi, daDongGoi, demBuoiDuKien, demChuaBu, duConLai, tenGoi, thangHetGoi, tienDuGoi, tinhTrangGoi, tinNhanPhuHuynh, tongGoi, tongHopHocSinh, vnd,
   type Goi, type PhieuThu, type Thang,
@@ -29,6 +29,8 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
   const [anh, setAnh] = useState<{ duong_dan: string; ngay: string }[]>([])
   const [urlA, setUrlA] = useState<Record<string, string>>({})
   const [daHoan, setDaHoan] = useState(0)
+  const [congTru, setCongTru] = useState<StickerCongTru[]>([])
+  const [tongSticker, setTongSticker] = useState(0)
   const [link, setLink] = useState(hs.link_zalo)
   const [oLink, setOLink] = useState(hs.link_zalo ?? '')
   const luuLink = async () => {
@@ -41,13 +43,16 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
   }
 
   const tai = async () => {
-    const [d, g, b, h] = await Promise.all([
+    const [d, g, b, h, ct, tong] = await Promise.all([
       q(sb.from('diem_danh').select('trang_thai, sticker, buoi_hoc(*)').eq('hoc_sinh_id', hs.id)),
       q(sb.from('goi_hoc').select('*').eq('hoc_sinh_id', hs.id).order('thang_bat_dau')),
       q(sb.from('buoi_hoc').select('*').eq('lop_id', hs.lop_id).or('lop_nghi.eq.true,loai.eq.phu')),
       // khoản đã hoàn tiền dư cho em này (chỉ giáo viên đọc được chi_phi; người khác nhận về rỗng)
       q(sb.from('chi_phi').select('so_tien').eq('hoc_sinh_id', hs.id).eq('danh_muc', 'Hoàn học phí')),
+      q(sb.from('sticker_cong_tru').select('*').eq('hoc_sinh_id', hs.id).order('tao_luc', { ascending: false })),
+      taiTongSticker([hs.id]),
     ])
+    setCongTru(ct as StickerCongTru[]); setTongSticker(tong[hs.id] ?? 0)
     setDd(d as never); setGoi(g as never); setBuoiDb(b as BuoiHoc[])
     setDaHoan((h as { so_tien: number }[]).reduce((s, x) => s + x.so_tien, 0))
     const ids = (g as Goi[]).map((x) => x.id)
@@ -72,7 +77,6 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
   }, [thang, dd.length])
 
   const soCoMat = buoiIdsCoMat.length
-  const tongSticker = (hs.sticker_dau_ky ?? 0) + dd.reduce((s, x) => s + x.sticker, 0)
   const chuaBu = demChuaBu(dd.map((x) => ({ trang_thai: x.trang_thai, loai: x.buoi_hoc.loai })))
   const th = useMemo(() => tongHopHocSinh(goi, phieu, thang), [goi, phieu, thang])
   const tinNhan = tinNhanPhuHuynh(hs.ho_ten, thang, th, soCoMat)
@@ -107,6 +111,19 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
       <Card size="small" title={`Điểm danh tháng ${thang.slice(5)}/${thang.slice(0, 4)}`}>
         <LuoiThang key={thang} o={luoiThang(thang, buoiThang, dd, hs.ngay_vao, hs.trang_thai === 'dang_hoc', homNay())} lopId={hs.lop_id} />
       </Card>
+
+      {congTru.length > 0 && <Card size="small" title="Sticker ngoài buổi">
+        {/* phụ huynh (chiXem) không thấy tên người ghi */}
+        <Table size="small" rowKey="id" pagination={false} dataSource={congTru} scroll={{ x: true }} columns={[
+          { title: 'Ngày', render: (_, x) => dayjs(x.ngay).format('DD/MM/YYYY') },
+          { title: 'Sticker', render: (_, x) => <b style={{ color: x.so > 0 ? MAU.tot : MAU.do }}>{x.so > 0 ? `+${x.so}` : x.so}</b> },
+          { title: 'Lý do', dataIndex: 'ly_do' },
+          ...(chiXem ? [] : [{ title: 'Người ghi', dataIndex: 'ten_nguoi' },
+            { title: '', render: (_: unknown, x: StickerCongTru) => <Popconfirm title="Xoá lần cộng/trừ này?" onConfirm={async () => {
+              const { error } = await sb.from('sticker_cong_tru').delete().eq('id', x.id); if (error) message.error(error.message); else tai()
+            }}><a style={{ color: 'red' }}>Xoá</a></Popconfirm> }]),
+        ]} />
+      </Card>}
 
       {/* ảnh đã được workflow don-anh cất lên GitHub thì không còn file, không ký được link: ẩn thay vì hiện ảnh vỡ */}
       {chiXem && anh.some((a) => urlA[a.duong_dan]) && <Card size="small" title="Ảnh lớp">

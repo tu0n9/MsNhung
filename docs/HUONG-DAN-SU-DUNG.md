@@ -64,6 +64,14 @@ Mỗi em một nhóm Zalo (phụ huynh, giáo viên, quản lý). Mở học sin
 Anh chị em chung nhóm thì dán cùng link cho từng em. Chỉ giáo viên và admin thấy và sửa link; trợ giảng, phụ huynh
 không thấy.
 
+### Cộng / trừ sticker ngoài buổi học
+
+Trang **Lớp**, mỗi em có nút **⭐ tổng sticker**. Bấm vào → nhập số (**5** là cộng 5, **-10** là trừ 10) → chọn nhanh
+**Đổi quà / Thưởng / Sửa sai** hoặc gõ lý do → **Lưu**. Trừ thì bắt buộc có lý do. Giáo viên và trợ giảng đều làm
+được; lần cộng/trừ luôn tính vào hôm nay. Mở học sinh → mục **Sticker ngoài buổi** xem lại từng lần (ngày, số, lý do,
+người ghi); ghi nhầm thì bấm **Xoá** rồi ghi lại. Phụ huynh thấy mục này nhưng không thấy tên người ghi. Tháng đã chốt
+sổ thì không thêm / xoá được. Cột Sticker trong file Excel tháng đã cộng cả các lần này.
+
 ### Xoá lớp
 
 **Sửa lớp → Xoá lớp**, gõ lại đúng tên lớp. Xoá cả học sinh, điểm danh, gói, phiếu thu, ảnh của lớp. **Không lấy lại

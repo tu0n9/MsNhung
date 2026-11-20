@@ -4,7 +4,7 @@ import { CameraOutlined, PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { CHU_SO, MAU } from '../giao-dien'
 import { cong2Gio, gioBuoi, nhomBuoi } from '../gio-hoc'
-import { homNay, q, useMotLan, sb, taiAnhLen, urlAnh, type BuoiHoc, type DiemDanh as DD, type HocSinh, type Lop, type TaiKhoan } from '../supabase'
+import { homNay, q, useMotLan, sb, taiAnhLen, taiTongSticker, urlAnh, type BuoiHoc, type DiemDanh as DD, type HocSinh, type Lop, type TaiKhoan } from '../supabase'
 
 const LOAI = { lich: 'Theo lịch', phu: 'Buổi phụ', bu: 'Buổi bù' }
 
@@ -182,7 +182,7 @@ function DsHocSinh({ buoi, lop, tatCaHs, tatCaLan, nhieuLop, doiNghi }: {
   const { message } = App.useApp()
   const [hs, setHs] = useState<HocSinh[]>([])
   const [dd, setDd] = useState<Record<string, DD>>({})
-  // sticker đã có + các buổi KHÁC; tổng hiện = số này + sticker buổi đang chấm. Không cộng dồn từng lần chấm vì
+  // sticker đã có + các buổi KHÁC + cộng/trừ ngoài buổi; tổng hiện = số này + sticker buổi đang chấm. Không cộng dồn từng lần chấm vì
   // chấm trước khi số này tải xong sẽ cộng vào số 0 tạm thời (tổng sai).
   const [stickerKhac, setStickerKhac] = useState<Record<string, number>>({})
   const [url, setUrl] = useState<Record<string, string>>({})
@@ -199,10 +199,8 @@ function DsHocSinh({ buoi, lop, tatCaHs, tatCaLan, nhieuLop, doiNghi }: {
     setHs(ds); setDd(ddMap)
     const ids = ds.map((h) => h.id)
     if (ids.length) {
-      const st = await q(sb.from('diem_danh').select('hoc_sinh_id, sticker').in('hoc_sinh_id', ids).neq('buoi_id', buoi.id))
-      const khac: Record<string, number> = Object.fromEntries(ds.map((h) => [h.id, h.sticker_dau_ky ?? 0]))
-      for (const x of st as { hoc_sinh_id: string; sticker: number }[]) khac[x.hoc_sinh_id] = (khac[x.hoc_sinh_id] ?? 0) + x.sticker
-      setStickerKhac(khac)
+      const tong = await taiTongSticker(ids)
+      setStickerKhac(Object.fromEntries(ids.map((id) => [id, (tong[id] ?? 0) - (ddMap[id]?.sticker ?? 0)])))
     }
     setUrl(await urlAnh(ds.map((h) => h.avatar!).filter(Boolean)))
   }

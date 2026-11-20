@@ -308,6 +308,37 @@ Link nhóm Zalo của từng học sinh (grill 2026-11-20):
   dòng điểm danh của em ở buổi đó, kể cả sticker đã chấm: em biến khỏi danh sách, không tính học bù hay vắng. Học sinh
   của chính lớp không có nút Gỡ. Tháng đã chốt sổ thì không gỡ được (như mọi sửa điểm danh khác).
 
+### Sticker ngoài buổi (grill 2026-11-20)
+
+- Cộng / trừ sticker không cần vào buổi học. Mỗi lần là **một dòng riêng** (học sinh, ±số, lý do, người ghi, thời
+  điểm); tổng sticker = sticker đã có từ trước + sticker các buổi + các lần cộng/trừ.
+- **Chỗ sửa:** trang **Lớp**, mỗi em có chip "⭐ tổng"; bấm vào hiện hộp nhỏ: số (+/−), lý do, Lưu. Không có nút
+  cộng/trừ cả lớp.
+- **Quyền:** giáo viên và trợ giảng như nhau.
+- **Lý do:** nút chọn nhanh *Đổi quà / Thưởng / Sửa sai* + ô gõ tự do; **bắt buộc khi trừ**, cộng thì không.
+- **Ngày:** luôn là hôm nay. Tháng đã chốt sổ thì không thêm / xoá được lần nào của tháng đó.
+- **Ghi nhầm:** xoá hẳn (không sửa; xoá rồi ghi lại). Dấu vết còn trong nhật ký.
+- **Tổng được âm.**
+- **Lịch sử:** trang chi tiết học sinh có mục "Sticker ngoài buổi" (ngày, ±số, lý do, người ghi). Phụ huynh thấy mục
+  này nhưng **không thấy tên người ghi**.
+- **Excel tháng:** cột sticker của tháng cộng cả các lần cộng/trừ trong tháng, không thêm trang.
+- Hướng dẫn: chỉ sửa phần chữ, không quay lại video.
+- Tên người ghi được chụp lúc ghi (cột `ten_nguoi`) vì trợ giảng không đọc được tài khoản giáo viên. Phụ huynh đọc được
+  cột này và mã tài khoản người ghi (`nguoi`) qua API dù giao diện ẩn: **chấp nhận được**, cùng mức với "trợ giảng đọc được đơn giá lớp qua API".
+
+### Nhật ký thao tác (grill 2026-11-20)
+
+- **Ghi:** đăng nhập thành công (mọi vai trò) và mọi thêm / sửa / xoá trên: sticker ngoài buổi, trợ giảng có mặt,
+  buổi học (lớp nghỉ, buổi phụ / bù), lớp, học sinh, gói học, phiếu thu, chi phí, tài khoản, chốt sổ / mở khoá.
+- **Không ghi:** có mặt / vắng / học bù và sticker trong buổi, ảnh lớp, phiếu đánh giá.
+- **Mỗi dòng:** ai, lúc nào, cái gì, các cột đã đổi (cũ → mới).
+- **Giữ 6 tháng**, job hằng tháng tự xoá dòng cũ hơn. Không ai sửa / xoá được nhật ký (kể cả giáo viên).
+- **Chỉ giáo viên xem**, trang "Nhật ký" (vào từ trang Tài khoản), lọc theo người, loại, ngày. Không xuất Excel.
+- Script hệ thống (dọn ảnh, tạo demo) ghi người là "Hệ thống"; `lam-moi` xoá cả nhật ký.
+- Ước tính với quy mô hiện tại (131 học sinh, 14 lớp): ~2.500 dòng ≈ 1 MB/tháng, giữ 6 tháng ~6 MB, trong gói miễn
+  phí 500 MB.
+- Làm **sau** tính năng sticker ngoài buổi, migration và commit riêng.
+
 ## Câu hỏi còn mở
 
 Không còn.
