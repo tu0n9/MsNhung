@@ -243,6 +243,7 @@ CREATE OR REPLACE FUNCTION "public"."ngay_cua"("bang" "text", "r" "jsonb") RETUR
     when 'chi_phi' then (r->>'ngay')::date
     when 'phieu_thu' then (r->>'ngay_thu')::date
     when 'goi_hoc' then (r->>'thang_bat_dau')::date
+    when 'sticker_cong_tru' then (r->>'ngay')::date
     else (select ngay from buoi_hoc where id = (r->>'buoi_id')::uuid)
   end
 $$;
@@ -395,6 +396,20 @@ end $$;
 ALTER FUNCTION "public"."trg_khoa_so"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."trg_nguoi_ghi_sticker"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+begin
+  new.nguoi := auth.uid();
+  new.ten_nguoi := (select ho_ten from tai_khoan where id = auth.uid());
+  return new;
+end $$;
+
+
+ALTER FUNCTION "public"."trg_nguoi_ghi_sticker"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."vai_tro"() RETURNS "text"
     LANGUAGE "sql" STABLE SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -425,6 +440,7 @@ begin
   delete from diem_danh where hoc_sinh_id = any(hs) or buoi_id = any(bh);
   delete from tro_giang_buoi where buoi_id = any(bh);
   delete from anh_buoi where buoi_id = any(bh);
+  delete from sticker_cong_tru where hoc_sinh_id = any(hs);
   delete from hoc_sinh where id = any(hs);
   delete from buoi_hoc where id = any(bh);
   delete from lop where id = p_lop;
@@ -636,6 +652,23 @@ CREATE TABLE IF NOT EXISTS "public"."phieu_thu" (
 ALTER TABLE "public"."phieu_thu" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."sticker_cong_tru" (
+    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
+    "hoc_sinh_id" "uuid" NOT NULL,
+    "so" integer NOT NULL,
+    "ly_do" "text",
+    "ngay" "date" DEFAULT (("now"() AT TIME ZONE 'Asia/Ho_Chi_Minh'::"text"))::"date" NOT NULL,
+    "nguoi" "uuid",
+    "ten_nguoi" "text",
+    "tao_luc" timestamp with time zone DEFAULT "now"() NOT NULL,
+    CONSTRAINT "sticker_cong_tru_check" CHECK ((("so" > 0) OR (COALESCE(TRIM(BOTH FROM "ly_do"), ''::"text") <> ''::"text"))),
+    CONSTRAINT "sticker_cong_tru_so_check" CHECK (("so" <> 0))
+);
+
+
+ALTER TABLE "public"."sticker_cong_tru" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."tai_khoan" (
     "id" "uuid" NOT NULL,
     "email" "text" NOT NULL,
@@ -665,6 +698,19 @@ CREATE TABLE IF NOT EXISTS "public"."tom_tat_danh_gia" (
 
 
 ALTER TABLE "public"."tom_tat_danh_gia" OWNER TO "postgres";
+
+
+CREATE OR REPLACE VIEW "public"."tong_sticker" WITH ("security_invoker"='true') AS
+ SELECT "id" AS "hoc_sinh_id",
+    (("sticker_dau_ky" + COALESCE(( SELECT "sum"("d"."sticker") AS "sum"
+           FROM "public"."diem_danh" "d"
+          WHERE ("d"."hoc_sinh_id" = "h"."id")), (0)::bigint)) + COALESCE(( SELECT "sum"("s"."so") AS "sum"
+           FROM "public"."sticker_cong_tru" "s"
+          WHERE ("s"."hoc_sinh_id" = "h"."id")), (0)::bigint)) AS "tong"
+   FROM "public"."hoc_sinh" "h";
+
+
+ALTER VIEW "public"."tong_sticker" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."tro_giang_buoi" (
@@ -752,6 +798,11 @@ ALTER TABLE ONLY "public"."phieu_thu"
 
 
 
+ALTER TABLE ONLY "public"."sticker_cong_tru"
+    ADD CONSTRAINT "sticker_cong_tru_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."tai_khoan"
     ADD CONSTRAINT "tai_khoan_email_key" UNIQUE ("email");
 
@@ -790,6 +841,14 @@ CREATE INDEX "danh_gia_thang_idx" ON "public"."danh_gia" USING "btree" ("thang")
 
 
 
+CREATE INDEX "diem_danh_hoc_sinh_id_idx" ON "public"."diem_danh" USING "btree" ("hoc_sinh_id");
+
+
+
+CREATE INDEX "sticker_cong_tru_hoc_sinh_id_idx" ON "public"."sticker_cong_tru" USING "btree" ("hoc_sinh_id");
+
+
+
 CREATE OR REPLACE TRIGGER "gia_tro_giang" BEFORE INSERT ON "public"."tro_giang_buoi" FOR EACH ROW EXECUTE FUNCTION "public"."trg_gia_tro_giang"();
 
 
@@ -822,7 +881,15 @@ CREATE OR REPLACE TRIGGER "khoa_so" BEFORE INSERT OR DELETE OR UPDATE ON "public
 
 
 
+CREATE OR REPLACE TRIGGER "khoa_so" BEFORE INSERT OR DELETE OR UPDATE ON "public"."sticker_cong_tru" FOR EACH ROW EXECUTE FUNCTION "public"."trg_khoa_so"();
+
+
+
 CREATE OR REPLACE TRIGGER "khoa_so" BEFORE INSERT OR DELETE OR UPDATE ON "public"."tro_giang_buoi" FOR EACH ROW EXECUTE FUNCTION "public"."trg_khoa_so"();
+
+
+
+CREATE OR REPLACE TRIGGER "nguoi_ghi" BEFORE INSERT ON "public"."sticker_cong_tru" FOR EACH ROW EXECUTE FUNCTION "public"."trg_nguoi_ghi_sticker"();
 
 
 
@@ -883,6 +950,16 @@ ALTER TABLE ONLY "public"."phieu_thu"
 
 ALTER TABLE ONLY "public"."phieu_thu"
     ADD CONSTRAINT "phieu_thu_nguoi_thu_fkey" FOREIGN KEY ("nguoi_thu") REFERENCES "public"."tai_khoan"("id");
+
+
+
+ALTER TABLE ONLY "public"."sticker_cong_tru"
+    ADD CONSTRAINT "sticker_cong_tru_hoc_sinh_id_fkey" FOREIGN KEY ("hoc_sinh_id") REFERENCES "public"."hoc_sinh"("id");
+
+
+
+ALTER TABLE ONLY "public"."sticker_cong_tru"
+    ADD CONSTRAINT "sticker_cong_tru_nguoi_fkey" FOREIGN KEY ("nguoi") REFERENCES "public"."tai_khoan"("id") ON DELETE SET NULL;
 
 
 
@@ -977,6 +1054,12 @@ CREATE POLICY "doc" ON "public"."phieu_thu" FOR SELECT USING (("public"."la_quan
 
 
 
+CREATE POLICY "doc" ON "public"."sticker_cong_tru" FOR SELECT USING (("public"."la_nhan_vien"() OR ("hoc_sinh_id" IN ( SELECT "hoc_sinh"."id"
+   FROM "public"."hoc_sinh"
+  WHERE ("hoc_sinh"."phu_huynh_id" = "auth"."uid"())))));
+
+
+
 CREATE POLICY "doc" ON "public"."tai_khoan" FOR SELECT USING ((("id" = "auth"."uid"()) OR "public"."la_quan_ly"() OR ("public"."la_nhan_vien"() AND ("vai_tro" = 'phu_huynh'::"text"))));
 
 
@@ -1038,6 +1121,9 @@ CREATE POLICY "ql" ON "public"."link_danh_gia" USING ("public"."la_quan_ly"()) W
 
 
 
+ALTER TABLE "public"."sticker_cong_tru" ENABLE ROW LEVEL SECURITY;
+
+
 CREATE POLICY "sua" ON "public"."buoi_hoc" FOR UPDATE USING ("public"."la_nhan_vien"()) WITH CHECK ("public"."la_nhan_vien"());
 
 
@@ -1057,6 +1143,10 @@ CREATE POLICY "them" ON "public"."buoi_hoc" FOR INSERT WITH CHECK ("public"."la_
 
 
 
+CREATE POLICY "them" ON "public"."sticker_cong_tru" FOR INSERT WITH CHECK (("public"."la_nhan_vien"() AND ("ngay" = (("now"() AT TIME ZONE 'Asia/Ho_Chi_Minh'::"text"))::"date")));
+
+
+
 ALTER TABLE "public"."tom_tat_danh_gia" ENABLE ROW LEVEL SECURITY;
 
 
@@ -1072,6 +1162,10 @@ CREATE POLICY "xoa" ON "public"."buoi_hoc" FOR DELETE USING ("public"."la_quan_l
 
 
 CREATE POLICY "xoa" ON "public"."danh_gia" FOR DELETE USING ("public"."la_quan_ly"());
+
+
+
+CREATE POLICY "xoa" ON "public"."sticker_cong_tru" FOR DELETE USING ("public"."la_nhan_vien"());
 
 
 
@@ -1339,6 +1433,10 @@ GRANT ALL ON FUNCTION "public"."trg_khoa_so"() TO "service_role";
 
 
 
+REVOKE ALL ON FUNCTION "public"."trg_nguoi_ghi_sticker"() FROM PUBLIC;
+
+
+
 REVOKE ALL ON FUNCTION "public"."vai_tro"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."vai_tro"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."vai_tro"() TO "service_role";
@@ -1442,6 +1540,12 @@ GRANT ALL ON TABLE "public"."phieu_thu" TO "service_role";
 
 
 
+GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."sticker_cong_tru" TO "anon";
+GRANT SELECT,INSERT,REFERENCES,DELETE,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."sticker_cong_tru" TO "authenticated";
+GRANT ALL ON TABLE "public"."sticker_cong_tru" TO "service_role";
+
+
+
 GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."tai_khoan" TO "anon";
 GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."tai_khoan" TO "authenticated";
 GRANT ALL ON TABLE "public"."tai_khoan" TO "service_role";
@@ -1463,6 +1567,12 @@ GRANT UPDATE("hoat_dong") ON TABLE "public"."tai_khoan" TO "authenticated";
 GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."tom_tat_danh_gia" TO "anon";
 GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."tom_tat_danh_gia" TO "authenticated";
 GRANT ALL ON TABLE "public"."tom_tat_danh_gia" TO "service_role";
+
+
+
+GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."tong_sticker" TO "anon";
+GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."tong_sticker" TO "authenticated";
+GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."tong_sticker" TO "service_role";
 
 
 
