@@ -8,3 +8,7 @@ tests/e2e/out/
 tests/video/tam/
 __pycache__/
 sao-luu-may/
+
+# file tạm do vitest và tsc -b tự tạo mỗi lần chạy test
+.vitest/
+tsconfig.tsbuildinfo
