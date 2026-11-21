@@ -107,7 +107,7 @@ export default function App() {
         {/* Đánh giá không vào thanh dưới (đã đủ 5 mục); trên điện thoại vào từ nút ở trang Học phí */}
         {dienThoai && menu.length > 1 && (
           <nav className="thanh-duoi" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', background: MAU.dau, borderTop: `1px solid ${MAU.vien}`, zIndex: 10 }}>
-            {menu.filter((m) => m.key !== '/danh-gia').map((m) => (
+            {menu.map((m) => (
               <button key={m.key} onClick={() => nav(m.key)} style={{
                 flex: 1, border: 0, background: 'none', padding: '8px 0 10px', fontSize: 11,
                 color: dangO(m.key) ? MAU.chinh : MAU.chuMo, fontWeight: dangO(m.key) ? 600 : 400, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,

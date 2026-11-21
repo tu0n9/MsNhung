@@ -356,6 +356,9 @@ Link nhóm Zalo của từng học sinh (grill 2026-11-20):
   chưa gửi lên đầu. Mở ra: mỗi em một dòng; em có link nhóm Zalo thì có nút **"Nhắc qua Zalo"**: chép sẵn lời nhắc (tên
   em, tháng, hạn, link phiếu) rồi mở nhóm Zalo của em. Em chưa có link thì không hiện nút.
 - Một em học nhiều lớp có hồ sơ riêng ở mỗi lớp, nên hiện ở danh sách của từng lớp đó.
+- **Thanh điều hướng dưới (điện thoại), giáo viên: 6 mục** Điểm danh · Lớp · Học phí · Chi phí · Đánh giá · Tài khoản
+  (đã thử: đủ chỗ ở 360px). Bỏ nút "Đánh giá học sinh" trong trang Học phí để không có hai lối vào trùng nhau. Người
+  dùng không chọn cách gom Học phí + Chi phí thành một mục.
 
 ### Sửa lỗi sau review ngoài (2026-11-21)
 

@@ -391,7 +391,9 @@ with sync_playwright() as pw:
 
     def b_danh_gia():
         nav("Học phí")
-        p.get_by_role("button", name="Đánh giá học sinh").click()
+        # điện thoại: Đánh giá là mục thứ 6 ở thanh dưới, không còn nút trong trang Học phí
+        assert p.get_by_role("button", name="Đánh giá học sinh").count() == 0
+        nav("Đánh giá")
         p.wait_for_timeout(2000)
         # database dùng chung với bản thật: tháng này đã có link thật thì dùng lại, không đổi mã
         tao = p.get_by_role("button", name=re.compile("^Tạo link tháng")).count() > 0
