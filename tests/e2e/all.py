@@ -104,7 +104,7 @@ with sync_playwright() as pw:
         lab(p, "Họ tên").fill("TEST Nguyễn Bảo An")
         chon(p, "Lớp", "TEST Lớp Starters")
         p.locator(".ant-modal input[type=file]").set_input_files(os.path.join(D, "avatar.jpg"))
-        lab(p, "Tên phụ huynh").fill("Chị Hoa")
+        lab(p, "Tên phụ huynh").fill("TEST Chị Hoa")  # có chữ TEST để don-test.mjs nhận ra dòng nhật ký Hệ thống
         p.get_by_label(re.compile("SĐT phụ huynh")).fill("0922 000 002")
         p.get_by_label(re.compile("Sticker đã có")).fill("5")
         lab(p, "Ngày vào học").fill("01/11/2026")

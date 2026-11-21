@@ -21,14 +21,16 @@ if (buoi.length) chk(await sb.from('buoi_hoc').delete().in('id', buoi))
 if (lop.length) chk(await sb.from('lop').delete().in('id', lop))
 const tk = (await sb.from('tai_khoan').select('id').or('ten_dang_nhap.eq.testlan,so_dien_thoai.in.(0911000001,0922000002,0900000101,0900000103)')).data
 for (const x of tk) await sb.auth.admin.deleteUser(x.id)
-// nhật ký do test sinh ra (cả các lệnh xoá ở trên): từ mốc TU_LUC, mọi dòng của tài khoản test, admin break-glass (test
-// đăng nhập bằng nó) và Hệ thống (script này). Người thật dùng tài khoản riêng của mình nên dòng của họ còn nguyên.
+// nhật ký do test sinh ra (cả các lệnh xoá ở trên), từ mốc TU_LUC: mọi dòng của tài khoản test và admin break-glass
+// (test đăng nhập bằng nó); dòng "Hệ thống" (Edge Function, script này) CHỈ khi dính dữ liệu TEST, vì người thật có thể
+// đang tạo tài khoản thật cùng lúc (dòng đó cũng là Hệ thống).
 let nk = 0
 if (process.env.TU_LUC) {
   const admin = (await sb.from('tai_khoan').select('id').eq('ten_dang_nhap', 'admin')).data.map((x) => x.id)
   const ids = [...tk.map((x) => x.id), ...admin]
-  const r = await sb.from('nhat_ky').delete({ count: 'exact' }).gte('luc', process.env.TU_LUC)
-    .or(`nguoi.is.null${ids.length ? `,nguoi.in.(${ids.join(',')})` : ''}`)
-  chk(r); nk = r.count ?? 0
+  const xoa = async (loc) => { const r = await loc(sb.from('nhat_ky').delete({ count: 'exact' }).gte('luc', process.env.TU_LUC)); chk(r); nk += r.count ?? 0 }
+  if (ids.length) await xoa((r) => r.in('nguoi', ids))
+  await xoa((r) => r.is('nguoi', null).or(['doi_tuong.ilike.*TEST*', 'thay_doi->>ghi_chu.eq.TEST e2e',
+    ...(tk.length ? [`thay_doi->>id.in.(${tk.map((x) => x.id).join(',')})`] : [])].join(',')))
 }
 console.log(`đã dọn: ${lop.length} lớp, ${hs.length} học sinh, ${buoi.length} buổi, ${goi.length} gói, ${anh.length + avatar.length} ảnh, ${tk.length} tài khoản, ${nk} dòng nhật ký`)
