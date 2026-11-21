@@ -1,6 +1,6 @@
 // Kết quả phiếu đánh giá của học sinh, chỉ giáo viên (docs/YEU-CAU.md mục "Đánh giá từ học sinh").
 import { useEffect, useRef, useState } from 'react'
-import { App, Button, Card, Collapse, DatePicker, Select, Space, Table, Tag } from 'antd'
+import { App, Button, Card, Collapse, DatePicker, Progress, Select, Space, Table, Tag } from 'antd'
 import dayjs from 'dayjs'
 import { CAU_VIET, hanNhan, taoMa, TIEU_CHI, tongHop, urlPhieu, type PhieuDanhGia } from '../danh-gia'
 import { congThang, type Thang } from '../hoc-phi'
@@ -118,19 +118,34 @@ export default function DanhGia() {
         ) : <Button type="primary" loading={dangGhiMa} onClick={() => ghiMa()}>Tạo link tháng {thang.slice(5)}/{thang.slice(0, 4)}</Button>}
       </Card>
 
-      <Card size="small" title={`Đã gửi ${k.soPhieu} / ${tongEm} em`}>
-        <Collapse size="small" key={lopId ?? ''} defaultActiveKey={lopId ? [lopId] : []} items={nhomLop.map(({ l, tong, chua }) => ({
-          key: l.id, collapsible: chua.length ? undefined : 'disabled' as const,
-          label: <span data-lop-chua-gui={l.ten}><b>{l.ten}</b> · đã gửi {tong - chua.length}/{tong}{!chua.length && ' ✓'}</span>,
-          children: <Space direction="vertical" style={{ width: '100%' }}>{chua.map((h) => (
-            <div key={h.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minHeight: 40 }}>
-              <span>{h.ho_ten}</span>
-              {/* <a> mở nhóm ngay trong cú chạm (chặn popup nếu mở sau khi chờ chép xong); onClick chép lời nhắc trước */}
-              {h.link_zalo && ma && <Button size="small" href={h.link_zalo} target="_blank" rel="noreferrer"
-                onClick={() => navigator.clipboard.writeText(loiNhac(h)).then(() => message.success('Đã chép lời nhắc, dán vào nhóm Zalo'))
-                  .catch(() => message.error('Không chép được lời nhắc, hãy gõ tay'))}>Nhắc qua Zalo</Button>}
-            </div>))}</Space>,
-        }))} />
+      {/* đếm phiếu chứ không đếm em: em học nhiều lớp gửi mỗi lớp một phiếu, có hồ sơ riêng ở mỗi lớp */}
+      <Card size="small" title={`Đã gửi ${k.soPhieu} / ${tongEm} phiếu`} extra={<span style={{ fontSize: 12, color: MAU.chuPhu }}>mỗi lớp một phiếu</span>}>
+        <Collapse size="small" key={lopId ?? ''} defaultActiveKey={lopId ? [lopId] : []} items={nhomLop.map(({ l, tong, chua }) => {
+          // em có nút nhắc thì mỗi em một dòng; em chưa có link Zalo chỉ cần tên, xếp sát nhau cho danh sách ngắn lại
+          const coNut = ma ? chua.filter((h) => h.link_zalo) : []
+          const chiTen = chua.filter((h) => !coNut.includes(h))
+          return {
+            key: l.id, collapsible: chua.length ? undefined : 'disabled' as const,
+            label: <div data-lop-chua-gui={l.ten} style={{ padding: '4px 0' }}>
+              <b>{l.ten}</b> · đã gửi {tong - chua.length}/{tong}{!chua.length && ' ✓'}
+              <Progress percent={Math.round(((tong - chua.length) / tong) * 100)} showInfo={false} size="small"
+                strokeColor={chua.length ? MAU.chinh : MAU.tot} style={{ margin: 0 }} />
+            </div>,
+            children: <>
+              {coNut.map((h) => (
+                <div key={h.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minHeight: 44 }}>
+                  <span>{h.ho_ten}</span>
+                  {/* <a> mở nhóm ngay trong cú chạm (chặn popup nếu mở sau khi chờ chép xong); onClick chép lời nhắc trước */}
+                  <Button size="small" href={h.link_zalo!} target="_blank" rel="noreferrer"
+                    onClick={() => navigator.clipboard.writeText(loiNhac(h)).then(() => message.success('Đã chép lời nhắc, dán vào nhóm Zalo'))
+                      .catch(() => message.error('Không chép được lời nhắc, hãy gõ tay'))}>Nhắc qua Zalo</Button>
+                </div>))}
+              {chiTen.length > 0 && <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: coNut.length ? 8 : 0 }}>
+                {chiTen.map((h) => <Tag key={h.id} style={{ margin: 0, padding: '2px 8px', fontSize: 13 }}>{h.ho_ten}</Tag>)}
+              </div>}
+            </>,
+          }
+        })} />
       </Card>
 
       <Card size="small" title="Trợ giảng" styles={{ body: { padding: 0 } }}>

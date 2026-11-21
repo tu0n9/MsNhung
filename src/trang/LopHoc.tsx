@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { App, Avatar, Button, Checkbox, Collapse, DatePicker, Form, Input, InputNumber, List, Modal, Popconfirm, Select, Space, Tag, Upload } from 'antd'
+import { App, Avatar, Button, Checkbox, Collapse, DatePicker, Form, Input, InputNumber, List, Modal, Popconfirm, Segmented, Select, Space, Tag, Upload } from 'antd'
 import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useToi } from '../App'
@@ -233,11 +233,12 @@ function LichTuan({ value = {}, onChange }: { value?: GioThu; onChange?: (v: Gio
 }
 
 // Việc hay làm nhất là trừ sticker đổi quà cuối tháng (người dùng chốt 2026-11-21), nên hộp mở sẵn Trừ + "Đổi quà",
-// con trỏ ở ô số: gõ số rồi bấm Lưu. Lý do tự do, gõ tay.
+// con trỏ ở ô số: gõ số rồi bấm nút. Lý do tự do, gõ tay.
 const DOI_QUA = 'Đổi quà'
 
 // Cộng / trừ sticker ngoài buổi học: mỗi lần lưu là một dòng sticker_cong_tru, ngày = hôm nay (database tự điền).
-// Chọn Cộng / Trừ bằng nút rồi nhập số dương: không phải gõ dấu trừ (bàn phím số iPhone không có dấu này).
+// Chọn Trừ / Cộng rồi nhập số dương: không phải gõ dấu trừ (bàn phím số iPhone không có dấu này).
+// Một màu nhấn (màu của app) cho nút chính; đỏ chỉ dùng khi tổng mới âm, để màu còn mang nghĩa.
 function CongTruSticker({ hs, tong, dong }: { hs: HocSinh; tong: number; dong: (daLuu: boolean) => void }) {
   const { message } = App.useApp()
   const [chieu, setChieu] = useState<'cong' | 'tru'>('tru')
@@ -245,9 +246,8 @@ function CongTruSticker({ hs, tong, dong }: { hs: HocSinh; tong: number; dong: (
   const [lyDo, setLyDo] = useState(DOI_QUA)
   const [baoLoi, setBaoLoi] = useState(false)
   const n = soLuong ?? 0
-  const so = chieu === 'cong' ? n : -n
+  const moi = tong + (chieu === 'cong' ? n : -n)
   const thieuLyDo = chieu === 'tru' && !lyDo.trim()
-  const mau = chieu === 'cong' ? MAU.tot : MAU.do
   const doiChieu = (c: 'cong' | 'tru') => {
     setChieu(c)
     // "Đổi quà" chỉ hợp với trừ: sang cộng thì xoá, quay lại trừ mà ô trống thì điền lại
@@ -257,47 +257,37 @@ function CongTruSticker({ hs, tong, dong }: { hs: HocSinh; tong: number; dong: (
   const [luu, dangLuu] = useMotLan(async () => {
     if (!n || thieuLyDo) return setBaoLoi(true)
     try {
-      await q(sb.from('sticker_cong_tru').insert({ hoc_sinh_id: hs.id, so, ly_do: lyDo.trim() || null }))
+      await q(sb.from('sticker_cong_tru').insert({ hoc_sinh_id: hs.id, so: chieu === 'cong' ? n : -n, ly_do: lyDo.trim() || null }))
       message.success(`Đã ${chieu === 'cong' ? 'cộng' : 'trừ'} ${n} sticker`); dong(true)
     } catch (e) { message.error((e as Error).message) }
   })
-  const to = { height: 48, minWidth: 48, fontSize: 18 }
   return (
-    <Modal open title={<>Sticker: {hs.ho_ten} <span style={{ float: 'right', marginRight: 32 }}>⭐ {tong}</span></>}
-      onCancel={() => dong(false)} destroyOnHidden
-      footer={[<Button key="t" size="large" onClick={() => dong(false)}>Thôi</Button>,
-        <Button key="l" size="large" type="primary" loading={dangLuu} disabled={!n} onClick={() => luu()}
-          style={{ background: n ? mau : undefined, borderColor: n ? mau : undefined }}>
-          {chieu === 'cong' ? 'Cộng' : 'Trừ'} {n || ''} sticker
-        </Button>]}>
-      {/* nút đang chọn tô cả nền theo chiều (xanh cộng / đỏ trừ), chữ trắng: đọc rõ, không lẫn với màu hồng của app */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }} role="radiogroup" aria-label="Cộng hay trừ">
-        {(['tru', 'cong'] as const).map((c) => {
-          const chon = chieu === c, mauC = c === 'cong' ? MAU.tot : MAU.do
-          return <Button key={c} role="radio" aria-checked={chon} size="large" block icon={c === 'cong' ? <PlusOutlined /> : <MinusOutlined />}
-            onClick={() => doiChieu(c)} style={{ height: 48, fontWeight: 700, ...(chon ? { background: mauC, borderColor: mauC, color: '#fff' } : { color: mauC }) }}>
-            {c === 'cong' ? 'Cộng' : 'Trừ'}</Button>
-        })}
+    <Modal open onCancel={() => dong(false)} destroyOnHidden width={400}
+      title={<div><div>{hs.ho_ten}</div><div style={{ fontWeight: 400, fontSize: 14, color: MAU.chuPhu }}>Đang có {tong} sticker</div></div>}
+      footer={<Button block size="large" type="primary" loading={dangLuu} disabled={!n} onClick={() => luu()} style={{ height: 48, fontWeight: 600 }}>
+        {n ? `${chieu === 'cong' ? 'Cộng' : 'Trừ'} ${n} sticker` : 'Nhập số sticker'}</Button>}>
+      <Segmented block size="large" value={chieu} onChange={(v) => doiChieu(v as 'cong' | 'tru')}
+        options={[{ value: 'tru', label: 'Trừ' }, { value: 'cong', label: 'Cộng' }]} />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, margin: '24px 0 4px' }}>
+        <Button shape="circle" size="large" aria-label="Bớt 1" icon={<MinusOutlined />} disabled={n <= 1} onClick={() => setSoLuong(Math.max(1, n - 1))} />
+        <InputNumber<number> aria-label="Số sticker" autoFocus variant="borderless" min={1} precision={0} value={soLuong} onChange={setSoLuong}
+          inputMode="numeric" placeholder="0" controls={false} style={{ width: 120 }} onPressEnter={() => luu()}
+          styles={{ input: { textAlign: 'center', fontSize: 44, fontWeight: 700, lineHeight: 1.1, padding: 0 } }} />
+        <Button shape="circle" size="large" aria-label="Thêm 1" icon={<PlusOutlined />} onClick={() => setSoLuong(n + 1)} />
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-        <Button style={to} aria-label="Bớt 1" icon={<MinusOutlined />} disabled={n <= 1} onClick={() => setSoLuong(Math.max(1, n - 1))} />
-        <InputNumber<number> aria-label="Số sticker" autoFocus min={1} precision={0} value={soLuong} onChange={setSoLuong} inputMode="numeric"
-          placeholder="Số" controls={false} style={{ width: 100 }} styles={{ input: { textAlign: 'center', fontSize: 24, fontWeight: 700 } }}
-          size="large" onPressEnter={() => luu()} />
-        <Button style={to} aria-label="Thêm 1" icon={<PlusOutlined />} onClick={() => setSoLuong(n + 1)} />
+      {/* tổng được âm (cô cho em "nợ" sticker): chỉ báo, không chặn */}
+      <div style={{ textAlign: 'center', color: MAU.chuPhu, minHeight: 22 }} aria-live="polite">
+        {n > 0 && <>Thành <b style={{ color: moi < 0 ? MAU.do : MAU.chu }}>{moi}</b> sticker{moi < 0 && <span style={{ color: MAU.do }}> (thiếu {-moi})</span>}</>}
       </div>
-      {/* tổng được âm (cô cho em "nợ" sticker): chỉ cảnh báo, không chặn */}
-      <div style={{ textAlign: 'center', marginTop: 12, fontSize: 20 }} aria-live="polite">
-        ⭐ {tong} → <b style={{ color: mau }}>{tong + so}</b>
-        {chieu === 'tru' && n > tong && <div style={{ color: MAU.do, fontSize: 14 }}>Em chỉ còn {tong} sticker</div>}
+      <div style={{ marginTop: 20 }}>
+        <label htmlFor="ly-do-sticker" style={{ display: 'block', marginBottom: 6, color: MAU.chuPhu, fontSize: 13 }}>
+          Lý do{chieu === 'cong' && ' (không bắt buộc)'}</label>
+        <Input id="ly-do-sticker" aria-label="Lý do" variant="filled" size="large" value={lyDo}
+          onChange={(e) => { setLyDo(e.target.value); setBaoLoi(false) }} status={baoLoi && thieuLyDo ? 'error' : undefined} />
+        {chieu === 'tru' && lyDo !== DOI_QUA && (
+          <Button type="link" size="small" style={{ padding: 0, marginTop: 4 }} onClick={() => { setLyDo(DOI_QUA); setBaoLoi(false) }}>Dùng "{DOI_QUA}"</Button>)}
+        {baoLoi && thieuLyDo && <div style={{ color: MAU.do, marginTop: 4, fontSize: 13 }}>Trừ sticker phải ghi lý do</div>}
       </div>
-      <div style={{ marginTop: 16, marginBottom: 6 }}>Lý do{chieu === 'tru' && <span style={{ color: MAU.do }}> (bắt buộc khi trừ)</span>}</div>
-      <Space.Compact block>
-        <Input aria-label="Lý do" value={lyDo} onChange={(e) => { setLyDo(e.target.value); setBaoLoi(false) }}
-          status={baoLoi && thieuLyDo ? 'error' : undefined} size="large" placeholder={chieu === 'cong' ? 'Không bắt buộc' : ''} />
-        {chieu === 'tru' && lyDo !== DOI_QUA && <Button size="large" onClick={() => { setLyDo(DOI_QUA); setBaoLoi(false) }}>{DOI_QUA}</Button>}
-      </Space.Compact>
-      {baoLoi && thieuLyDo && <div style={{ color: MAU.do, marginTop: 4 }}>Trừ sticker phải ghi lý do</div>}
     </Modal>
   )
 }

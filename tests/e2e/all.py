@@ -324,12 +324,13 @@ with sync_playwright() as pw:
 
         def ghi(so, ly_do):
             chip.click()
-            m = p.locator(".ant-modal", has_text="Sticker: TEST Nguyễn Bảo An")
+            m = p.locator(".ant-modal", has_text="Đang có")
+            expect(m).to_contain_text("TEST Nguyễn Bảo An")
             # hộp mở sẵn Trừ + "Đổi quà", con trỏ ở ô số
-            expect(m.get_by_role("radio", name="Trừ")).to_have_attribute("aria-checked", "true")
+            expect(m.get_by_role("radio", name="Trừ")).to_be_checked()
             expect(m.get_by_label("Lý do")).to_have_value("Đổi quà")
             if so > 0:
-                m.get_by_role("radio", name="Cộng").click()
+                m.locator(".ant-segmented-item", has_text="Cộng").click()
                 expect(m.get_by_label("Lý do")).to_have_value("")
                 m.get_by_label("Số sticker").fill(str(so))
             else:
@@ -339,7 +340,7 @@ with sync_playwright() as pw:
                 m.get_by_label("Lý do").fill("")
                 luu.click()
                 expect(m.get_by_text("Trừ sticker phải ghi lý do")).to_be_visible()
-                m.get_by_role("button", name=ly_do).click()
+                m.get_by_role("button", name=f'Dùng "{ly_do}"').click()
             else:
                 m.get_by_label("Lý do").fill(ly_do)
             luu.click()
