@@ -77,5 +77,7 @@ export const useCheDo = () => useContext(CheDoCtx)
 export const O_TIEN = {
   min: 0, step: 50000, precision: 0, style: { width: '100%' },
   formatter: (s?: number | string) => `${s ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.'),
-  parser: (s?: string) => Number(s?.replace(/\./g, '') || 0),
+  // xoá trắng ô phải ra trống (null), không ra 0: "Đơn giá riêng" trống = theo lớp, còn 0 = miễn phí
+  // antd chấp nhận chuỗi (chuỗi rỗng → null) dù kiểu khai là number
+  parser: (s?: string) => (s?.replace(/\./g, '') ?? '') as unknown as number,
 }

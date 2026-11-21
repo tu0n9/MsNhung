@@ -91,6 +91,9 @@ Vòng 3 (2026-11-15):
   hoàn thì ghi khoản chi "Hoàn học phí" gắn với học sinh.
 - **Vào học giữa chừng:** gói đầu tính từ buổi đầu vào học; phải thu tháng đầu = buổi dự kiến còn lại × đơn giá.
 - **Đổi đơn giá:** giá chốt lúc đóng gói; giá mới áp dụng từ gói kế tiếp.
+- **Đơn giá trống khác 0** (chốt 2026-11-21): ô Đơn giá riêng để trống = theo giá lớp; nhập 0 = miễn phí, vẫn cho lưu
+  nhưng hiện nhắc "để trống để theo giá lớp". Ô Đơn giá/buổi lúc Thu tiền cũng vậy: trống = giá mặc định, 0 = gói 0đ.
+  Xoá trắng mọi ô tiền ra trống, không tự thành 0.
 - **Ảnh minh chứng:** giáo viên hoặc trợ giảng chụp.
 
 Vòng 4 (2026-11-15):

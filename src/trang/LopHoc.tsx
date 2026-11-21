@@ -183,7 +183,13 @@ export default function LopHoc() {
           <Form.Item name="ten_phu_huynh" label="Tên phụ huynh"><Input /></Form.Item>
           <Form.Item name="sdt_phu_huynh" label="SĐT phụ huynh (tạo tài khoản phụ huynh, mật khẩu đầu = SĐT)"><Input inputMode="tel" /></Form.Item>
           <Form.Item name="ngay_vao_d" label="Ngày vào học" rules={[{ required: true }]}><DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} /></Form.Item>
-          <Form.Item name="don_gia_rieng" label="Đơn giá riêng (để trống = theo lớp)"><InputNumber<number> {...O_TIEN} step={10000} /></Form.Item>
+          <Form.Item noStyle shouldUpdate={(a, b) => a.lop_id !== b.lop_id || a.don_gia_rieng !== b.don_gia_rieng}>{({ getFieldValue }) => {
+            const giaLop = lops.find((l) => l.id === getFieldValue('lop_id'))?.don_gia
+            return <Form.Item name="don_gia_rieng" label="Đơn giá riêng (để trống = theo lớp)"
+              extra={getFieldValue('don_gia_rieng') === 0 && <span style={{ color: MAU.do }}>0 = em học miễn phí. Muốn theo giá lớp thì để trống ô này.</span>}>
+              <InputNumber<number> {...O_TIEN} step={10000} placeholder={giaLop != null ? `Theo lớp: ${vnd(giaLop)}` : 'Theo lớp'} />
+            </Form.Item>
+          }}</Form.Item>
           <Form.Item name="sticker_dau_ky" label="Sticker đã có từ trước (sổ giấy)"><InputNumber<number> min={0} precision={0} style={{ width: '100%' }} /></Form.Item>
           <Form.Item name="ghi_chu" label="Ghi chú"><Input.TextArea rows={2} /></Form.Item>
           <Button type="primary" htmlType="submit" block loading={dangLuuHs}>Lưu</Button>

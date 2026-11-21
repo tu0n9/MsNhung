@@ -304,7 +304,8 @@ function ThuTien({ hs, lop, goi, phieu, buoiDb, daHoan, dong }: {
         ) : <>
           <Form.Item name="so_thang" label="Số tháng"><Radio.Group optionType="button" options={[1, 2, 3].map((n) => ({ value: n, label: `${n} tháng` }))} /></Form.Item>
           <Form.Item name="thang" label="Từ tháng"><DatePicker picker="month" format="MM/YYYY" allowClear={false} /></Form.Item>
-          <Form.Item name="don_gia" label={`Đơn giá/buổi (mặc định ${vnd(hs.don_gia_rieng ?? lop.don_gia)})`}><InputNumber {...tien} placeholder={`${donGia}`} /></Form.Item>
+          <Form.Item name="don_gia" label={`Đơn giá/buổi (mặc định ${vnd(hs.don_gia_rieng ?? lop.don_gia)})`}
+            extra={v.don_gia === 0 && <span style={{ color: MAU.do }}>0 = gói này 0đ. Để trống để dùng giá mặc định.</span>}><InputNumber {...tien} placeholder={`${donGia}`} /></Form.Item>
           <Form.Item name="tien_du_tru" label={`Trừ tiền dư (còn lại ${vnd(duCon)})`}
             extra={!duCon && 'Chưa có tiền dư: tiền dư chỉ sinh từ buổi lớp nghỉ của gói đã kết thúc. Tiền dư ngoài app (sổ cũ) nhập ở ô Điều chỉnh bằng số âm.'}>
             <InputNumber {...tien} max={truToiDa} disabled={!duCon} />

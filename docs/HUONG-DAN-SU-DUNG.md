@@ -42,7 +42,8 @@ Tab **Lớp** → **Thêm lớp**: tên lớp, đơn giá một buổi, và lị
 khác lớp), sticker đã có từ trước (sổ giấy).
 
 - **Ngày vào học** quan trọng: buổi trước ngày này không tính tiền, không hiện trong điểm danh của em.
-- **Đơn giá riêng** để trống thì em học theo giá của lớp.
+- **Đơn giá riêng** để trống thì em học theo giá của lớp. Nhập **0** là em học miễn phí (app nhắc dưới ô); muốn
+  về giá lớp thì xoá trắng ô, đừng nhập 0.
 - Em nghỉ hẳn: bấm **Ngừng**. Em ẩn khỏi điểm danh nhưng vẫn giữ lịch sử và công nợ. Học lại thì bấm **Học lại**.
 - **Xoá hẳn** chỉ xoá được em nhập nhầm, chưa có dữ liệu gì.
 
@@ -223,7 +224,8 @@ Thanh Trúc vào học ngày 18/11/2026 (ngày vào học nhập ở hồ sơ h�
 ### 5.10 Đơn giá riêng, đổi đơn giá
 
 - Em được giá riêng 100.000 đ/buổi (ghi ở hồ sơ học sinh): gói 1 tháng 11 = 13 × 100.000 = **1.300.000 đ**.
-- Chỉ áp giá khác cho **một gói**: sửa ô Đơn giá/buổi lúc Thu tiền.
+- Bỏ giá riêng, về giá lớp: mở Sửa học sinh, **xoá trắng** ô Đơn giá riêng rồi Lưu.
+- Chỉ áp giá khác cho **một gói**: sửa ô Đơn giá/buổi lúc Thu tiền (để trống = giá mặc định, 0 = gói 0đ).
 - Lớp tăng giá từ tháng 1: sửa đơn giá lớp. Gói đã đóng giữ giá cũ, gói đóng sau đó dùng giá mới.
 
 ### 5.11 Điều chỉnh (giảm giá, cộng thêm)
