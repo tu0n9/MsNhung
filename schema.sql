@@ -119,6 +119,21 @@ $$;
 ALTER FUNCTION "public"."email_dang_nhap"("dinh_danh" "text") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."ghi_dang_nhap"() RETURNS "void"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+begin
+  if auth.uid() is null then raise exception 'Chưa đăng nhập'; end if;
+  insert into nhat_ky (nguoi, ten_nguoi, bang, hanh_dong, doi_tuong)
+  select id, ho_ten, 'tai_khoan', 'dang_nhap', ho_ten from tai_khoan where id = auth.uid();
+  delete from nhat_ky where luc < now() - interval '6 months';
+end $$;
+
+
+ALTER FUNCTION "public"."ghi_dang_nhap"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."gui_danh_gia"("p_ma" "text", "p_lop" "uuid", "p_hoc_sinh" "uuid", "p_khoa_hoc" "text", "p_kho_khan" "text", "p_tro_giang" "jsonb") RETURNS "void"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -349,6 +364,21 @@ end $$;
 ALTER FUNCTION "public"."thang_cua_ma"("p_ma" "text") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."trg_chan_buoi_nghi"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+begin
+  if exists (select 1 from buoi_hoc where id = new.buoi_id and lop_nghi) then
+    raise exception 'Buổi này lớp nghỉ, không điểm danh được. Bỏ "Lớp nghỉ" trước.';
+  end if;
+  return new;
+end $$;
+
+
+ALTER FUNCTION "public"."trg_chan_buoi_nghi"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."trg_gia_tro_giang"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -396,6 +426,20 @@ end $$;
 ALTER FUNCTION "public"."trg_khoa_so"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."trg_lop_nghi_xoa"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+begin
+  delete from diem_danh where buoi_id = new.id;
+  delete from tro_giang_buoi where buoi_id = new.id;
+  return null;
+end $$;
+
+
+ALTER FUNCTION "public"."trg_lop_nghi_xoa"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."trg_nguoi_ghi_sticker"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -408,6 +452,52 @@ end $$;
 
 
 ALTER FUNCTION "public"."trg_nguoi_ghi_sticker"() OWNER TO "postgres";
+
+
+CREATE OR REPLACE FUNCTION "public"."trg_nhat_ky"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+declare
+  cu jsonb := case when tg_op <> 'INSERT' then to_jsonb(old) end;
+  moi jsonb := case when tg_op <> 'DELETE' then to_jsonb(new) end;
+  r jsonb := coalesce(moi, cu);
+  doi jsonb := r;
+  hd text := case tg_op when 'INSERT' then 'them' when 'UPDATE' then 'sua' else 'xoa' end;
+begin
+  -- buổi theo lịch do sinh_buoi_thang tự sinh mỗi tháng, không phải thao tác của ai
+  if tg_table_name = 'buoi_hoc' and tg_op = 'INSERT' and r->>'loai' = 'lich' then return null; end if;
+  if tg_op = 'UPDATE' then
+    select jsonb_object_agg(k, jsonb_build_array(cu->k, moi->k)) into doi
+    from jsonb_object_keys(moi) k where cu->k is distinct from moi->k;
+    if doi is null then return null; end if;  -- update không đổi gì
+  end if;
+  if tg_table_name = 'nhat_ky_chot_so' then
+    hd := r->>'hanh_dong';
+    doi := jsonb_build_object('ly_do', r->'ly_do');
+  end if;
+  insert into nhat_ky (nguoi, ten_nguoi, bang, hanh_dong, doi_tuong, thay_doi)
+  values (auth.uid(), (select ho_ten from tai_khoan where id = auth.uid()), tg_table_name, hd,
+    case tg_table_name
+      when 'hoc_sinh' then r->>'ho_ten'
+      when 'lop' then r->>'ten'
+      when 'tai_khoan' then r->>'ho_ten'
+      when 'chi_phi' then r->>'danh_muc'
+      when 'sticker_cong_tru' then (select ho_ten from hoc_sinh where id = (r->>'hoc_sinh_id')::uuid)
+      when 'goi_hoc' then (select ho_ten from hoc_sinh where id = (r->>'hoc_sinh_id')::uuid)
+      when 'phieu_thu' then (select h.ho_ten from goi_hoc g join hoc_sinh h on h.id = g.hoc_sinh_id where g.id = (r->>'goi_id')::uuid)
+      when 'buoi_hoc' then (select ten from lop where id = (r->>'lop_id')::uuid) || ' · ' || to_char((r->>'ngay')::date, 'DD/MM/YYYY')
+      when 'tro_giang_buoi' then (select concat_ws(' · ', k.ho_ten, l.ten, to_char(b.ngay, 'DD/MM/YYYY'))
+        from buoi_hoc b join lop l on l.id = b.lop_id left join tai_khoan k on k.id = (r->>'tro_giang_id')::uuid
+        where b.id = (r->>'buoi_id')::uuid)
+      when 'nhat_ky_chot_so' then 'Tháng ' || to_char((r->>'thang')::date, 'MM/YYYY')
+    end,
+    doi);
+  return null;
+end $$;
+
+
+ALTER FUNCTION "public"."trg_nhat_ky"() OWNER TO "postgres";
 
 
 CREATE OR REPLACE FUNCTION "public"."vai_tro"() RETURNS "text"
@@ -610,6 +700,22 @@ CREATE TABLE IF NOT EXISTS "public"."lop" (
 ALTER TABLE "public"."lop" OWNER TO "postgres";
 
 
+CREATE TABLE IF NOT EXISTS "public"."nhat_ky" (
+    "id" bigint NOT NULL,
+    "luc" timestamp with time zone DEFAULT "now"() NOT NULL,
+    "nguoi" "uuid",
+    "ten_nguoi" "text",
+    "bang" "text" NOT NULL,
+    "hanh_dong" "text" NOT NULL,
+    "doi_tuong" "text",
+    "thay_doi" "jsonb",
+    CONSTRAINT "nhat_ky_hanh_dong_check" CHECK (("hanh_dong" = ANY (ARRAY['them'::"text", 'sua'::"text", 'xoa'::"text", 'dang_nhap'::"text", 'chot'::"text", 'mo_khoa'::"text"])))
+);
+
+
+ALTER TABLE "public"."nhat_ky" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."nhat_ky_chot_so" (
     "id" bigint NOT NULL,
     "thang" "date" NOT NULL,
@@ -626,6 +732,17 @@ ALTER TABLE "public"."nhat_ky_chot_so" OWNER TO "postgres";
 
 ALTER TABLE "public"."nhat_ky_chot_so" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (
     SEQUENCE NAME "public"."nhat_ky_chot_so_id_seq"
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+
+ALTER TABLE "public"."nhat_ky" ALTER COLUMN "id" ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME "public"."nhat_ky_id_seq"
     START WITH 1
     INCREMENT BY 1
     NO MINVALUE
@@ -793,6 +910,11 @@ ALTER TABLE ONLY "public"."nhat_ky_chot_so"
 
 
 
+ALTER TABLE ONLY "public"."nhat_ky"
+    ADD CONSTRAINT "nhat_ky_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."phieu_thu"
     ADD CONSTRAINT "phieu_thu_pkey" PRIMARY KEY ("id");
 
@@ -845,7 +967,19 @@ CREATE INDEX "diem_danh_hoc_sinh_id_idx" ON "public"."diem_danh" USING "btree" (
 
 
 
+CREATE INDEX "nhat_ky_luc_idx" ON "public"."nhat_ky" USING "btree" ("luc" DESC);
+
+
+
 CREATE INDEX "sticker_cong_tru_hoc_sinh_id_idx" ON "public"."sticker_cong_tru" USING "btree" ("hoc_sinh_id");
+
+
+
+CREATE OR REPLACE TRIGGER "chan_buoi_nghi" BEFORE INSERT OR UPDATE ON "public"."diem_danh" FOR EACH ROW EXECUTE FUNCTION "public"."trg_chan_buoi_nghi"();
+
+
+
+CREATE OR REPLACE TRIGGER "chan_buoi_nghi" BEFORE INSERT OR UPDATE ON "public"."tro_giang_buoi" FOR EACH ROW EXECUTE FUNCTION "public"."trg_chan_buoi_nghi"();
 
 
 
@@ -889,7 +1023,51 @@ CREATE OR REPLACE TRIGGER "khoa_so" BEFORE INSERT OR DELETE OR UPDATE ON "public
 
 
 
+CREATE OR REPLACE TRIGGER "lop_nghi_xoa" AFTER UPDATE OF "lop_nghi" ON "public"."buoi_hoc" FOR EACH ROW WHEN (("new"."lop_nghi" AND (NOT "old"."lop_nghi"))) EXECUTE FUNCTION "public"."trg_lop_nghi_xoa"();
+
+
+
 CREATE OR REPLACE TRIGGER "nguoi_ghi" BEFORE INSERT ON "public"."sticker_cong_tru" FOR EACH ROW EXECUTE FUNCTION "public"."trg_nguoi_ghi_sticker"();
+
+
+
+CREATE OR REPLACE TRIGGER "nhat_ky" AFTER INSERT OR DELETE OR UPDATE ON "public"."buoi_hoc" FOR EACH ROW EXECUTE FUNCTION "public"."trg_nhat_ky"();
+
+
+
+CREATE OR REPLACE TRIGGER "nhat_ky" AFTER INSERT OR DELETE OR UPDATE ON "public"."chi_phi" FOR EACH ROW EXECUTE FUNCTION "public"."trg_nhat_ky"();
+
+
+
+CREATE OR REPLACE TRIGGER "nhat_ky" AFTER INSERT OR DELETE OR UPDATE ON "public"."goi_hoc" FOR EACH ROW EXECUTE FUNCTION "public"."trg_nhat_ky"();
+
+
+
+CREATE OR REPLACE TRIGGER "nhat_ky" AFTER INSERT OR DELETE OR UPDATE ON "public"."hoc_sinh" FOR EACH ROW EXECUTE FUNCTION "public"."trg_nhat_ky"();
+
+
+
+CREATE OR REPLACE TRIGGER "nhat_ky" AFTER INSERT OR DELETE OR UPDATE ON "public"."lop" FOR EACH ROW EXECUTE FUNCTION "public"."trg_nhat_ky"();
+
+
+
+CREATE OR REPLACE TRIGGER "nhat_ky" AFTER INSERT ON "public"."nhat_ky_chot_so" FOR EACH ROW EXECUTE FUNCTION "public"."trg_nhat_ky"();
+
+
+
+CREATE OR REPLACE TRIGGER "nhat_ky" AFTER INSERT OR DELETE OR UPDATE ON "public"."phieu_thu" FOR EACH ROW EXECUTE FUNCTION "public"."trg_nhat_ky"();
+
+
+
+CREATE OR REPLACE TRIGGER "nhat_ky" AFTER INSERT OR DELETE OR UPDATE ON "public"."sticker_cong_tru" FOR EACH ROW EXECUTE FUNCTION "public"."trg_nhat_ky"();
+
+
+
+CREATE OR REPLACE TRIGGER "nhat_ky" AFTER INSERT OR DELETE OR UPDATE ON "public"."tai_khoan" FOR EACH ROW EXECUTE FUNCTION "public"."trg_nhat_ky"();
+
+
+
+CREATE OR REPLACE TRIGGER "nhat_ky" AFTER INSERT OR DELETE OR UPDATE ON "public"."tro_giang_buoi" FOR EACH ROW EXECUTE FUNCTION "public"."trg_nhat_ky"();
 
 
 
@@ -1043,6 +1221,10 @@ CREATE POLICY "doc" ON "public"."lop" FOR SELECT USING (("public"."la_nhan_vien"
 
 
 
+CREATE POLICY "doc" ON "public"."nhat_ky" FOR SELECT USING ("public"."la_quan_ly"());
+
+
+
 CREATE POLICY "doc" ON "public"."nhat_ky_chot_so" FOR SELECT USING ("public"."la_quan_ly"());
 
 
@@ -1101,6 +1283,9 @@ ALTER TABLE "public"."link_danh_gia" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."lop" ENABLE ROW LEVEL SECURITY;
+
+
+ALTER TABLE "public"."nhat_ky" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."nhat_ky_chot_so" ENABLE ROW LEVEL SECURITY;
@@ -1359,6 +1544,12 @@ GRANT ALL ON FUNCTION "public"."email_dang_nhap"("dinh_danh" "text") TO "service
 
 
 
+REVOKE ALL ON FUNCTION "public"."ghi_dang_nhap"() FROM PUBLIC;
+GRANT ALL ON FUNCTION "public"."ghi_dang_nhap"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."ghi_dang_nhap"() TO "service_role";
+
+
+
 REVOKE ALL ON FUNCTION "public"."gui_danh_gia"("p_ma" "text", "p_lop" "uuid", "p_hoc_sinh" "uuid", "p_khoa_hoc" "text", "p_kho_khan" "text", "p_tro_giang" "jsonb") FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."gui_danh_gia"("p_ma" "text", "p_lop" "uuid", "p_hoc_sinh" "uuid", "p_khoa_hoc" "text", "p_kho_khan" "text", "p_tro_giang" "jsonb") TO "anon";
 GRANT ALL ON FUNCTION "public"."gui_danh_gia"("p_ma" "text", "p_lop" "uuid", "p_hoc_sinh" "uuid", "p_khoa_hoc" "text", "p_kho_khan" "text", "p_tro_giang" "jsonb") TO "authenticated";
@@ -1423,6 +1614,10 @@ GRANT ALL ON FUNCTION "public"."thang_cua_ma"("p_ma" "text") TO "service_role";
 
 
 
+REVOKE ALL ON FUNCTION "public"."trg_chan_buoi_nghi"() FROM PUBLIC;
+
+
+
 REVOKE ALL ON FUNCTION "public"."trg_gia_tro_giang"() FROM PUBLIC;
 GRANT ALL ON FUNCTION "public"."trg_gia_tro_giang"() TO "service_role";
 
@@ -1433,7 +1628,15 @@ GRANT ALL ON FUNCTION "public"."trg_khoa_so"() TO "service_role";
 
 
 
+REVOKE ALL ON FUNCTION "public"."trg_lop_nghi_xoa"() FROM PUBLIC;
+
+
+
 REVOKE ALL ON FUNCTION "public"."trg_nguoi_ghi_sticker"() FROM PUBLIC;
+
+
+
+REVOKE ALL ON FUNCTION "public"."trg_nhat_ky"() FROM PUBLIC;
 
 
 
@@ -1521,6 +1724,12 @@ GRANT ALL ON TABLE "public"."link_danh_gia" TO "service_role";
 GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."lop" TO "anon";
 GRANT ALL ON TABLE "public"."lop" TO "authenticated";
 GRANT ALL ON TABLE "public"."lop" TO "service_role";
+
+
+
+GRANT REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."nhat_ky" TO "anon";
+GRANT SELECT,REFERENCES,TRIGGER,TRUNCATE,MAINTAIN ON TABLE "public"."nhat_ky" TO "authenticated";
+GRANT ALL ON TABLE "public"."nhat_ky" TO "service_role";
 
 
 
