@@ -10,6 +10,8 @@ import { cong2Gio, moTaLich, thieuGio, type GioThu } from '../gio-hoc'
 import { MAU, O_TIEN } from '../giao-dien'
 import HocSinhChiTiet from './HocSinhChiTiet'
 
+const khongDau = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase()
+
 export default function LopHoc() {
   const { message, modal } = App.useApp()
   const toi = useToi()
@@ -22,6 +24,9 @@ export default function LopHoc() {
   const [suaHs, setSuaHs] = useState<Partial<HocSinh> | null>(null)
   const [xem, setXem] = useState<HocSinh | null>(null)
   const [hienNgung, setHienNgung] = useState(false)
+  // thu gọn mọi lớp khi mở trang (14 lớp mở cùng lúc rối mắt); tìm tên thì tự mở các lớp có em đó
+  const [mo, setMo] = useState<string[]>([])
+  const [tim, setTim] = useState('')
   const [tong, setTong] = useState<Record<string, number>>({})
   const [hsSticker, setHsSticker] = useState<HocSinh | null>(null)
 
@@ -105,6 +110,10 @@ export default function LopHoc() {
 
   if (xem) return <HocSinhChiTiet hs={xem} lop={lops.find((l) => l.id === xem.lop_id)!} quayLai={() => { setXem(null); tai() }} />
 
+  // tìm không dấu: gõ "hai long" vẫn ra "Vũ Hải Long"
+  const timKhong = khongDau(tim.trim())
+  const lopTimThay = lops.filter((l) => hs.some((h) => h.lop_id === l.id && (hienNgung || h.trang_thai === 'dang_hoc') && khongDau(h.ho_ten).includes(timKhong)))
+
   return (
     <Space direction="vertical" style={{ width: '100%' }}>
       {ql && <Space wrap>
@@ -113,8 +122,11 @@ export default function LopHoc() {
         <Button onClick={() => nav('/import')}>Import Excel</Button>
         <Checkbox checked={hienNgung} onChange={(e) => setHienNgung(e.target.checked)}>Hiện học sinh đã ngừng học</Checkbox>
       </Space>}
-      <Collapse defaultActiveKey={lops.map((l) => l.id)} key={lops.length} items={lops.map((l) => {
-        const ds = hs.filter((h) => h.lop_id === l.id && (hienNgung || h.trang_thai === 'dang_hoc'))
+      <Input.Search allowClear size="large" placeholder="Tìm tên học sinh" aria-label="Tìm tên học sinh" value={tim}
+        onChange={(e) => setTim(e.target.value)} />
+      <Collapse activeKey={timKhong ? lopTimThay.map((l) => l.id) : mo} onChange={(k) => { if (timKhong) return; setMo(k as string[]) }}
+        items={(timKhong ? lopTimThay : lops).map((l) => {
+        const ds = hs.filter((h) => h.lop_id === l.id && (hienNgung || h.trang_thai === 'dang_hoc') && (!timKhong || khongDau(h.ho_ten).includes(timKhong)))
         return {
           key: l.id,
           label: <Space wrap><b>{l.ten}</b>{l.lich.length > 0 && <span>{moTaLich(l)}</span>}{thieuGio(l) && <Tag color="red">Chưa có giờ</Tag>}

@@ -84,8 +84,15 @@ export default function DanhGia() {
   // em chưa gửi: tính trên học sinh đang học của lớp đang hoạt động
   const daGui = new Set(phieus.map((p) => p.hoc_sinh_id))
   const lopXet = lops.filter((l) => !lopId || l.id === lopId)
-  const chuaGui = hss.filter((h) => lopXet.some((l) => l.id === h.lop_id) && !daGui.has(h.id))
-  const tongEm = hss.filter((h) => lopXet.some((l) => l.id === h.lop_id)).length
+  // theo lớp, lớp còn nhiều em chưa gửi lên đầu. Một em học nhiều lớp có hồ sơ riêng ở mỗi lớp nên hiện ở từng lớp đó.
+  const nhomLop = lopXet.map((l) => {
+    const ds = hss.filter((h) => h.lop_id === l.id)
+    return { l, tong: ds.length, chua: ds.filter((h) => !daGui.has(h.id)) }
+  }).filter((x) => x.tong > 0).sort((a, b) => b.chua.length - a.chua.length || a.l.ten.localeCompare(b.l.ten))
+  const tongEm = nhomLop.reduce((s, x) => s + x.tong, 0)
+  // mỗi em có nhóm Zalo riêng với phụ huynh (không có nhóm chung của lớp): chép sẵn lời nhắc rồi mở nhóm của em
+  const loiNhac = (h: HocSinh) => `Nhắc con ${h.ho_ten} gửi phiếu đánh giá tháng ${thang.slice(5)}/${thang.slice(0, 4)}`
+    + ` (hạn ${han.slice(8)}/${han.slice(5, 7)}): ${ma ? urlPhieu(ma) : ''}`
   const dsPhieu = lopId ? phieus.filter((p) => p.lop_id === lopId) : phieus
 
   return (
@@ -112,8 +119,18 @@ export default function DanhGia() {
       </Card>
 
       <Card size="small" title={`Đã gửi ${k.soPhieu} / ${tongEm} em`}>
-        {!lopId && k.theoLop.length > 0 && <div style={{ marginBottom: 8 }}>{k.theoLop.map(([l, n]) => <Tag key={l}>{l}: {n}</Tag>)}</div>}
-        {chuaGui.length > 0 && <div style={{ fontSize: 13, color: MAU.chuPhu }}>Chưa gửi: {chuaGui.map((h) => h.ho_ten).join(', ')}</div>}
+        <Collapse size="small" key={lopId ?? ''} defaultActiveKey={lopId ? [lopId] : []} items={nhomLop.map(({ l, tong, chua }) => ({
+          key: l.id, collapsible: chua.length ? undefined : 'disabled' as const,
+          label: <span data-lop-chua-gui={l.ten}><b>{l.ten}</b> · đã gửi {tong - chua.length}/{tong}{!chua.length && ' ✓'}</span>,
+          children: <Space direction="vertical" style={{ width: '100%' }}>{chua.map((h) => (
+            <div key={h.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minHeight: 40 }}>
+              <span>{h.ho_ten}</span>
+              {/* <a> mở nhóm ngay trong cú chạm (chặn popup nếu mở sau khi chờ chép xong); onClick chép lời nhắc trước */}
+              {h.link_zalo && ma && <Button size="small" href={h.link_zalo} target="_blank" rel="noreferrer"
+                onClick={() => navigator.clipboard.writeText(loiNhac(h)).then(() => message.success('Đã chép lời nhắc, dán vào nhóm Zalo'))
+                  .catch(() => message.error('Không chép được lời nhắc, hãy gõ tay'))}>Nhắc qua Zalo</Button>}
+            </div>))}</Space>,
+        }))} />
       </Card>
 
       <Card size="small" title="Trợ giảng" styles={{ body: { padding: 0 } }}>

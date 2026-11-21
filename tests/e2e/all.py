@@ -56,6 +56,10 @@ with sync_playwright() as pw:
     def nav(t):
         p.locator("nav").get_by_text(t, exact=True).click()
 
+    def tim_hs(ten="TEST"):
+        # trang Lớp thu gọn mọi lớp; gõ tên vào ô tìm thì các lớp có em đó tự mở
+        p.get_by_label("Tìm tên học sinh").fill(ten)
+
     def huong_dan(vao, so_video):
         vao()
         expect(p.locator("video")).to_have_count(so_video, timeout=10000)
@@ -106,6 +110,10 @@ with sync_playwright() as pw:
         lab(p, "Ngày vào học").fill("01/11/2026")
         p.keyboard.press("Enter")  # Enter gửi form ngay; bấm Lưu thêm lần nữa phải không tạo trùng
         p.locator(".ant-modal").get_by_role("button", name="Lưu").click()
+        expect(p.locator(".ant-modal")).to_have_count(0, timeout=20000)
+        # mới vào trang, mọi lớp đang thu gọn: không thấy em nào cho tới khi tìm
+        assert p.locator(".ant-list-item", has_text="TEST Nguyễn Bảo An").count() == 0, "lớp không thu gọn khi mở trang"
+        tim_hs("nguyen bao an")  # tìm không dấu
         expect(p.get_by_text("TEST Nguyễn Bảo An")).to_be_visible(timeout=20000)
         p.wait_for_timeout(2500)
         n = p.locator(".ant-list-item", has_text="TEST Nguyễn Bảo An").count()
@@ -199,6 +207,7 @@ with sync_playwright() as pw:
         p.wait_for_timeout(1500)
         p.get_by_role("button", name="← Quay lại").click()
         nav("Lớp")
+        tim_hs()
         p.get_by_text("TEST Nguyễn Bảo An").click()
         kiem_luoi()
         p.screenshot(path=os.path.join(OUT, "a-luoi-giao-vien.png"), full_page=True)
@@ -207,6 +216,7 @@ with sync_playwright() as pw:
 
     def b_thu_tien():
         nav("Lớp")
+        tim_hs()
         p.get_by_text("TEST Nguyễn Bảo An").click()
         p.get_by_role("button", name="Thu tiền").click()
         p.locator(".ant-modal").get_by_text("3 tháng").click()
@@ -307,6 +317,7 @@ with sync_playwright() as pw:
 
     def b_sticker():
         nav("Lớp")
+        tim_hs()
         chip = p.get_by_role("button", name="Sticker của TEST Nguyễn Bảo An")
         expect(chip).to_be_visible(timeout=15000)
         truoc = int(re.search(r"-?\d+", chip.inner_text()).group())
@@ -408,6 +419,8 @@ with sync_playwright() as pw:
             p.goto(URL + "#/danh-gia")
             expect(p.locator(".ant-table", has_text="TEST Trợ giảng Lan")).to_contain_text("4", timeout=15000)
             expect(p.get_by_text("TEST nhận xét khoá học")).to_be_visible()
+            # mục chưa gửi chia theo lớp: lớp TEST chỉ có 1 em và em đã gửi
+            expect(p.locator("[data-lop-chua-gui='TEST Lớp Starters']")).to_contain_text("đã gửi 1/1 ✓")
             p.get_by_text(re.compile(r"^Từng phiếu")).click()
             expect(p.locator(".ant-collapse", has_text="TEST Nguyễn Bảo An")).to_be_visible()
             p.screenshot(path=os.path.join(OUT, "a-danh-gia.png"), full_page=True)
@@ -455,6 +468,7 @@ with sync_playwright() as pw:
         expect(p.get_by_text("Thoát")).to_be_visible(timeout=15000)
         assert p.locator("nav").get_by_text("Học phí", exact=True).count() == 0, "trợ giảng thấy tab Học phí"
         nav("Lớp")
+        tim_hs()
         expect(p.get_by_role("button", name="Sticker của TEST Nguyễn Bảo An")).to_be_visible(timeout=15000)
         nav("Tài khoản")
         p.wait_for_timeout(2000)

@@ -346,6 +346,17 @@ Link nhóm Zalo của từng học sinh (grill 2026-11-20):
   người là "Hệ thống" vì chạy bằng service role. Buổi theo lịch do app tự sinh mỗi tháng không ghi. Dòng cũ hơn 6 tháng
   xoá kèm mỗi lần có người đăng nhập (không cần job riêng).
 
+### Trang Lớp thu gọn, danh sách chưa gửi đánh giá theo lớp (grill 2026-11-21)
+
+- **Mỗi em một nhóm Zalo riêng** (phụ huynh + giáo viên + quản lý), **không có nhóm Zalo chung của lớp**. Nhắc nhở
+  luôn làm theo từng em.
+- Trang **Lớp**: mọi lớp **thu gọn** khi mở trang. Ô **"Tìm tên học sinh"** ở đầu trang (không phân biệt dấu): gõ tên
+  thì chỉ còn các lớp có em đó và tự mở ra.
+- Trang **Đánh giá**, mục chưa gửi: chia **theo lớp**, mỗi lớp một dòng thu gọn "Tên lớp · đã gửi x/y", lớp còn nhiều em
+  chưa gửi lên đầu. Mở ra: mỗi em một dòng; em có link nhóm Zalo thì có nút **"Nhắc qua Zalo"**: chép sẵn lời nhắc (tên
+  em, tháng, hạn, link phiếu) rồi mở nhóm Zalo của em. Em chưa có link thì không hiện nút.
+- Một em học nhiều lớp có hồ sơ riêng ở mỗi lớp, nên hiện ở danh sách của từng lớp đó.
+
 ### Sửa lỗi sau review ngoài (2026-11-21)
 
 - Gõ SĐT phụ huynh trùng một tài khoản phụ huynh **đang khoá** thì **mở lại** tài khoản đó (trước đây gắn con vào tài
