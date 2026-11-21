@@ -360,6 +360,15 @@ Link nhóm Zalo của từng học sinh (grill 2026-11-20):
   (đã thử: đủ chỗ ở 360px). Bỏ nút "Đánh giá học sinh" trong trang Học phí để không có hai lối vào trùng nhau. Người
   dùng không chọn cách gom Học phí + Chi phí thành một mục.
 
+### Lớp nghỉ xoá điểm danh, hoàn tác điểm danh (grill 2026-11-21)
+
+- Bật **Lớp nghỉ** ở buổi đã điểm danh: app hỏi lại (số em, số trợ giảng), đồng ý thì **database xoá** điểm danh,
+  sticker và trợ giảng của buổi (trước đây chúng vẫn còn: trợ giảng vẫn được tính lương, học sinh vẫn có mặt). Buổi
+  đang nghỉ thì database chặn ghi điểm danh / trợ giảng mới. Tắt Lớp nghỉ thì điểm danh lại.
+- Điểm danh từng em: `[ Có mặt | – | Vắng ]`; "–" quay về chưa điểm danh, em đã có sticker trong buổi thì hỏi lại.
+- **Bỏ nút "Tất cả có mặt"** (cả nút của lớp lẫn nút cả ca): tick từng em. Em lớp khác giữ nút Gỡ, buổi bù riêng giữ
+  "Không đến". Video hướng dẫn điểm danh còn cảnh nút cũ (không quay lại).
+
 ### Sửa lỗi sau review ngoài (2026-11-21)
 
 - Gõ SĐT phụ huynh trùng một tài khoản phụ huynh **đang khoá** thì **mở lại** tài khoản đó (trước đây gắn con vào tài

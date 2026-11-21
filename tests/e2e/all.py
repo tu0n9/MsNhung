@@ -128,6 +128,12 @@ with sync_playwright() as pw:
         row.get_by_text("Có mặt", exact=True).click()
         # chỉ bấm "Có mặt" (chưa nhập sticker) đã phải lưu: lỗi cũ Segmented nuốt cú bấm ô đầu tiên
         expect(p.locator(".ant-card-head-title", has_text="Học sinh")).to_contain_text("(1/1 có mặt)", timeout=8000)
+        # bấm nhầm thì "–" quay về chưa điểm danh (chưa có sticker nên không hỏi lại)
+        row.get_by_label("Chưa điểm danh").click()
+        expect(p.locator(".ant-card-head-title", has_text="Học sinh")).to_contain_text("(0/1 có mặt)", timeout=8000)
+        expect(p.get_by_role("button", name=re.compile("^Tất cả có mặt"))).to_have_count(0)
+        row.get_by_text("Có mặt", exact=True).click()
+        expect(p.locator(".ant-card-head-title", has_text="Học sinh")).to_contain_text("(1/1 có mặt)", timeout=8000)
         row.locator(".ant-input-number input").fill("3")
         p.keyboard.press("Tab")
         p.wait_for_timeout(1500)

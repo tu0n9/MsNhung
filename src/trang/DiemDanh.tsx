@@ -94,7 +94,7 @@ const tenFile = (duong: string) => duong.split('/').pop()!
  * học sinh và "Lớp nghỉ" vẫn tách theo lớp vì học phí, tiền dư tính theo lớp.
  */
 function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[]; quayLai: () => void }) {
-  const { message } = App.useApp()
+  const { message, modal } = App.useApp()
   const [buois, setBuois] = useState(b0)
   const [tgs, setTgs] = useState<TaiKhoan[]>([])
   const [tgCo, setTgCo] = useState<string[]>([])
@@ -106,7 +106,6 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
   // null = chưa tải: thẻ học sinh chỉ dựng khi đã có, để mỗi thẻ tải đúng một lần. Tải hai lần (lần đầu với danh sách
   // rỗng) thì lần sau về muộn có thể ghi đè dấu "Học bù" vừa bấm, làm nút "Không đến" bấm không ăn.
   const [tatCaHs, setTatCaHs] = useState<HocSinh[] | null>(null)
-  const [tatCaLan, setTatCaLan] = useState(0)
   const ids = buois.map((b) => b.id)
   const dangHoc = buois.filter((b) => !b.lop_nghi)
 
@@ -126,9 +125,30 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
   }
   useEffect(() => { tai().catch((e) => message.error(e.message)) }, [])
 
+  const ghiNghi = async (b: BuoiHoc, v: boolean) => {
+    try {
+      await q(sb.from('buoi_hoc').update({ lop_nghi: v }).eq('id', b.id))
+      setBuois((ds) => ds.map((x) => (x.id === b.id ? { ...x, lop_nghi: v } : x)))
+      // database đã xoá trợ giảng của buổi vừa nghỉ: tải lại để ô trợ giảng khớp
+      if (v) tai().catch((e) => message.error(e.message))
+    } catch (e) { message.error((e as Error).message) }
+  }
+  // Đánh lớp nghỉ xoá điểm danh, sticker, trợ giảng của buổi (trigger lop_nghi_xoa): buổi đã điểm danh thì hỏi lại trước
   const doiNghi = async (b: BuoiHoc, v: boolean) => {
-    try { await q(sb.from('buoi_hoc').update({ lop_nghi: v }).eq('id', b.id)); setBuois((ds) => ds.map((x) => (x.id === b.id ? { ...x, lop_nghi: v } : x))) }
-    catch (e) { message.error((e as Error).message) }
+    if (!v) return ghiNghi(b, v)
+    try {
+      const [{ count: soEm }, { count: soTg }] = await Promise.all([
+        sb.from('diem_danh').select('hoc_sinh_id', { count: 'exact', head: true }).eq('buoi_id', b.id),
+        sb.from('tro_giang_buoi').select('tro_giang_id', { count: 'exact', head: true }).eq('buoi_id', b.id),
+      ])
+      if (!soEm && !soTg) return ghiNghi(b, v)
+      modal.confirm({
+        title: `Đánh lớp nghỉ cho ${lopCua(b).ten}?`,
+        content: `Buổi này đã điểm danh ${soEm ?? 0} em, ${soTg ?? 0} trợ giảng. Đánh lớp nghỉ sẽ xoá điểm danh, sticker và trợ giảng của buổi.`,
+        okText: 'Đánh lớp nghỉ', okButtonProps: { danger: true }, cancelText: 'Thôi',
+        onOk: () => ghiNghi(b, v),
+      })
+    } catch (e) { message.error((e as Error).message) }
   }
   const lopCua = (b: BuoiHoc) => lops.find((l) => l.id === b.lop_id)!
 
@@ -138,8 +158,6 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
         <Button onClick={quayLai}>← Quay lại</Button>
         <b>{buois.map((b) => lopCua(b).ten).join(' + ')} · {dayjs(buois[0].ngay).format('dddd DD/MM/YYYY')}</b>
         {gioBuoi(buois[0]) && <b style={{ fontFamily: CHU_SO, fontSize: 22, color: MAU.chinh }}>{gioBuoi(buois[0])}</b>}
-        {/* nhiều lớp: nút chung cho cả ca; một lớp thì nút nằm ở thẻ học sinh như trước */}
-        {buois.length > 1 && dangHoc.some((b) => b.loai !== 'bu') && <Button onClick={() => setTatCaLan(tatCaLan + 1)}>Tất cả có mặt (cả ca)</Button>}
       </Space>
 
       {dangHoc.length > 0 && <Card size="small" title="Trợ giảng có mặt">
@@ -157,7 +175,8 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
         {tgs.length === 0 && <i>Chưa có tài khoản trợ giảng</i>}
       </Card>}
 
-      {tatCaHs && buois.map((b) => <DsHocSinh key={b.id} buoi={b} lop={lopCua(b)} tatCaHs={tatCaHs} tatCaLan={tatCaLan}
+      {/* key theo cả lop_nghi: bỏ nghỉ thì dựng lại thẻ, không hiện lại dấu tick cũ (đã bị xoá) còn trong state */}
+      {tatCaHs && buois.map((b) => <DsHocSinh key={`${b.id}-${b.lop_nghi}`} buoi={b} lop={lopCua(b)} tatCaHs={tatCaHs}
         nhieuLop={buois.length > 1} doiNghi={(v) => doiNghi(b, v)} />)}
 
       <Card size="small" title="Ảnh lớp (minh chứng)">
@@ -187,10 +206,10 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
   )
 }
 
-function DsHocSinh({ buoi, lop, tatCaHs, tatCaLan, nhieuLop, doiNghi }: {
-  buoi: BuoiHoc; lop: Lop; tatCaHs: HocSinh[]; tatCaLan: number; nhieuLop: boolean; doiNghi: (v: boolean) => void
+function DsHocSinh({ buoi, lop, tatCaHs, nhieuLop, doiNghi }: {
+  buoi: BuoiHoc; lop: Lop; tatCaHs: HocSinh[]; nhieuLop: boolean; doiNghi: (v: boolean) => void
 }) {
-  const { message } = App.useApp()
+  const { message, modal } = App.useApp()
   const [hs, setHs] = useState<HocSinh[]>([])
   const [dd, setDd] = useState<Record<string, DD>>({})
   // sticker đã có + các buổi KHÁC + cộng/trừ ngoài buổi; tổng hiện = số này + sticker buổi đang chấm. Không cộng dồn từng lần chấm vì
@@ -242,19 +261,25 @@ function DsHocSinh({ buoi, lop, tatCaHs, tatCaLan, nhieuLop, doiNghi }: {
     ghi(() => q(sb.from('diem_danh').delete().eq('buoi_id', buoi.id).eq('hoc_sinh_id', hsId)))
   }
 
-  const tatCaCoMat = () => Promise.all(hs.filter((h) => !ddRef.current[h.id]).map((h) =>
-    q(sb.from('diem_danh').upsert({ buoi_id: buoi.id, hoc_sinh_id: h.id, trang_thai: 'co_mat', sticker: 0 })))).then(tai)
-  // nút "Tất cả có mặt (cả ca)" ở đầu màn tăng tatCaLan
-  useEffect(() => { if (tatCaLan && !buoi.lop_nghi && !buoiBu) tatCaCoMat().catch((e) => message.error(e.message)) }, [tatCaLan])
+  // "–": bấm nhầm Có mặt / Vắng thì quay về chưa điểm danh. Xoá cả sticker của buổi, nên em đã có sticker thì hỏi lại.
+  const veChua = (h: HocSinh) => {
+    const x = ddRef.current[h.id]
+    if (!x) return
+    if (!x.sticker) return boDiemDanh(h.id)
+    modal.confirm({
+      title: `Bỏ điểm danh ${h.ho_ten}?`, content: `Sẽ xoá ${x.sticker} sticker của em ở buổi này.`,
+      okText: 'Bỏ điểm danh', cancelText: 'Thôi', onOk: () => boDiemDanh(h.id),
+    })
+  }
 
   const nghi = <span style={{ fontWeight: 'normal' }}>Lớp nghỉ <Switch size="small" checked={buoi.lop_nghi} onChange={doiNghi} /></span>
   if (buoi.lop_nghi) return <Card size="small" title={nhieuLop ? lop.ten : 'Lớp nghỉ'} extra={nghi} />
 
-  // nhiều lớp trong ca: thẻ ghi tên lớp, nút "Tất cả có mặt" dùng nút chung ở đầu màn (điện thoại không đủ chỗ cho cả hai)
+  // không có nút "Tất cả có mặt" (người dùng chốt 2026-11-21): tick từng em, tránh bấm nhầm đánh có mặt cả lớp
   const dem = `(${Object.values(dd).filter((x) => x.trang_thai !== 'vang').length}/${hs.length} ${buoiBu ? 'học bù' : 'có mặt'})`
   return (
     <Card size="small" title={nhieuLop ? `${lop.ten} ${dem}` : `Học sinh ${dem}`}
-      extra={<Space>{nghi}{!buoiBu && !nhieuLop && <Button size="small" onClick={() => tatCaCoMat().catch((e) => message.error(e.message))}>Tất cả có mặt</Button>}</Space>}>
+      extra={nghi}>
       {buoiBu && <p style={{ marginTop: 0, color: MAU.chuPhu, fontSize: 13 }}>Buổi bù riêng: em nào đến thì chọn "Học bù" (trừ 1 buổi chưa bù). Em không đến thì để "Không đến", không bị tính thêm buổi chưa bù.</p>}
       <List dataSource={hs} renderItem={(h) => {
         const x = dd[h.id]
@@ -272,10 +297,14 @@ function DsHocSinh({ buoi, lop, tatCaHs, tatCaLan, nhieuLop, doiNghi }: {
               ) : (
                 // Radio thay Segmented: Segmented chưa có giá trị thì tự hiện chọn sẵn ô đầu ("Có mặt") và bấm vào
                 // ô đó không gọi onChange, nên em chưa điểm danh bấm "Có mặt" không được lưu. '' = chưa chọn ô nào.
+                // Ô "–" ở giữa là hành động quay về chưa điểm danh, không bao giờ ở trạng thái được chọn.
+                // Em lớp khác sang học bù không có "–": đã có nút Gỡ.
                 <Radio.Group optionType="button" buttonStyle="solid" value={x?.trang_thai ?? ''}
-                  onChange={(e) => luu(h.id, { trang_thai: e.target.value as DD['trang_thai'] })}
+                  onChange={(e) => (e.target.value === 'chua' ? veChua(h) : luu(h.id, { trang_thai: e.target.value as DD['trang_thai'] }))}
                   options={laBu ? [{ value: 'hoc_bu', label: 'Học bù' }, { value: 'vang', label: 'Vắng' }]
-                    : [{ value: 'co_mat', label: 'Có mặt' }, { value: 'vang', label: 'Vắng' }]} />
+                    : [{ value: 'co_mat', label: 'Có mặt' },
+                      { value: 'chua', label: <span aria-label="Chưa điểm danh" title="Chưa điểm danh">–</span> },
+                      { value: 'vang', label: 'Vắng' }]} />
               )}
               <InputNumber addonBefore="⭐" style={{ width: 110 }} precision={0} value={x?.sticker ?? 0}
                 onChange={(v) => v !== null && luu(h.id, { sticker: v })} />

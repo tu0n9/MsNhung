@@ -202,6 +202,24 @@ mong = h0[0]["sticker_dau_ky"] + sum(x["sticker"] for x in dd0) + sum(x["so"] fo
 _, tg_p = goi("GET", "/rest/v1/tong_sticker?select=hoc_sinh_id,tong", P)
 ok(f"sticker: tong_sticker đúng ({mong}) và phụ huynh chỉ thấy con mình", tg_p == [{"hoc_sinh_id": hs_id, "tong": mong}])
 
+# --- lớp nghỉ xoá điểm danh + trợ giảng của buổi (migration lop_nghi_xoa_diem_danh) ---
+mai = (date.today() + timedelta(days=1)).isoformat()
+_, bm = SV("GET", f"/rest/v1/buoi_hoc?select=id,lop_id&ngay=eq.{mai}&lop_id=eq.{SV('GET', f'/rest/v1/hoc_sinh?select=lop_id&id=eq.{hs_id}')[1][0]['lop_id']}")
+if bm:
+    b_id = bm[0]["id"]
+    _, tlan = SV("GET", "/rest/v1/tai_khoan?select=id&ten_dang_nhap=eq.testlan")
+    goi("POST", "/rest/v1/diem_danh", A, {"buoi_id": b_id, "hoc_sinh_id": hs_id, "trang_thai": "co_mat", "sticker": 2})
+    goi("POST", "/rest/v1/tro_giang_buoi", A, {"buoi_id": b_id, "tro_giang_id": tlan[0]["id"]})
+    goi("PATCH", f"/rest/v1/buoi_hoc?id=eq.{b_id}", A, {"lop_nghi": True})
+    ok("lớp nghỉ: xoá hết điểm danh và trợ giảng của buổi",
+       SV("GET", f"/rest/v1/diem_danh?select=hoc_sinh_id&buoi_id=eq.{b_id}")[1] == [] and
+       SV("GET", f"/rest/v1/tro_giang_buoi?select=tro_giang_id&buoi_id=eq.{b_id}")[1] == [])
+    ok("lớp nghỉ: không điểm danh được vào buổi đang nghỉ",
+       goi("POST", "/rest/v1/diem_danh", T, {"buoi_id": b_id, "hoc_sinh_id": hs_id, "trang_thai": "co_mat"})[0] == 400)
+    goi("PATCH", f"/rest/v1/buoi_hoc?id=eq.{b_id}", A, {"lop_nghi": False})
+else:
+    ok(f"lớp nghỉ: không có buổi ngày {mai} để kiểm (chạy ngày cuối tháng?)", False)
+
 # --- nhật ký thao tác (migration nhat_ky) ---
 _, nk1 = goi("GET", f"/rest/v1/nhat_ky?select=ten_nguoi,doi_tuong,thay_doi&bang=eq.sticker_cong_tru&hanh_dong=eq.them&order=id.desc&limit=1", A)
 ok("nhật ký: lần trợ giảng cộng sticker có dòng, đúng người ghi và tên học sinh",
@@ -221,17 +239,20 @@ _, khoa_truoc = SV("GET", "/rest/v1/khoa_so?select=khoa_den")
 # chỉ xoá nhật ký do test ghi: lọc theo id, không theo tháng (người dùng có thể đã chốt / mở khoá thật tháng 11)
 _, nk = SV("GET", "/rest/v1/nhat_ky_chot_so?select=id&order=id.desc&limit=1")
 nk_cuoi = nk[0]["id"] if nk else 0
+# dòng điểm danh tháng 11 có thật của em TEST (không đoán theo số sticker: trúng 0 dòng thì PATCH trả 204, test báo sai)
+_, dd_t11 = SV("GET", f"/rest/v1/diem_danh?select=buoi_id,sticker,buoi_hoc!inner(ngay)&hoc_sinh_id=eq.{hs_id}&buoi_hoc.ngay=gte.2026-11-01&buoi_hoc.ngay=lt.2026-12-01&limit=1")
+dd_khoa = f"/rest/v1/diem_danh?buoi_id=eq.{dd_t11[0]['buoi_id']}&hoc_sinh_id=eq.{hs_id}" if dd_t11 else None
 try:
     ok("chốt sổ tháng 11", goi("POST", "/rest/v1/rpc/chot_so", A, {"thang": "2026-11-01"})[0] == 204)
     ok("khoá: không thêm chi phí tháng 11", goi("POST", "/rest/v1/chi_phi", A, {"ngay": "2026-11-20", "danh_muc": "x", "so_tien": 1, "ghi_chu": "TEST e2e"})[0] == 400)
-    ok("khoá: không sửa điểm danh tháng 11", goi("PATCH", f"/rest/v1/diem_danh?sticker=eq.3&hoc_sinh_id=eq.{hs_id}", A, {"sticker": 4})[0] == 400)
+    ok("khoá: không sửa điểm danh tháng 11", bool(dd_khoa) and goi("PATCH", dd_khoa, A, {"sticker": dd_t11[0]["sticker"] + 1})[0] == 400)
     ok("khoá: không xoá phiếu thu tháng 11", goi("DELETE", "/rest/v1/phieu_thu?so_tien=eq.2000000", A)[0] == 400)
     ok("khoá: không cộng sticker tháng 11", goi("POST", "/rest/v1/sticker_cong_tru", T, {"hoc_sinh_id": hs_id, "so": 1})[0] == 400)
     ok("khoá: không xoá lần cộng sticker tháng 11", goi("DELETE", f"/rest/v1/sticker_cong_tru?id=eq.{st_id}", T)[0] == 400)
     ok("khoá: trợ giảng không mở khoá được", goi("POST", "/rest/v1/rpc/mo_khoa", T, {"thang": "2026-11-01", "ly_do": "x"})[0] == 400)
     ok("mở khoá thiếu lý do bị từ chối", goi("POST", "/rest/v1/rpc/mo_khoa", A, {"thang": "2026-11-01", "ly_do": " "})[0] == 400)
     ok("mở khoá có lý do", goi("POST", "/rest/v1/rpc/mo_khoa", A, {"thang": "2026-11-01", "ly_do": "TEST"})[0] == 204)
-    ok("sau mở khoá sửa lại được", goi("PATCH", f"/rest/v1/diem_danh?sticker=eq.3&hoc_sinh_id=eq.{hs_id}", A, {"sticker": 3})[0] == 204)
+    ok("sau mở khoá sửa lại được", bool(dd_khoa) and goi("PATCH", dd_khoa, A, {"sticker": dd_t11[0]["sticker"]}, prefer="return=representation")[1] not in (None, []))
     goi("POST", "/rest/v1/rpc/chot_so", A, {"thang": "2026-11-01"})
     _, lop_st = SV("GET", "/rest/v1/lop?select=id&ten=eq.TEST%20L%E1%BB%9Bp%20Starters")
     c, _ = goi("POST", "/rest/v1/rpc/xoa_lop", A, {"p_lop": lop_st[0]["id"], "p_ten": "TEST Lớp Starters"})

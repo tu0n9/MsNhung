@@ -89,12 +89,16 @@ thao tác do app tự làm (tạo tài khoản phụ huynh, script). Không ai s
 
 Tab **Điểm danh** hiện các buổi của ngày đang chọn, xếp theo giờ. App tự tạo buổi theo lịch lớp.
 
-- Bấm một buổi → chọn **Có mặt / Vắng** cho từng em, nhập sticker, tick trợ giảng có mặt, chụp ảnh lớp.
-- **Tất cả có mặt**: đánh có mặt cho mọi em chưa điểm danh, rồi chỉ cần sửa em vắng.
+- Bấm một buổi → chọn **Có mặt / Vắng** cho từng em, nhập sticker, tick trợ giảng có mặt, chụp ảnh lớp. Không có nút
+  đánh có mặt cả lớp: tick từng em.
+- Bấm nhầm: chạm ô **–** ở giữa (giữa Có mặt và Vắng) để quay về chưa điểm danh. Em đã có sticker trong buổi thì app
+  hỏi lại vì sticker của buổi đó cũng bị xoá.
 - Em chưa điểm danh hiện nền vàng để không sót.
 - **Lớp gộp:** hai lớp học **cùng ngày, cùng giờ bắt đầu** tự hiện thành một dòng (ví dụ `Starters 1 + Movers 2`) và
   một màn chung. Trợ giảng và ảnh chọn một lần cho cả ca; học sinh vẫn chia theo lớp.
 - **Lớp nghỉ** (lễ, Tết, giáo viên nghỉ): mở buổi, bật **Lớp nghỉ**. Buổi này sinh **tiền dư** cho học sinh (mục 5.7).
+  Buổi đã điểm danh mà bật Lớp nghỉ thì app hỏi lại, đồng ý là **xoá điểm danh, sticker và trợ giảng** của buổi đó (lớp
+  nghỉ thì không ai có mặt, trợ giảng không tính lương). Tắt Lớp nghỉ thì phải điểm danh lại.
 - **Thêm buổi phụ / bù** (nút trên cùng):
   - **Buổi phụ**: dạy bù cho buổi lớp nghỉ. Mỗi buổi phụ trừ bớt một buổi tiền dư.
   - **Buổi bù riêng**: buổi riêng cho các em vắng đến học bù. Em đến thì chọn "Học bù", không đến thì để "Không đến".
