@@ -1,6 +1,6 @@
 // Xoá sạch dữ liệu như app mới (người dùng chốt 2026-11-15). Chạy: npm run lam-moi
 // Giữ mọi tài khoản đăng nhập (admin, trợ giảng, phụ huynh...). Xoá: lớp, học sinh, buổi, điểm danh, trợ giảng buổi,
-// ảnh (cả file trong Storage, cả avatar), gói học, phiếu thu, chi phí, cộng/trừ sticker, nhật ký chốt sổ; mở khoá sổ.
+// ảnh (cả file trong Storage, cả avatar), gói học, phiếu thu, chi phí, cộng/trừ sticker, nhật ký chốt sổ, nhật ký thao tác; mở khoá sổ.
 // Trước khi xoá tải bản sao lưu JSON về sao-luu-may/ (không có file ảnh). Bản sao lưu đêm trên nhánh `sao-luu` vẫn còn.
 import { createClient } from '@supabase/supabase-js'
 import { mkdirSync, writeFileSync } from 'node:fs'
@@ -9,7 +9,7 @@ import { createInterface } from 'node:readline/promises'
 const sb = createClient(process.env.VITE_SUPABASE_URL, process.env.SUPABASE_SECRET_KEY, { auth: { persistSession: false } })
 const ok = ({ data, error }) => { if (error) throw new Error(error.message); return data }
 // thứ tự xoá theo khoá ngoại: bảng con trước
-const BANG = ['tom_tat_danh_gia', 'danh_gia', 'link_danh_gia', 'phieu_thu', 'goi_hoc', 'diem_danh', 'tro_giang_buoi', 'anh_buoi', 'chi_phi', 'sticker_cong_tru', 'hoc_sinh', 'buoi_hoc', 'lop', 'nhat_ky_chot_so']
+const BANG = ['tom_tat_danh_gia', 'danh_gia', 'link_danh_gia', 'phieu_thu', 'goi_hoc', 'diem_danh', 'tro_giang_buoi', 'anh_buoi', 'chi_phi', 'sticker_cong_tru', 'hoc_sinh', 'buoi_hoc', 'lop', 'nhat_ky_chot_so', 'nhat_ky']
 const KHOA = { diem_danh: 'buoi_id', tro_giang_buoi: 'buoi_id', link_danh_gia: 'thang', tom_tat_danh_gia: 'thang' }
 
 const rl = createInterface({ input: process.stdin, output: process.stdout })

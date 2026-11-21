@@ -202,6 +202,21 @@ mong = h0[0]["sticker_dau_ky"] + sum(x["sticker"] for x in dd0) + sum(x["so"] fo
 _, tg_p = goi("GET", "/rest/v1/tong_sticker?select=hoc_sinh_id,tong", P)
 ok(f"sticker: tong_sticker đúng ({mong}) và phụ huynh chỉ thấy con mình", tg_p == [{"hoc_sinh_id": hs_id, "tong": mong}])
 
+# --- nhật ký thao tác (migration nhat_ky) ---
+_, nk1 = goi("GET", f"/rest/v1/nhat_ky?select=ten_nguoi,doi_tuong,thay_doi&bang=eq.sticker_cong_tru&hanh_dong=eq.them&order=id.desc&limit=1", A)
+ok("nhật ký: lần trợ giảng cộng sticker có dòng, đúng người ghi và tên học sinh",
+   nk1 and nk1[0]["ten_nguoi"] == "TEST Trợ giảng Lan" and nk1[0]["doi_tuong"] == "TEST Nguyễn Bảo An")
+goi("PATCH", f"/rest/v1/hoc_sinh?id=eq.{hs_id}", A, {"ghi_chu": "TEST nhật ký"})
+_, nk2 = goi("GET", f"/rest/v1/nhat_ky?select=thay_doi&bang=eq.hoc_sinh&hanh_dong=eq.sua&order=id.desc&limit=1", A)
+ok("nhật ký: sửa học sinh chỉ ghi cột đổi", nk2 and list(nk2[0]["thay_doi"]) == ["ghi_chu"] and nk2[0]["thay_doi"]["ghi_chu"][1] == "TEST nhật ký")
+ok("nhật ký: trợ giảng đọc ra rỗng", goi("GET", "/rest/v1/nhat_ky?select=id&limit=1", T) == (200, []))
+ok("nhật ký: phụ huynh đọc ra rỗng", goi("GET", "/rest/v1/nhat_ky?select=id&limit=1", P) == (200, []))
+ok("nhật ký: không ai ghi thẳng được", goi("POST", "/rest/v1/nhat_ky", A, {"bang": "x", "hanh_dong": "them"})[0] >= 400)
+c, xoa_nk = goi("DELETE", "/rest/v1/nhat_ky?id=gt.0", A, prefer=R)
+ok("nhật ký: giáo viên không xoá được", c >= 400 or xoa_nk == [])
+ok("nhật ký: ghi đăng nhập", goi("POST", "/rest/v1/rpc/ghi_dang_nhap", T)[0] == 204 and
+   goi("GET", "/rest/v1/nhat_ky?select=ten_nguoi&hanh_dong=eq.dang_nhap&order=id.desc&limit=1", A)[1] == [{"ten_nguoi": "TEST Trợ giảng Lan"}])
+
 _, khoa_truoc = SV("GET", "/rest/v1/khoa_so?select=khoa_den")
 # chỉ xoá nhật ký do test ghi: lọc theo id, không theo tháng (người dùng có thể đã chốt / mở khoá thật tháng 11)
 _, nk = SV("GET", "/rest/v1/nhat_ky_chot_so?select=id&order=id.desc&limit=1")

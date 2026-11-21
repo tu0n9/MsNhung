@@ -338,6 +338,9 @@ Link nhóm Zalo của từng học sinh (grill 2026-11-20):
 - Ước tính với quy mô hiện tại (131 học sinh, 14 lớp): ~2.500 dòng ≈ 1 MB/tháng, giữ 6 tháng ~6 MB, trong gói miễn
   phí 500 MB.
 - Làm **sau** tính năng sticker ngoài buổi, migration và commit riêng.
+- Cách làm (2026-11-21): ghi bằng trigger trong database. Việc qua Edge Function (tạo tài khoản, đặt lại mật khẩu) ghi
+  người là "Hệ thống" vì chạy bằng service role. Buổi theo lịch do app tự sinh mỗi tháng không ghi. Dòng cũ hơn 6 tháng
+  xoá kèm mỗi lần có người đăng nhập (không cần job riêng).
 
 ### Sửa lỗi sau review ngoài (2026-11-21)
 

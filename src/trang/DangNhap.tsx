@@ -13,7 +13,9 @@ export default function DangNhap() {
       const { data: email, error: loiTim } = await sb.rpc('email_dang_nhap', { dinh_danh: v.dinh_danh.trim() })
       if (loiTim) return void message.error('Không kết nối được máy chủ, kiểm tra mạng rồi thử lại')
       const { error } = await sb.auth.signInWithPassword({ email: email ?? 'khong-co@msnhung.local', password: v.mat_khau })
-      if (error) message.error(error.status === 400 ? 'Sai tên đăng nhập/số điện thoại hoặc mật khẩu' : `Không đăng nhập được: ${error.message}`)
+      if (error) return void message.error(error.status === 400 ? 'Sai tên đăng nhập/số điện thoại hoặc mật khẩu' : `Không đăng nhập được: ${error.message}`)
+      // ghi nhật ký đăng nhập; lỗi thì bỏ qua, không chặn người dùng vào app
+      await sb.rpc('ghi_dang_nhap')
     } finally {
       setDang(false)
     }

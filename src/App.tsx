@@ -17,6 +17,7 @@ import ImportExcel from './trang/ImportExcel'
 import HuongDan from './trang/HuongDan'
 import DanhGia from './trang/DanhGia'
 import PhieuDanhGia from './trang/PhieuDanhGia'
+import NhatKy from './trang/NhatKy'
 
 const NguoiDung = createContext<TaiKhoan>(null!)
 export const useToi = () => useContext(NguoiDung)
@@ -94,6 +95,7 @@ export default function App() {
                 {ql && <Route path="/chi-phi" element={<ChiPhi />} />}
                 {ql && <Route path="/import" element={<ImportExcel />} />}
                 {ql && <Route path="/danh-gia" element={<DanhGia />} />}
+                {ql && <Route path="/nhat-ky" element={<NhatKy />} />}
                 <Route path="/tai-khoan" element={<TaiKhoanTrang />} />
               </>
             )}

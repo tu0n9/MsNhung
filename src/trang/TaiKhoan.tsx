@@ -38,6 +38,7 @@ export default function TaiKhoan() {
       <Space wrap>
         {laQuanLy(toi.vai_tro) && <Button type="primary" icon={<PlusOutlined />} onClick={() => setTao(true)}>Tạo tài khoản</Button>}
         <Button onClick={() => nav('/doi-mat-khau')}>Đổi mật khẩu của tôi</Button>
+        {laQuanLy(toi.vai_tro) && <Button onClick={() => nav('/nhat-ky')}>Nhật ký thao tác</Button>}
         <Select value={loc} onChange={setLoc} style={{ width: 150 }} options={[{ value: 'tat_ca', label: 'Tất cả' }, ...Object.entries(TEN_VAI).map(([v, l]) => ({ value: v, label: l }))]} />
       </Space>
       <Table size="small" rowKey="id" dataSource={ds.filter((x) => loc === 'tat_ca' || x.vai_tro === loc)} scroll={{ x: true }} columns={[

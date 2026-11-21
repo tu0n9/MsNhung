@@ -339,6 +339,17 @@ with sync_playwright() as pw:
         p.screenshot(path=os.path.join(OUT, "a-sticker.png"), full_page=True)
     buoc("sticker ngoài buổi: chip ⭐ ở trang Lớp, trừ phải có lý do, lịch sử ở trang học sinh, xoá thì tổng trở lại", b_sticker)
 
+    def b_nhat_ky():
+        nav("Tài khoản")
+        p.get_by_role("button", name="Nhật ký thao tác").click()
+        bang = p.locator(".ant-table")
+        expect(bang).to_contain_text("TEST Nguyễn Bảo An", timeout=15000)
+        expect(bang).to_contain_text("Sticker ngoài buổi")
+        expect(bang).to_contain_text("Lý do: Đổi quà")  # lần trừ đã xoá vẫn còn vết
+        p.screenshot(path=os.path.join(OUT, "a-nhat-ky.png"), full_page=True)
+        p.get_by_role("button", name="← Quay lại").click()
+    buoc("nhật ký thao tác: giáo viên mở từ trang Tài khoản, thấy cộng/trừ sticker vừa làm kể cả lần đã xoá", b_nhat_ky)
+
     def b_xoa_lop():
         nav("Lớp")
         p.locator(".ant-collapse-item", has_text="TEST Movers 2").get_by_role("button", name="Sửa lớp", exact=True).click()

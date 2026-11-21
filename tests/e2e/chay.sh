@@ -5,6 +5,8 @@
 set -e
 cd "$(dirname "$0")/../.."
 set -a; . ./.env; set +a
+# mốc bắt đầu: don-test.mjs xoá dòng nhật ký thao tác do test sinh ra từ lúc này
+export TU_LUC=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 TRUOC=$(node --env-file=.env tests/e2e/dem.mjs)
 npx vitest run
 npx tsc --noEmit && echo "tsc sạch"

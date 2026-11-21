@@ -72,6 +72,13 @@ Trang **Lớp**, mỗi em có nút **⭐ tổng sticker**. Bấm vào → nhập
 người ghi); ghi nhầm thì bấm **Xoá** rồi ghi lại. Phụ huynh thấy mục này nhưng không thấy tên người ghi. Tháng đã chốt
 sổ thì không thêm / xoá được. Cột Sticker trong file Excel tháng đã cộng cả các lần này.
 
+### Nhật ký thao tác
+
+Trang **Tài khoản → Nhật ký thao tác** (chỉ giáo viên, admin): ai đăng nhập, ai thêm / sửa / xoá gì, lúc nào, giá trị
+cũ → mới. Gồm sticker ngoài buổi, trợ giảng có mặt, buổi học, lớp, học sinh, gói học, phiếu thu, chi phí, tài khoản,
+chốt / mở khoá sổ (không gồm điểm danh có mặt / vắng, ảnh, phiếu đánh giá). Lọc theo ngày, người, loại. "Hệ thống" là
+thao tác do app tự làm (tạo tài khoản phụ huynh, script). Không ai sửa / xoá được nhật ký; dòng cũ hơn 6 tháng tự xoá.
+
 ### Xoá lớp
 
 **Sửa lớp → Xoá lớp**, gõ lại đúng tên lớp. Xoá cả học sinh, điểm danh, gói, phiếu thu, ảnh của lớp. **Không lấy lại

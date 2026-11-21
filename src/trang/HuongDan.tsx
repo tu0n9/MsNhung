@@ -13,7 +13,7 @@ const VIDEO: { file: string; ten: string; mo_ta: string; ai: ('ql' | 'tg' | 'ph'
   { file: '04-diem-danh', ten: '4. Điểm danh', mo_ta: 'Lớp gộp cùng giờ, có mặt / vắng, sticker, trợ giảng, ảnh lớp, lớp nghỉ, buổi bù, lưới điểm danh tháng.', ai: ['ql', 'tg'] },
   { file: '05-thu-hoc-phi', ten: '5. Học phí và thu tiền', mo_ta: 'Nguyên tắc tính tiền, gói 1 / 2 / 3 tháng, thu nhiều đợt, đóng trước, tiền dư lớp nghỉ, điều chỉnh, các trường hợp khác.', ai: ['ql'] },
   { file: '06-chi-phi', ten: '6. Chi phí', mo_ta: 'Lương trợ giảng tự tính theo ca, thêm khoản chi, hoàn học phí.', ai: ['ql'] },
-  { file: '07-hoc-phi-chot-so-excel', ten: '7. Tab Học phí, chốt sổ, Excel', mo_ta: 'Đã thu và thực thu, lọc còn nợ, sắp hết gói, nhắn phụ huynh, xuất Excel, chốt và mở khoá sổ.', ai: ['ql'] },
+  { file: '07-hoc-phi-chot-so-excel', ten: '7. Tab Học phí, chốt sổ, Excel', mo_ta: 'Đã thu và thực thu, lọc còn nợ, sắp hết gói, nhắn phụ huynh, xuất Excel, chốt và mở khoá sổ. Nhật ký thao tác (ai sửa gì, lúc nào): trang Tài khoản → Nhật ký thao tác.', ai: ['ql'] },
   { file: '08-phu-huynh', ten: '8. Dành cho phụ huynh', mo_ta: 'Đăng nhập bằng số điện thoại, gói còn mấy buổi, lưới điểm danh tháng, sticker, ảnh lớp, học phí.', ai: ['ql', 'ph'] },
 ]
 
