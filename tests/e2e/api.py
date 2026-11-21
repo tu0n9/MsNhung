@@ -1,5 +1,5 @@
 """Kiểm RLS và khoá sổ ở tầng database (không qua giao diện). Chạy sau all.py, dùng dữ liệu TEST nó tạo."""
-import json, os, sys, urllib.request, urllib.error
+import http.client, json, os, sys, time, urllib.request, urllib.error
 from datetime import date, timedelta
 
 env = dict(l.split("=", 1) for l in open(r"C:\Users\TIENTUONG\MsNhung\.env", encoding="utf-8").read().splitlines() if "=" in l and not l.startswith("#"))
@@ -15,13 +15,21 @@ def goi(method, path, token=None, body=None, key=K, prefer=None):
     if prefer:
         h["Prefer"] = prefer
     req = urllib.request.Request(U + path, method=method, headers=h, data=json.dumps(body).encode() if body is not None else None)
-    try:
-        with urllib.request.urlopen(req) as r:
-            t = r.read().decode()
-            return r.status, json.loads(t) if t else None
-    except urllib.error.HTTPError as e:
-        t = e.read().decode()
-        return e.code, json.loads(t) if t else None
+    # mạng tới Supabase hay bị ngắt giữa chừng: thử lại lệnh đọc / sửa / xoá (chạy lại vẫn cùng kết quả).
+    # POST không thử lại vì có thể đã ghi xong mà mất phản hồi, thử lại sẽ tạo trùng.
+    lan = 3 if method in ("GET", "PATCH", "DELETE") else 1
+    for i in range(lan):
+        try:
+            with urllib.request.urlopen(req) as r:
+                t = r.read().decode()
+                return r.status, json.loads(t) if t else None
+        except urllib.error.HTTPError as e:
+            t = e.read().decode()
+            return e.code, json.loads(t) if t else None
+        except (urllib.error.URLError, http.client.RemoteDisconnected, ConnectionError):
+            if i == lan - 1:
+                raise
+            time.sleep(1.5)
 
 
 def tok(dinh_danh, mk):
@@ -285,7 +293,11 @@ _, dg = SV("GET", "/rest/v1/danh_gia?select=lop_id,hoc_sinh_id&ten_lop=eq.TEST%2
 ok("xoá lớp: phiếu đánh giá của lớp vẫn giữ, chỉ bỏ liên kết", len(dg) == 1 and dg[0] == {"lop_id": None, "hoc_sinh_id": None})
 # client xoá file theo danh sách trả về; ở đây làm thay để Storage không sót file test
 if c == 200 and anh_xoa:
-    goi("DELETE", "/storage/v1/object/anh", S, {"prefixes": anh_xoa}, key=S)
+    # mạng chập chờn ở bước dọn cuối thì chỉ báo, vẫn in kết quả các kiểm ở trên
+    try:
+        goi("DELETE", "/storage/v1/object/anh", S, {"prefixes": anh_xoa}, key=S)
+    except OSError as e:
+        print("cảnh báo | chưa xoá được ảnh TEST trên Storage:", e, anh_xoa)
 
 for k, t in KQ:
     print(k, "|", t)
