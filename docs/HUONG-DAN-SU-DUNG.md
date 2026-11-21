@@ -66,8 +66,9 @@ không thấy.
 
 ### Cộng / trừ sticker ngoài buổi học
 
-Trang **Lớp**, mỗi em có nút **⭐ tổng sticker**. Bấm vào → nhập số (**5** là cộng 5, **-10** là trừ 10) → chọn nhanh
-**Đổi quà / Thưởng / Sửa sai** hoặc gõ lý do → **Lưu**. Trừ thì bắt buộc có lý do. Giáo viên và trợ giảng đều làm
+Trang **Lớp**, mỗi em có nút **⭐ tổng sticker**. Bấm vào: hộp mở sẵn **Trừ**, lý do **Đổi quà** → gõ số sticker →
+bấm **Trừ … sticker**. Muốn cộng thì bấm **Cộng** trước, gõ số, lý do ghi hay không tuỳ ý. Trừ thì bắt buộc có lý do;
+trừ quá số đang có thì app nhắc "Em chỉ còn … sticker" nhưng vẫn cho lưu. Giáo viên và trợ giảng đều làm
 được; lần cộng/trừ luôn tính vào hôm nay. Mở học sinh → mục **Sticker ngoài buổi** xem lại từng lần (ngày, số, lý do,
 người ghi); ghi nhầm thì bấm **Xoá** rồi ghi lại. Phụ huynh thấy mục này nhưng không thấy tên người ghi. Tháng đã chốt
 sổ thì không thêm / xoá được. Cột Sticker trong file Excel tháng đã cộng cả các lần này.

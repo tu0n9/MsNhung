@@ -314,6 +314,10 @@ Link nhóm Zalo của từng học sinh (grill 2026-11-20):
   điểm); tổng sticker = sticker đã có từ trước + sticker các buổi + các lần cộng/trừ.
 - **Chỗ sửa:** trang **Lớp**, mỗi em có chip "⭐ tổng"; bấm vào hiện hộp nhỏ: số (+/−), lý do, Lưu. Không có nút
   cộng/trừ cả lớp.
+- **Hộp cộng/trừ (grill 2026-11-21):** việc hay làm nhất là trừ đổi quà cuối tháng, nên hộp mở sẵn **Trừ** + lý do
+  **"Đổi quà"**, con trỏ ở ô số (bàn phím số bật lên). Chọn Trừ / Cộng bằng nút, nhập số dương (không gõ dấu trừ), có
+  nút −/+. Không có nút số nhanh. Sang Cộng thì xoá lý do "Đổi quà", lý do khi cộng không bắt buộc. Thấy trước
+  "⭐ cũ → mới"; trừ quá số đang có chỉ cảnh báo "Em chỉ còn N sticker", vẫn lưu được. Lưu xong đóng hộp, báo "Đã trừ N sticker".
 - **Quyền:** giáo viên và trợ giảng như nhau.
 - **Lý do:** nút chọn nhanh *Đổi quà / Thưởng / Sửa sai* + ô gõ tự do; **bắt buộc khi trừ**, cộng thì không.
 - **Ngày:** luôn là hôm nay. Tháng đã chốt sổ thì không thêm / xoá được lần nào của tháng đó.
