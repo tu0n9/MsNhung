@@ -4,7 +4,7 @@ SET session_replication_role = replica;
 -- PostgreSQL database dump
 --
 
--- \restrict tSKr9eIhQXNwhboMuuQij5QnYgRUSbQ1gNPvzdPVnZtTfrbPJkbvWKdz26dbvKe
+-- \restrict HtSZX789s92JfnW5SI1Bth3ve9W5B3VtQfp2L4BdKhPx7XR3theAjSAGK0wpFTh
 
 -- Dumped from database version 17.11
 -- Dumped by pg_dump version 17.12
@@ -56,10 +56,10 @@ COPY "auth"."users" ("instance_id", "id", "aud", "role", "email", "encrypted_pas
 00000000-0000-0000-0000-000000000000	8f2ca2fa-e36b-4f1c-89a0-aade2484f779	authenticated	authenticated	ed73e7b8-d79a-4f34-9401-1efaf3f11565@msnhung.local	$2a$10$8n65S02U/HG.Rmr2jAcy8u1QE2e0D1Naf88B10Ns8/hPfAOOt6zTO	2026-11-21 04:24:05.344258+00	\N		\N		\N			\N	2026-11-21 04:25:32.628624+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-21 04:24:05.328421+00	2026-11-21 04:25:44.277457+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	8b0b82af-8eee-477b-bc50-b5c72837c2f7	authenticated	authenticated	9b44af75-9759-4353-8276-9a34385879ac@msnhung.local	$2a$10$8vao8LW315Dfkchm1MBos.ijJyY9XJ1wNm.MG.jh30CoYiaS2ng2a	2026-11-18 10:58:11.97509+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:58:11.951136+00	2026-11-18 10:58:11.976631+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	9b8a626d-c10d-443e-adcf-8b152a9b6c90	authenticated	authenticated	ac70b571-f88b-4b91-910e-2056e06887f5@msnhung.local	$2a$10$L6Hx8GBRQb3UJP0RgrP49uzhjOQobgfNWJ4h4I/xunR7cf5q/sRSW	2026-11-18 11:01:13.795726+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 11:01:13.775131+00	2026-11-18 11:01:13.797193+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	43d2ab0d-e902-49d7-9e81-a3696d296ad2	authenticated	authenticated	admin@msnhung.local	$2a$10$BCdkciwG3PPPv4yCMa50oefbpbFKmU9xlXou.UTQCXONcdSKZxnAO	2026-11-15 10:27:58.76274+00	\N		\N		\N			\N	2026-11-21 12:41:14.882819+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-15 10:27:58.741954+00	2026-11-21 16:14:07.666967+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	906a5d63-7289-4b55-a279-ff8db9b1a5c4	authenticated	authenticated	fcc895cd-f026-4e3f-81d1-1544acf6f727@msnhung.local	$2a$10$fk7lu2GZgnCeo8pi.fU9FOcvyaorYm2xYyyHDFwwDcs5.K2upZ5ia	2026-11-18 10:50:37.366255+00	\N		\N		\N			\N	2026-11-20 10:26:49.265772+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:50:37.354077+00	2026-11-21 11:04:35.736881+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	authenticated	authenticated	19f38f04-61b3-43ca-8335-d6f1b809a252@msnhung.local	$2a$10$tgJwaw/JFI4E7hab8YRaGOOclde/9PSkhcngbqfe6d7aeED.Crtfm	2026-11-18 10:49:19.499215+00	\N		\N		\N			\N	2026-11-20 09:39:16.892235+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:49:19.494982+00	2026-11-21 12:01:34.506023+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	authenticated	authenticated	8a80fc97-4996-4655-afee-8eac991e9a12@msnhung.local	$2a$10$97fyKO0vuMQfYkBUWS32X.Q56vy5lBsfCC.aooYX7mAnGjFJmA3xW	2026-11-18 10:48:28.317304+00	\N		\N		\N			\N	2026-11-19 13:09:30.603649+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:48:28.280417+00	2026-11-20 06:20:35.317963+00	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	43d2ab0d-e902-49d7-9e81-a3696d296ad2	authenticated	authenticated	admin@msnhung.local	$2a$10$BCdkciwG3PPPv4yCMa50oefbpbFKmU9xlXou.UTQCXONcdSKZxnAO	2026-11-15 10:27:58.76274+00	\N		\N		\N			\N	2026-11-22 15:03:34.173806+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-15 10:27:58.741954+00	2026-11-22 20:15:24.269186+00	\N	\N			\N		0	\N		\N	f	\N	f
 \.
 
 
@@ -106,12 +106,13 @@ COPY "auth"."sessions" ("id", "user_id", "created_at", "updated_at", "factor_id"
 eeb51907-2ea4-4b83-ac18-4d4d82e61ad1	7925dcdb-7311-4634-896a-b4b6386b2df2	2026-11-19 15:33:10.47744+00	2026-11-19 15:33:10.47744+00	\N	aal1	\N	\N	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0	183.80.74.68	\N	\N	\N	\N	\N
 c0d0a073-5f8e-45d2-b701-61fb6aee22fd	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	2026-11-19 13:09:30.604521+00	2026-11-20 06:20:35.345899+00	\N	aal1	\N	2026-11-20 06:20:35.345772	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Mobile/15E148 Safari/604.1	118.68.111.181	\N	\N	\N	\N	\N
 516ceaae-f4e9-4fb2-949a-89f7802cb620	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-21 05:17:20.027603+00	2026-11-21 05:17:20.027603+00	\N	aal1	\N	\N	Python-urllib/3.12	117.1.90.139	\N	\N	\N	\N	\N
-b7d6d855-2d8f-4eca-b1e8-ba9c4df511bb	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-21 07:38:24.102893+00	2026-11-21 07:38:24.102893+00	\N	aal1	\N	\N	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0	117.1.90.139	\N	\N	\N	\N	\N
 66ba1b64-acaa-44cc-b4bd-3b794a6f4d93	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-21 08:57:12.600183+00	2026-11-21 08:57:12.600183+00	\N	aal1	\N	\N	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Zalo iOS/261101802 ZaloTheme/dark ZaloLanguage/vn	1.52.70.168	\N	\N	\N	\N	\N
 98d9f79f-0ff0-4861-aa57-09ae20073ef4	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	2026-11-20 09:39:16.892389+00	2026-11-21 12:01:34.537626+00	\N	aal1	\N	2026-11-21 12:01:34.537496	Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Mobile Safari/537.36	42.118.51.176	\N	\N	\N	\N	\N
-6d07f565-9ecc-4bf9-b4fa-f99e925e9f62	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-21 11:51:57.80846+00	2026-11-21 13:12:56.188153+00	\N	aal1	\N	2026-11-21 13:12:56.187993	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0	14.166.194.194	\N	\N	\N	\N	\N
 c0d8d08a-b7b5-4d0c-8fd1-a28467d039a6	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-21 12:41:14.88356+00	2026-11-21 14:15:05.961424+00	\N	aal1	\N	2026-11-21 14:15:05.961295	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Mobile/15E148 Safari/604.1	42.113.16.7	\N	\N	\N	\N	\N
 47f9013e-1239-4b44-8092-601a20a6a137	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-21 11:08:45.436168+00	2026-11-21 16:14:07.702311+00	\N	aal1	\N	2026-11-21 16:14:07.702106	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6.1 Mobile/15E148 Safari/604.1	118.69.162.70	\N	\N	\N	\N	\N
+6d07f565-9ecc-4bf9-b4fa-f99e925e9f62	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-21 11:51:57.80846+00	2026-11-22 02:13:32.383297+00	\N	aal1	\N	2026-11-22 02:13:32.383179	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0	14.166.194.194	\N	\N	\N	\N	\N
+b7d6d855-2d8f-4eca-b1e8-ba9c4df511bb	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-21 07:38:24.102893+00	2026-11-22 14:16:15.420534+00	\N	aal1	\N	2026-11-22 14:16:15.420375	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36 Edg/158.0.0.0	42.113.16.7	\N	\N	\N	\N	\N
+ea885e67-0701-45eb-8d66-7aa9cdbaccc5	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-22 15:03:34.17553+00	2026-11-22 20:15:24.292914+00	\N	aal1	\N	2026-11-22 20:15:24.292459	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36 Edg/158.0.0.0	42.113.16.7	\N	\N	\N	\N	\N
 \.
 
 
@@ -125,6 +126,7 @@ b7d6d855-2d8f-4eca-b1e8-ba9c4df511bb	2026-11-21 07:38:24.186891+00	2026-11-21 07
 47f9013e-1239-4b44-8092-601a20a6a137	2026-11-21 11:08:45.471933+00	2026-11-21 11:08:45.471933+00	password	445b4110-7a7a-4e6a-b372-711ef2f3525e
 6d07f565-9ecc-4bf9-b4fa-f99e925e9f62	2026-11-21 11:51:57.871991+00	2026-11-21 11:51:57.871991+00	password	415845cc-d26b-4cd3-9b35-f1837699b8b6
 c0d8d08a-b7b5-4d0c-8fd1-a28467d039a6	2026-11-21 12:41:14.929348+00	2026-11-21 12:41:14.929348+00	password	f0da0b57-a542-4055-924c-f896680261e4
+ea885e67-0701-45eb-8d66-7aa9cdbaccc5	2026-11-22 15:03:34.226813+00	2026-11-22 15:03:34.226813+00	password	2fa0ed7e-746a-4505-9d7a-f614b0dccf97
 138b0991-bade-4ac1-99f0-d5b4e29bfcce	2026-11-18 11:15:04.66948+00	2026-11-18 11:15:04.66948+00	password	0e8bcbd4-b605-4f8d-92ef-a09f44104bec
 c0d0a073-5f8e-45d2-b701-61fb6aee22fd	2026-11-19 13:09:30.662961+00	2026-11-19 13:09:30.662961+00	password	af8deb5d-c21a-41f3-832b-e2efa8a9f085
 eeb51907-2ea4-4b83-ac18-4d4d82e61ad1	2026-11-19 15:33:10.569478+00	2026-11-19 15:33:10.569478+00	password	f9153c04-47e8-4095-9108-0105f4f831fa
@@ -208,20 +210,29 @@ COPY "auth"."refresh_tokens" ("instance_id", "id", "token", "user_id", "revoked"
 00000000-0000-0000-0000-000000000000	517	5aimmp2svbp6	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-19 16:31:49.525176+00	2026-11-20 06:20:35.280109+00	uqzjyb2jzeez	c0d0a073-5f8e-45d2-b701-61fb6aee22fd
 00000000-0000-0000-0000-000000000000	528	6hom4mlbwosb	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	f	2026-11-20 06:20:35.301906+00	2026-11-20 06:20:35.301906+00	5aimmp2svbp6	c0d0a073-5f8e-45d2-b701-61fb6aee22fd
 00000000-0000-0000-0000-000000000000	733	fwjfyv4cy7ez	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-21 11:51:57.842204+00	2026-11-21 13:12:56.113268+00	\N	6d07f565-9ecc-4bf9-b4fa-f99e925e9f62
-00000000-0000-0000-0000-000000000000	737	dmjnoylrvqq4	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-21 13:12:56.134565+00	2026-11-21 13:12:56.134565+00	fwjfyv4cy7ez	6d07f565-9ecc-4bf9-b4fa-f99e925e9f62
 00000000-0000-0000-0000-000000000000	736	dtc4mwzh3ahw	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-21 12:41:14.915105+00	2026-11-21 14:15:05.909574+00	\N	c0d8d08a-b7b5-4d0c-8fd1-a28467d039a6
 00000000-0000-0000-0000-000000000000	738	pdgrbzdx37fl	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-21 14:15:05.930294+00	2026-11-21 14:15:05.930294+00	dtc4mwzh3ahw	c0d8d08a-b7b5-4d0c-8fd1-a28467d039a6
 00000000-0000-0000-0000-000000000000	541	vdo4zwc6q2dr	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	t	2026-11-20 12:34:38.272158+00	2026-11-20 15:05:28.547244+00	em3biwnp7sp4	98d9f79f-0ff0-4861-aa57-09ae20073ef4
 00000000-0000-0000-0000-000000000000	735	w6okmgcy7pqe	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-21 12:38:26.034267+00	2026-11-21 16:14:07.626347+00	2u75ir5gktx4	47f9013e-1239-4b44-8092-601a20a6a137
 00000000-0000-0000-0000-000000000000	739	u2acme2c3qkz	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-21 16:14:07.650965+00	2026-11-21 16:14:07.650965+00	w6okmgcy7pqe	47f9013e-1239-4b44-8092-601a20a6a137
+00000000-0000-0000-0000-000000000000	737	dmjnoylrvqq4	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-21 13:12:56.134565+00	2026-11-21 22:58:49.022529+00	fwjfyv4cy7ez	6d07f565-9ecc-4bf9-b4fa-f99e925e9f62
+00000000-0000-0000-0000-000000000000	740	uyhh4izikyby	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-21 22:58:49.032572+00	2026-11-21 23:57:06.591437+00	dmjnoylrvqq4	6d07f565-9ecc-4bf9-b4fa-f99e925e9f62
+00000000-0000-0000-0000-000000000000	741	vmt6hxj5oenp	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-21 23:57:06.603264+00	2026-11-22 02:13:32.331026+00	uyhh4izikyby	6d07f565-9ecc-4bf9-b4fa-f99e925e9f62
+00000000-0000-0000-0000-000000000000	742	dofr2h32nzf5	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-22 02:13:32.34937+00	2026-11-22 02:13:32.34937+00	vmt6hxj5oenp	6d07f565-9ecc-4bf9-b4fa-f99e925e9f62
+00000000-0000-0000-0000-000000000000	727	js5fdfecgsy2	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-21 07:38:24.161191+00	2026-11-22 07:52:19.974544+00	\N	b7d6d855-2d8f-4eca-b1e8-ba9c4df511bb
+00000000-0000-0000-0000-000000000000	743	zleqgvukmdtg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-22 07:52:19.994588+00	2026-11-22 13:10:33.115728+00	js5fdfecgsy2	b7d6d855-2d8f-4eca-b1e8-ba9c4df511bb
+00000000-0000-0000-0000-000000000000	744	zu6lookq7jmu	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-22 13:10:33.13325+00	2026-11-22 14:16:15.374084+00	zleqgvukmdtg	b7d6d855-2d8f-4eca-b1e8-ba9c4df511bb
 00000000-0000-0000-0000-000000000000	533	em3biwnp7sp4	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	t	2026-11-20 09:39:16.893934+00	2026-11-20 12:34:38.26187+00	\N	98d9f79f-0ff0-4861-aa57-09ae20073ef4
+00000000-0000-0000-0000-000000000000	745	zzdmejnqjrjk	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-22 14:16:15.392543+00	2026-11-22 14:16:15.392543+00	zu6lookq7jmu	b7d6d855-2d8f-4eca-b1e8-ba9c4df511bb
+00000000-0000-0000-0000-000000000000	746	osjhrh6tikpz	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-22 15:03:34.205997+00	2026-11-22 18:12:21.294423+00	\N	ea885e67-0701-45eb-8d66-7aa9cdbaccc5
 00000000-0000-0000-0000-000000000000	492	4ar5dq6mxsrv	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-18 11:15:04.612498+00	2026-11-18 12:20:21.000342+00	\N	138b0991-bade-4ac1-99f0-d5b4e29bfcce
+00000000-0000-0000-0000-000000000000	747	6lppne7pntil	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-22 18:12:21.312024+00	2026-11-22 20:15:24.235746+00	osjhrh6tikpz	ea885e67-0701-45eb-8d66-7aa9cdbaccc5
+00000000-0000-0000-0000-000000000000	748	sjaps7ryi2yr	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-22 20:15:24.258535+00	2026-11-22 20:15:24.258535+00	6lppne7pntil	ea885e67-0701-45eb-8d66-7aa9cdbaccc5
 00000000-0000-0000-0000-000000000000	497	oiucqvgppb62	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-18 12:20:21.012121+00	2026-11-18 13:22:21.165498+00	4ar5dq6mxsrv	138b0991-bade-4ac1-99f0-d5b4e29bfcce
 00000000-0000-0000-0000-000000000000	499	he4pscw7nv4q	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-18 13:22:21.175637+00	2026-11-18 16:34:59.646129+00	oiucqvgppb62	138b0991-bade-4ac1-99f0-d5b4e29bfcce
 00000000-0000-0000-0000-000000000000	722	l2akjtmdylmv	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-21 05:17:20.03725+00	2026-11-21 05:17:20.03725+00	\N	516ceaae-f4e9-4fb2-949a-89f7802cb620
 00000000-0000-0000-0000-000000000000	502	hk4ftmgehg54	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-18 16:34:59.669286+00	2026-11-19 09:28:18.584226+00	he4pscw7nv4q	138b0991-bade-4ac1-99f0-d5b4e29bfcce
 00000000-0000-0000-0000-000000000000	511	4b3s52br5fd3	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	f	2026-11-19 09:28:18.60024+00	2026-11-19 09:28:18.60024+00	hk4ftmgehg54	138b0991-bade-4ac1-99f0-d5b4e29bfcce
-00000000-0000-0000-0000-000000000000	727	js5fdfecgsy2	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-21 07:38:24.161191+00	2026-11-21 07:38:24.161191+00	\N	b7d6d855-2d8f-4eca-b1e8-ba9c4df511bb
 00000000-0000-0000-0000-000000000000	515	tez5ezxmlo7a	7925dcdb-7311-4634-896a-b4b6386b2df2	f	2026-11-19 15:33:10.535556+00	2026-11-19 15:33:10.535556+00	\N	eeb51907-2ea4-4b83-ac18-4d4d82e61ad1
 00000000-0000-0000-0000-000000000000	514	uqzjyb2jzeez	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-19 13:09:30.633872+00	2026-11-19 16:31:49.504555+00	\N	c0d0a073-5f8e-45d2-b701-61fb6aee22fd
 00000000-0000-0000-0000-000000000000	729	rcsmxh5fq6tu	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-21 08:57:12.633862+00	2026-11-21 08:57:12.633862+00	\N	66ba1b64-acaa-44cc-b4bd-3b794a6f4d93
@@ -648,7 +659,6 @@ c0f883fc-0857-4b2b-bc18-2e057ddde6a7	6ef103a4-fc2b-4fc6-bb1a-e113033e7f91	co_mat
 1dc15fdd-fa0f-47e7-b22c-8e44dc54cd1b	7dd34d24-cee2-4506-98f3-90bc27e293a9	vang	0
 2a9b49fe-888a-4327-9b2b-92cf74c0ffad	c896114e-f0e2-4b63-af81-07e50276d6fd	vang	0
 2a9b49fe-888a-4327-9b2b-92cf74c0ffad	8605edcb-76d1-4391-9739-fcbf0bc389a1	vang	0
-c0f883fc-0857-4b2b-bc18-2e057ddde6a7	324c6f0b-b834-4644-a01d-c2762901413a	vang	0
 c0f883fc-0857-4b2b-bc18-2e057ddde6a7	60cdb4a9-3025-44d3-8086-b14612242c76	co_mat	0
 2a9b49fe-888a-4327-9b2b-92cf74c0ffad	97016524-445e-48cb-ad25-91aae2e0369b	vang	0
 2a9b49fe-888a-4327-9b2b-92cf74c0ffad	58ccd9fc-cb17-4e09-afc1-0989f0636f6f	vang	0
@@ -673,7 +683,9 @@ b58e02fa-a696-449e-bdab-8586041d5620	b64ca36c-4f68-4afd-ac90-9f3a5fbe6381	co_mat
 2d39d3bf-403a-4add-b335-932f3f0f7f67	1b364415-27c0-4528-b772-6f9331702874	vang	0
 2d39d3bf-403a-4add-b335-932f3f0f7f67	2a71aebf-2868-4496-8c0d-26a9c5fdac6d	co_mat	11
 2d39d3bf-403a-4add-b335-932f3f0f7f67	9c5e27df-2361-46d3-9551-92dc6109c2f5	co_mat	10
+f6e57378-f553-452e-9d0c-3cd5920181c2	8283478e-08ac-4890-a5e7-aa6a4f5a244c	hoc_bu	10
 2d39d3bf-403a-4add-b335-932f3f0f7f67	b3065572-cd6a-4131-bae6-4f0b9ed4f46f	co_mat	10
+f6e57378-f553-452e-9d0c-3cd5920181c2	58ccd9fc-cb17-4e09-afc1-0989f0636f6f	hoc_bu	10
 2d39d3bf-403a-4add-b335-932f3f0f7f67	e561c6d5-6fbc-462a-ab2e-e1423f3b692f	co_mat	13
 \.
 
@@ -720,6 +732,7 @@ COPY "public"."nhat_ky" ("id", "luc", "nguoi", "ten_nguoi", "bang", "hanh_dong",
 1299	2026-11-21 13:10:07.205886+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	Thiên Nga · Lớp ielts cơ bản t7 · 21/11/2026	{"buoi_id": "81a08445-8690-4ba5-9fc5-2331ede97bb5", "don_gia": 100000, "tro_giang_id": "906a5d63-7289-4b55-a279-ff8db9b1a5c4"}
 1258	2026-11-21 08:57:13.183957+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
 1288	2026-11-21 11:18:48.717537+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Khuất Hoàng An 	{"link_zalo": [null, "https://zalo.me/g/rd741dryczmk29nfhvgw"]}
+1300	2026-11-22 15:03:34.523597+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
 1259	2026-11-21 08:59:13.384652+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	xoa	Chu Bảo Ngân	{"id": "ad4eb7e3-ef7e-442e-9e18-766284275ff7", "avatar": "avatar/ad4eb7e3-ef7e-442e-9e18-766284275ff7-1794999976075.jpg", "ho_ten": "Chu Bảo Ngân", "lop_id": "0d76975d-4f18-47de-adb8-3992850432eb", "ghi_chu": null, "tao_luc": "2026-11-18T11:06:16.031289+00:00", "ngay_vao": "2026-11-01", "link_zalo": null, "trang_thai": "dang_hoc", "phu_huynh_id": null, "don_gia_rieng": null, "sdt_phu_huynh": null, "ten_phu_huynh": null, "sticker_dau_ky": 0}
 1260	2026-11-21 08:59:13.384652+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	xoa	Hoàng Diệu Linh	{"id": "e57f5ae7-1615-43da-89c0-af87f74cdc97", "avatar": "avatar/e57f5ae7-1615-43da-89c0-af87f74cdc97-1795000028815.jpg", "ho_ten": "Hoàng Diệu Linh", "lop_id": "0d76975d-4f18-47de-adb8-3992850432eb", "ghi_chu": null, "tao_luc": "2026-11-18T11:07:08.678948+00:00", "ngay_vao": "2026-11-01", "link_zalo": null, "trang_thai": "dang_hoc", "phu_huynh_id": null, "don_gia_rieng": null, "sdt_phu_huynh": null, "ten_phu_huynh": null, "sticker_dau_ky": 0}
 1261	2026-11-21 08:59:13.384652+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	xoa	Lê Thị Anh Thư	{"id": "e83a1cf4-c38e-4ddc-acd0-ff0fb166c6af", "avatar": "avatar/e83a1cf4-c38e-4ddc-acd0-ff0fb166c6af-1795003669718.jpg", "ho_ten": "Lê Thị Anh Thư", "lop_id": "0d76975d-4f18-47de-adb8-3992850432eb", "ghi_chu": null, "tao_luc": "2026-11-18T11:08:14.94948+00:00", "ngay_vao": "2026-11-01", "link_zalo": null, "trang_thai": "dang_hoc", "phu_huynh_id": null, "don_gia_rieng": null, "sdt_phu_huynh": null, "ten_phu_huynh": null, "sticker_dau_ky": 0}
@@ -925,7 +938,7 @@ COPY "storage"."vector_indexes" ("id", "name", "bucket_id", "data_type", "dimens
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: supabase_auth_admin
 --
 
-SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 739, true);
+SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 748, true);
 
 
 --
@@ -939,13 +952,13 @@ SELECT pg_catalog.setval('"public"."nhat_ky_chot_so_id_seq"', 173, true);
 -- Name: nhat_ky_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."nhat_ky_id_seq"', 1299, true);
+SELECT pg_catalog.setval('"public"."nhat_ky_id_seq"', 1300, true);
 
 
 --
 -- PostgreSQL database dump complete
 --
 
--- \unrestrict tSKr9eIhQXNwhboMuuQij5QnYgRUSbQ1gNPvzdPVnZtTfrbPJkbvWKdz26dbvKe
+-- \unrestrict HtSZX789s92JfnW5SI1Bth3ve9W5B3VtQfp2L4BdKhPx7XR3theAjSAGK0wpFTh
 
 RESET ALL;
