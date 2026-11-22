@@ -3,6 +3,7 @@ import { App, Avatar, Button, Card, Checkbox, DatePicker, Empty, Image, Input, I
 import { CameraOutlined, PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { CHU_SO, MAU } from '../giao-dien'
+import { dsHocSinhBuoi } from '../diem-danh-thang'
 import { cong2Gio, gioBuoi, nhomBuoi } from '../gio-hoc'
 import { homNay, hsDangHoc, q, taiHet, useMotLan, sb, taiAnhLen, taiTongSticker, urlAnh, type BuoiHoc, type DiemDanh as DD, type GhiDanh, type HocSinh, type Lop, type TaiKhoan } from '../supabase'
 
@@ -116,7 +117,8 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
       q(sb.from('tro_giang_buoi').select('tro_giang_id').in('buoi_id', ids)),
       q(sb.from('anh_buoi').select('id, duong_dan').in('buoi_id', ids).order('tao_luc')),
       taiHet((x, y) => sb.from('hoc_sinh').select('*').order('ho_ten').order('id').range(x, y)),
-      taiHet((x, y) => sb.from('ghi_danh').select('*').eq('trang_thai', 'dang_hoc').order('id').range(x, y)),
+      // Tải cả ghi_danh đã ngừng để buổi cũ không gắn nhầm "· học bù" cho học sinh từng học lớp này
+      taiHet((x, y) => sb.from('ghi_danh').select('*').order('id').range(x, y)),
     ])
     setTgs(tg as TaiKhoan[]); setTgCo([...new Set((tgb as { tro_giang_id: string }[]).map((x) => x.tro_giang_id))])
     // ảnh lớp gộp được chép sang từng buổi cùng tên file: chỉ hiện một lần
@@ -219,15 +221,12 @@ function DsHocSinh({ buoi, lop, tatCaHs, ghiDanh, nhieuLop, doiNghi }: {
   const [stickerKhac, setStickerKhac] = useState<Record<string, number>>({})
   const [url, setUrl] = useState<Record<string, string>>({})
 
-  const cuaLopIds = new Set(ghiDanh.filter((g) => g.lop_id === lop.id && g.ngay_vao <= buoi.ngay).map((g) => g.hoc_sinh_id))
+  const { cuaLopTatCaIds } = dsHocSinhBuoi(tatCaHs, ghiDanh, lop.id, buoi.ngay, dd)
 
   const tai = async () => {
     const d = await q(sb.from('diem_danh').select('*').eq('buoi_id', buoi.id))
     const ddMap = Object.fromEntries((d as DD[]).map((x) => [x.hoc_sinh_id, x]))
-    const cuaLop = tatCaHs.filter((h) => cuaLopIds.has(h.id))
-    // học sinh lớp khác sang học bù cũng hiện trong danh sách buổi này
-    const ngoai = tatCaHs.filter((h) => ddMap[h.id] && !cuaLopIds.has(h.id))
-    const ds = [...cuaLop, ...ngoai]
+    const { ds } = dsHocSinhBuoi(tatCaHs, ghiDanh, lop.id, buoi.ngay, ddMap)
     setHs(ds); setDd(ddMap)
     const ids = ds.map((h) => h.id)
     if (ids.length) {
@@ -285,7 +284,7 @@ function DsHocSinh({ buoi, lop, tatCaHs, ghiDanh, nhieuLop, doiNghi }: {
       {buoiBu && <p style={{ marginTop: 0, color: MAU.chuPhu, fontSize: 13 }}>Buổi bù riêng: em nào đến thì chọn "Học bù" (trừ 1 buổi chưa bù). Em không đến thì để "Không đến", không bị tính thêm buổi chưa bù.</p>}
       <List dataSource={hs} renderItem={(h) => {
         const x = dd[h.id]
-        const laBu = !cuaLopIds.has(h.id)
+        const laBu = !cuaLopTatCaIds.has(h.id)
         return (
           <List.Item style={{ flexWrap: 'wrap', gap: 8, background: x || buoiBu ? undefined : MAU.vang }}>
             <Space>

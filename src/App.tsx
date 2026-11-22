@@ -4,6 +4,7 @@ import { Button, Grid, Layout, Menu, Result, Spin } from 'antd'
 import { BankOutlined, CheckSquareOutlined, DollarOutlined, MoonOutlined, StarOutlined, SunOutlined, TeamOutlined, WalletOutlined } from '@ant-design/icons'
 import type { Session } from '@supabase/supabase-js'
 import { laQuanLy, q, sb, type TaiKhoan } from './supabase'
+import { trangThaiTruyCap } from './truy-cap'
 import { CHU_SO, MAU, useCheDo } from './giao-dien'
 import DangNhap from './trang/DangNhap'
 import DoiMatKhau from './trang/DoiMatKhau'
@@ -52,10 +53,14 @@ export default function App() {
   if (phien === undefined || (phien && !toi)) return <Spin fullscreen />
   if (!phien) return <DangNhap />
   if (!toi) return null
-  if (toi.phai_doi_mat_khau) return <DoiMatKhau batBuoc xong={taiToi} />
-  if (toi.vai_tro === 'phu_huynh') {
+  const trangThai = trangThaiTruyCap(toi)
+  if (trangThai === 'phu_huynh') {
     return <Result status="403" title="Tài khoản phụ huynh đã ngừng sử dụng" extra={<Button onClick={() => sb.auth.signOut()}>Thoát</Button>} />
   }
+  if (trangThai === 'bi_khoa') {
+    return <Result status="403" title="Tài khoản đã bị khoá" subTitle="Liên hệ quản lý nếu cần mở lại." extra={<Button onClick={() => sb.auth.signOut()}>Thoát</Button>} />
+  }
+  if (trangThai === 'doi_mat_khau') return <DoiMatKhau batBuoc xong={taiToi} />
 
   const ql = laQuanLy(toi.vai_tro)
   const menu = [

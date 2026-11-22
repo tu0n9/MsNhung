@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { App, Button, Card, Collapse, DatePicker, Progress, Select, Space, Table, Tag } from 'antd'
 import dayjs from 'dayjs'
-import { CAU_VIET, hanNhan, taoMa, TIEU_CHI, tongHop, urlPhieu, type PhieuDanhGia } from '../danh-gia'
+import { CAU_VIET, hanNhan, taoMa, thongKeDaGui, TIEU_CHI, tongHop, urlPhieu, type PhieuDanhGia } from '../danh-gia'
 import { congThang, type Thang } from '../hoc-phi'
 import { goiHam, q, sb, taiHet, useMotLan, type GhiDanh, type HocSinh, type Lop } from '../supabase'
 import { MAU } from '../giao-dien'
@@ -83,16 +83,8 @@ export default function DanhGia() {
   const kTruoc = tongHop(truoc, lopId)
   const han = hanNhan(thang)
   const conNhan = dayjs().format('YYYY-MM-DD') <= han
-  // em chưa gửi: tính trên ghi_danh đang học của lớp đang hoạt động; mỗi em mỗi tháng chỉ gửi 1 phiếu duy nhất
-  const daGui = new Set(phieus.map((p) => p.hoc_sinh_id))
-  const lopXet = lops.filter((l) => !lopId || l.id === lopId)
-  const hsMap = new Map(hss.map((h) => [h.id, h]))
-  const nhomLop = lopXet.map((l) => {
-    const ds = gds.filter((g) => g.lop_id === l.id).map((g) => hsMap.get(g.hoc_sinh_id)).filter((h): h is HocSinh => !!h)
-      .sort((a, b) => a.ho_ten.localeCompare(b.ho_ten))
-    return { l, tong: ds.length, chua: ds.filter((h) => !daGui.has(h.id)) }
-  }).filter((x) => x.tong > 0).sort((a, b) => b.chua.length - a.chua.length || a.l.ten.localeCompare(b.l.ten))
-  const tongEm = new Set(nhomLop.flatMap((x) => gds.filter((g) => g.lop_id === x.l.id && hsMap.has(g.hoc_sinh_id)).map((g) => g.hoc_sinh_id))).size
+  // em đã gửi & chưa gửi: tính trên ghi_danh đang học của lớp đang hoạt động; mỗi em mỗi tháng chỉ gửi 1 phiếu duy nhất
+  const { nhomLop, tongEm, soEmDaGui } = thongKeDaGui(phieus, lops, hss, gds, lopId)
   // mỗi em có nhóm Zalo riêng với phụ huynh (không có nhóm chung của lớp): chép sẵn lời nhắc rồi mở nhóm của em
   const loiNhac = (h: HocSinh) => `Nhắc con ${h.ho_ten} gửi phiếu đánh giá tháng ${thang.slice(5)}/${thang.slice(0, 4)}`
     + ` (hạn ${han.slice(8)}/${han.slice(5, 7)}): ${ma ? urlPhieu(ma) : ''}`
@@ -122,7 +114,7 @@ export default function DanhGia() {
       </Card>
 
       {/* mỗi em chỉ gửi 1 phiếu duy nhất mỗi tháng, kể cả khi học nhiều lớp */}
-      <Card size="small" title={`Đã gửi ${k.soPhieu} / ${tongEm} học sinh`} extra={<span style={{ fontSize: 12, color: MAU.chuPhu }}>mỗi em một phiếu</span>}>
+      <Card size="small" title={`Đã gửi ${soEmDaGui} / ${tongEm} học sinh`} extra={<span style={{ fontSize: 12, color: MAU.chuPhu }}>mỗi em một phiếu</span>}>
         <Collapse size="small" key={lopId ?? ''} defaultActiveKey={lopId ? [lopId] : []} items={nhomLop.map(({ l, tong, chua }) => {
           // em có nút nhắc thì mỗi em một dòng; em chưa có link Zalo chỉ cần tên, xếp sát nhau cho danh sách ngắn lại
           const coNut = ma ? chua.filter((h) => h.link_zalo) : []

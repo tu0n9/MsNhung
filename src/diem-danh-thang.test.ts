@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { luoiThang, type BuoiLich, type DiemDanhEm } from './diem-danh-thang'
+import { dsHocSinhBuoi, luoiThang, type BuoiLich, type DiemDanhEm, type GhiDanhBuoi } from './diem-danh-thang'
 
 const buoi = (ngay: string, b: Partial<BuoiLich> = {}): BuoiLich => ({ id: `${ngay}-${b.loai ?? 'lich'}`, lop_id: 'L', ngay, loai: 'lich', lop_nghi: false, ...b })
 const dd = (b: BuoiLich, trang_thai: DiemDanhEm['trang_thai'], sticker = 0): DiemDanhEm => ({ trang_thai, sticker, buoi_hoc: b })
@@ -55,5 +55,44 @@ describe('luoiThang', () => {
     const l = luoiThang('2026-11', b, [dd(b[0], 'co_mat')], '2026-01-01', false, '2026-11-15')
     expect(o(l, '2026-11-02').trang_thai).toBe('co_mat')
     expect(o(l, '2026-11-03').trang_thai).toBe('trong')
+  })
+})
+
+describe('dsHocSinhBuoi (10a)', () => {
+  const tatCaHs = [
+    { id: 'h-dang', ho_ten: 'Em Đang Học' },
+    { id: 'h-ngung', ho_ten: 'Em Đã Ngừng' },
+    { id: 'h-bu', ho_ten: 'Em Học Bù Lớp Khác' },
+  ]
+  const ghiDanh: GhiDanhBuoi[] = [
+    { hoc_sinh_id: 'h-dang', lop_id: 'L1', ngay_vao: '2026-11-01', trang_thai: 'dang_hoc' },
+    { hoc_sinh_id: 'h-ngung', lop_id: 'L1', ngay_vao: '2026-11-01', trang_thai: 'ngung' },
+    { hoc_sinh_id: 'h-bu', lop_id: 'L2', ngay_vao: '2026-11-01', trang_thai: 'dang_hoc' },
+  ]
+
+  it('buổi cũ có điểm danh của em ngừng học: giữ trong danh sách và KHÔNG gắn học bù', () => {
+    const kq = dsHocSinhBuoi(tatCaHs, ghiDanh, 'L1', '2026-11-10', {
+      'h-dang': { trang_thai: 'co_mat' },
+      'h-ngung': { trang_thai: 'co_mat' },
+      'h-bu': { trang_thai: 'hoc_bu' },
+    })
+    expect(kq.ds.map((x) => x.id)).toEqual(['h-dang', 'h-ngung', 'h-bu'])
+    expect(kq.cuaLopTatCaIds.has('h-dang')).toBe(true)
+    expect(kq.cuaLopTatCaIds.has('h-ngung')).toBe(true)
+    expect(kq.cuaLopTatCaIds.has('h-bu')).toBe(false)
+  })
+
+  it('buổi mới chưa điểm danh: em ngừng học không tự hiện, chỉ hiện em đang học và em học bù (nếu có)', () => {
+    const kq = dsHocSinhBuoi(tatCaHs, ghiDanh, 'L1', '2026-11-23', {})
+    expect(kq.ds.map((x) => x.id)).toEqual(['h-dang'])
+  })
+
+  it('học sinh chuyển vào lớp sau ngày buổi diễn ra mà trước đó qua học bù vẫn tính là học bù ở buổi cũ', () => {
+    const gdSau: GhiDanhBuoi[] = [
+      { hoc_sinh_id: 'h-bu', lop_id: 'L1', ngay_vao: '2026-11-20', trang_thai: 'dang_hoc' },
+    ]
+    const kq = dsHocSinhBuoi(tatCaHs, gdSau, 'L1', '2026-11-10', { 'h-bu': { trang_thai: 'hoc_bu' } })
+    expect(kq.ds.map((x) => x.id)).toEqual(['h-bu'])
+    expect(kq.cuaLopTatCaIds.has('h-bu')).toBe(false)
   })
 })

@@ -42,3 +42,28 @@ export function luoiThang(thang: string, buoiLop: BuoiLich[], dd: DiemDanhEm[], 
   }
   return o
 }
+
+export interface GhiDanhBuoi { hoc_sinh_id: string; lop_id: string; ngay_vao: string; trang_thai: 'dang_hoc' | 'ngung' }
+
+/**
+ * Phân loại học sinh trong một buổi điểm danh:
+ * - `ds`: gồm học sinh đang học lớp này (`ngay_vao <= ngayBuoi`) và mọi em đã có điểm danh trong buổi (kể cả đã ngừng học hoặc học bù).
+ * - `cuaLopTatCaIds`: tập mọi học sinh từng ghi danh vào lớp tới ngày `ngayBuoi` (cả `dang_hoc` lẫn `ngung`), dùng để xác định `laBu` chính xác.
+ */
+export function dsHocSinhBuoi<T extends { id: string }>(
+  tatCaHs: T[],
+  ghiDanh: GhiDanhBuoi[],
+  lopId: string,
+  ngayBuoi: string,
+  ddMap: Record<string, unknown>,
+): { ds: T[]; cuaLopTatCaIds: Set<string> } {
+  const cuaLopTatCaIds = new Set(
+    ghiDanh.filter((g) => g.lop_id === lopId && g.ngay_vao <= ngayBuoi).map((g) => g.hoc_sinh_id),
+  )
+  const cuaLopDangHocIds = new Set(
+    ghiDanh.filter((g) => g.lop_id === lopId && g.trang_thai === 'dang_hoc' && g.ngay_vao <= ngayBuoi).map((g) => g.hoc_sinh_id),
+  )
+  const cuaLop = tatCaHs.filter((h) => cuaLopDangHocIds.has(h.id))
+  const daChamNgoai = tatCaHs.filter((h) => ddMap[h.id] != null && !cuaLopDangHocIds.has(h.id))
+  return { ds: [...cuaLop, ...daChamNgoai], cuaLopTatCaIds }
+}

@@ -12,8 +12,8 @@ interface Dong {
 
 const LOAI: Record<string, string> = {
   sticker_cong_tru: 'Sticker ngoài buổi', tro_giang_buoi: 'Trợ giảng có mặt', buoi_hoc: 'Buổi học', lop: 'Lớp',
-  hoc_sinh: 'Học sinh', goi_hoc: 'Gói học', phieu_thu: 'Phiếu thu', chi_phi: 'Chi phí', tai_khoan: 'Tài khoản',
-  nhat_ky_chot_so: 'Chốt sổ',
+  hoc_sinh: 'Học sinh', ghi_danh: 'Ghi danh', goi_hoc: 'Gói học', phieu_thu: 'Phiếu thu', chi_phi: 'Chi phí',
+  tai_khoan: 'Tài khoản', nhat_ky_chot_so: 'Chốt sổ',
 }
 const HANH_DONG: Record<string, { ten: string; mau: string }> = {
   them: { ten: 'Thêm', mau: 'green' }, sua: { ten: 'Sửa', mau: 'blue' }, xoa: { ten: 'Xoá', mau: 'red' },
@@ -21,9 +21,10 @@ const HANH_DONG: Record<string, { ten: string; mau: string }> = {
 }
 // cột hay gặp đổi sang tiếng Việt; cột khác giữ tên gốc
 const COT: Record<string, string> = {
-  so: 'Số', ly_do: 'Lý do', ngay: 'Ngày', ho_ten: 'Họ tên', ten: 'Tên', lop_nghi: 'Lớp nghỉ', trang_thai: 'Trạng thái',
-  so_tien: 'Số tiền', ngay_thu: 'Ngày thu', hinh_thuc: 'Hình thức', don_gia: 'Đơn giá', don_gia_buoi: 'Đơn giá/ca',
-  don_gia_rieng: 'Đơn giá riêng', danh_muc: 'Mục', ghi_chu: 'Ghi chú', sdt_phu_huynh: 'SĐT phụ huynh',
+  so: 'Số', ly_do: 'Lý do', ngay: 'Ngày', ma_hs: 'Mã HS', ho_ten: 'Họ tên', ten: 'Tên', lop_nghi: 'Lớp nghỉ',
+  trang_thai: 'Trạng thái', so_tien: 'Số tiền', ngay_thu: 'Ngày thu', hinh_thuc: 'Hình thức', don_gia: 'Đơn giá',
+  don_gia_buoi: 'Đơn giá/ca', don_gia_rieng: 'Đơn giá riêng', tien_thang: 'Tiền tháng', lop_gia: 'Giá theo lớp',
+  danh_muc: 'Mục', ghi_chu: 'Ghi chú', sdt_phu_huynh: 'SĐT phụ huynh',
   ten_phu_huynh: 'Tên phụ huynh', hoat_dong: 'Hoạt động', sticker_dau_ky: 'Sticker đã có', loai: 'Loại',
   bat_dau: 'Bắt đầu', ket_thuc: 'Kết thúc', ngay_vao: 'Ngày vào', thang_bat_dau: 'Từ tháng', so_thang: 'Số tháng',
   tien_du_tru: 'Trừ tiền dư', dieu_chinh: 'Điều chỉnh', ly_do_dieu_chinh: 'Lý do điều chỉnh', link_zalo: 'Link Zalo',

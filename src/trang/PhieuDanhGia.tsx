@@ -7,7 +7,7 @@ import { MAU } from '../giao-dien'
 
 interface DuLieu {
   thang: string; han: string; lops: { id: string; ten: string }[]
-  hoc_sinhs: { id: string; ho_ten: string; lop_id: string; da_gui: boolean }[]; tro_giangs: { id: string; ho_ten: string }[]
+  hoc_sinhs: { id: string; ho_ten: string; ma_hs?: string | null; lop_id: string; da_gui: boolean }[]; tro_giangs: { id: string; ho_ten: string }[]
 }
 const KHONG = 'khong'
 const THANG_DIEM = '1 Rất kém · 2 Kém · 3 Trung bình · 4 Khá · 5 Tốt'
@@ -62,7 +62,11 @@ export default function PhieuDanhGia({ ma }: { ma: string }) {
         </Form.Item>
         <Form.Item name="hs" label="Tên em" rules={[{ required: true, message: 'Em chọn tên mình nhé' }]}>
           <Select size="large" placeholder={lop ? 'Chọn tên' : 'Chọn lớp trước'} disabled={!lop} showSearch optionFilterProp="label"
-            options={d.hoc_sinhs.filter((h) => h.lop_id === lop).map((h) => ({ value: h.id, label: h.da_gui ? `${h.ho_ten} (đã gửi)` : h.ho_ten, disabled: h.da_gui }))} />
+            options={d.hoc_sinhs.filter((h) => h.lop_id === lop).map((h) => {
+              // Hiển thị kèm Mã HS để phân biệt học sinh trùng tên cùng lớp và hỗ trợ tìm theo mã
+              const ten = h.ma_hs ? `${h.ho_ten} (${h.ma_hs})` : h.ho_ten
+              return { value: h.id, label: h.da_gui ? `${ten} (đã gửi)` : ten, disabled: h.da_gui }
+            })} />
         </Form.Item>
       </Card>
 

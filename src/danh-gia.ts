@@ -55,3 +55,49 @@ export function tongHop(phieus: PhieuDanhGia[], lopId?: string) {
     nhanXet: { khoa_hoc: y('khoa_hoc'), kho_khan: y('kho_khan'), nhan_xet: yTg('nhan_xet'), chua_bai: yTg('chua_bai') },
   }
 }
+
+export interface LopDaGui<L extends { id: string; ten: string; hoat_dong?: boolean }, H extends { id: string; ho_ten: string }> {
+  l: L; tong: number; chua: H[]
+}
+
+/**
+ * Thống kê tỷ lệ gửi phiếu đánh giá theo học sinh đang học ở các lớp đang xét:
+ * mỗi em chỉ gửi 1 phiếu/tháng (kể cả học nhiều lớp), nên khi lọc một lớp cụ thể hoặc xem tất cả lớp,
+ * `soEmDaGui` đếm đúng số em duy nhất thuộc tập `tongEm` đã gửi phiếu, khớp nhất quán với bảng từng lớp.
+ */
+export function thongKeDaGui<
+  L extends { id: string; ten: string; hoat_dong?: boolean },
+  H extends { id: string; ho_ten: string },
+>(
+  phieus: Pick<PhieuDanhGia, 'hoc_sinh_id'>[],
+  lops: L[],
+  hss: H[],
+  gds: { lop_id: string; hoc_sinh_id: string; trang_thai?: 'dang_hoc' | 'ngung' }[],
+  lopId?: string,
+): { nhomLop: LopDaGui<L, H>[]; tongEm: number; soEmDaGui: number } {
+  const daGui = new Set(phieus.map((p) => p.hoc_sinh_id).filter((id): id is string => !!id))
+  const hsMap = new Map(hss.map((h) => [h.id, h]))
+  const gdHoatDong = gds.filter((g) => g.trang_thai !== 'ngung')
+  const lopXet = lops.filter((l) => l.hoat_dong !== false && (!lopId || l.id === lopId))
+
+  const emIds = new Set<string>()
+  const nhomLop: LopDaGui<L, H>[] = []
+  for (const l of lopXet) {
+    const dsTheoLop = new Map<string, H>()
+    for (const g of gdHoatDong) {
+      if (g.lop_id !== l.id) continue
+      const h = hsMap.get(g.hoc_sinh_id)
+      if (!h) continue
+      dsTheoLop.set(h.id, h)
+      emIds.add(h.id)
+    }
+    if (!dsTheoLop.size) continue
+    const ds = [...dsTheoLop.values()].sort((a, b) => a.ho_ten.localeCompare(b.ho_ten))
+    nhomLop.push({ l, tong: ds.length, chua: ds.filter((h) => !daGui.has(h.id)) })
+  }
+  nhomLop.sort((a, b) => b.chua.length - a.chua.length || a.l.ten.localeCompare(b.l.ten))
+
+  let soEmDaGui = 0
+  for (const id of emIds) if (daGui.has(id)) soEmDaGui++
+  return { nhomLop, tongEm: emIds.size, soEmDaGui }
+}
