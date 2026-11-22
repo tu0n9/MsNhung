@@ -4,6 +4,8 @@
 
 export type Thang = string // 'YYYY-MM'
 
+export interface LopGiaGoi { lop_id: string; ngay_vao: string; don_gia?: number }
+
 export interface Goi {
   id: string
   hoc_sinh_id: string
@@ -13,6 +15,8 @@ export interface Goi {
   buoi_du_kien: Record<Thang, number>
   /** Tổng học phí gốc theo từng tháng khi học sinh học nhiều lớp khác giá; null khi đồng giá. */
   tien_thang?: Record<Thang, number> | null
+  /** Ảnh chụp lớp, ngày vào và đơn giá lúc tạo gói; null/undefined với gói cũ trước khi có cột này. */
+  lop_gia?: LopGiaGoi[] | null
   tien_du_tru: number
   dieu_chinh: number
 }
@@ -125,9 +129,47 @@ export function trangThaiThang(th: TongHopThang): 'con_no' | 'dong_truoc' | 'du'
   return th.phaiThu > 0 && th.dongTruoc >= th.phaiThu ? 'dong_truoc' : 'du'
 }
 
+/**
+ * Học sinh đang học lớp có phí (> 0) nhưng chưa đóng gói nào phủ tháng này và chưa phát sinh tiền/nợ/thu trong kỳ:
+ * hiển thị "Chưa có gói" thay vì gán nhầm nhãn "Đã đủ".
+ */
+export function chuaCoGoiThang(
+  r: Pick<TongHopThang, 'phaiThu' | 'noKyTruoc' | 'daThu' | 'conPhaiThu'> & {
+    hs: { id: string; don_gia: number }
+    ghiDanh: { trang_thai: string; don_gia_rieng?: number | null }[]
+  },
+  goi: Goi[],
+  thang: Thang,
+): boolean {
+  if (r.phaiThu !== 0 || r.noKyTruoc !== 0 || r.daThu !== 0 || r.conPhaiThu !== 0) return false
+  if (goiCuaThang(goi.filter((x) => x.hoc_sinh_id === r.hs.id), thang)) return false
+  return r.ghiDanh.some((g) => g.trang_thai === 'dang_hoc' && (g.don_gia_rieng ?? r.hs.don_gia) > 0)
+}
+
 export const tongGoi = (g: Goi) => Object.values(phaiThuTheoThang(g)).reduce((s, x) => s + x, 0)
 export const daDongGoi = (g: Goi, phieu: PhieuThu[]) => phieu.filter((p) => p.goi_id === g.id).reduce((s, p) => s + p.so_tien, 0)
 export const conNoGoi = (g: Goi, phieu: PhieuThu[]) => tongGoi(g) - daDongGoi(g, phieu)
+
+/**
+ * Nợ thực còn lại của từng gói sau khi bù trừ phần đóng thừa từ các gói khác của cùng học sinh (theo thứ tự tháng bắt đầu).
+ * Bảo đảm tổng nợ thực trên các gói luôn khớp với `Math.max(0, sum(tongGoi) - sum(daDongGoi))` và `tongHopHocSinh.conPhaiThu`.
+ */
+export function noThucCuaGoi(goi: Goi[], phieu: PhieuThu[]): Record<string, number> {
+  const sorted = [...goi].sort((a, b) => a.thang_bat_dau.localeCompare(b.thang_bat_dau))
+  let thua = sorted.reduce((s, g) => s + Math.max(0, -conNoGoi(g, phieu)), 0)
+  const kq: Record<string, number> = {}
+  for (const g of sorted) {
+    const conNo = conNoGoi(g, phieu)
+    if (conNo > 0) {
+      const bu = Math.min(conNo, thua)
+      kq[g.id] = conNo - bu
+      thua -= bu
+    } else {
+      kq[g.id] = 0
+    }
+  }
+  return kq
+}
 /** Tháng ngay sau tháng cuối của gói. */
 export const thangHetGoi = (g: Pick<Goi, 'thang_bat_dau' | 'so_thang'>): Thang => congThang(thangCua(g.thang_bat_dau), g.so_thang)
 
@@ -167,7 +209,7 @@ export function tinhTrangGoi<G extends GoiNgan>(goi: G[], lich: number[], ngayVa
   for (let d = new Date(`${cuoi.thang_bat_dau}T00:00:00Z`); d.toISOString().slice(0, 10) < den; d.setUTCDate(d.getUTCDate() + 1)) {
     const n = d.toISOString().slice(0, 10)
     if (!lich.includes(d.getUTCDay())) continue
-    buoiCuoi = n
+    if (n >= ngayVao) buoiCuoi = n
     if (n >= tu) conBuoi++
   }
   const loai = conBuoi === 0 ? 'het' : conBuoi <= NGUONG_GIA_HAN ? 'sap_het' : 'con'
@@ -224,18 +266,25 @@ export function tinhTrangGoiNhieuLop<G extends GoiNgan>(goi: G[], ds: LichLopEm[
   return { loai, goi: cuoi, conBuoi, buoiCuoi, thangKe: thangHetGoi(cuoi) }
 }
 
-/** Tiền dư của gói qua nhiều lớp: buổi phụ lớp khác không bù chéo cho buổi lớp nghỉ của lớp kia. */
+/**
+ * Tiền dư của gói qua nhiều lớp: buổi phụ lớp khác không bù chéo cho buổi lớp nghỉ của lớp kia.
+ * Chỉ dùng giá riêng theo lớp khi gói tính theo `tien_thang` (hỗn hợp); gói 0đ hoặc đồng giá ghi đè (`tien_thang == null`) dùng `g.don_gia`.
+ */
 export function tienDuGoiNhieuLop(
-  g: Goi, buoi: BuoiDacBietLop[], ds: { lop_id: string; ngay_vao: string; don_gia?: number }[],
+  g: Goi, buoi: BuoiDacBietLop[], ds: LopGiaGoi[],
 ): number {
-  return ds.reduce((s, x) => {
+  const coGiaTheoLop = g.tien_thang != null
+  // Gói mới luôn xét theo ảnh chụp `lop_gia` lúc tạo gói; gói cũ chưa có `lop_gia` lùi về `ds`.
+  const dsXet = g.lop_gia ?? ds
+  return dsXet.reduce((s, x) => {
     const n = demNghiPhu(g, buoi.filter((b) => b.lop_id === x.lop_id), x.ngay_vao)
-    return s + Math.max(0, n.nghi - n.phu) * (x.don_gia ?? g.don_gia)
+    const gia = coGiaTheoLop ? (x.don_gia ?? g.don_gia) : g.don_gia
+    return s + Math.max(0, n.nghi - n.phu) * gia
   }, 0)
 }
 
 export function duConLaiNhieuLop(
-  goi: Goi[], buoi: BuoiDacBietLop[], ds: { lop_id: string; ngay_vao: string; don_gia?: number }[], daHoan: number, truocThang: Thang,
+  goi: Goi[], buoi: BuoiDacBietLop[], ds: LopGiaGoi[], daHoan: number, truocThang: Thang,
 ): number {
   const phatSinh = goi.filter((g) => thangHetGoi(g) <= truocThang).reduce((s, g) => s + tienDuGoiNhieuLop(g, buoi, ds), 0)
   const daTru = goi.reduce((s, g) => s + g.tien_du_tru, 0)
@@ -289,6 +338,28 @@ export function demChuaBu(dd: { trang_thai: string; loai: string }[]): number {
 
 export const vnd = (n: number) => n.toLocaleString('vi-VN') + ' đ'
 
+/**
+ * Mô tả đơn giá/buổi của học sinh trong một tháng:
+ * Ưu tiên lấy từ ảnh chụp `g.lop_gia` (hoặc `g.don_gia` với gói cũ chưa có `lop_gia`) của gói phủ tháng đó
+ * để khi xem lại tháng đã chốt không bị nhảy theo giá mới; chỉ fallback về giá hiện tại trên `ghiDanh` / `hs` khi tháng chưa có gói.
+ */
+export function moTaGiaThang(
+  hs: { don_gia: number },
+  ghiDanh: { trang_thai: string; don_gia_rieng?: number | null }[],
+  g?: Pick<Goi, 'don_gia' | 'lop_gia'> | null,
+): string {
+  let gias: number[]
+  if (g) {
+    gias = g.lop_gia?.length ? g.lop_gia.map((x) => x.don_gia ?? g.don_gia) : [g.don_gia]
+  } else {
+    const gds = ghiDanh.filter((x) => x.trang_thai === 'dang_hoc')
+    const ds = gds.length ? gds : ghiDanh
+    gias = ds.length ? ds.map((x) => x.don_gia_rieng ?? hs.don_gia) : [hs.don_gia]
+  }
+  const min = Math.min(...gias), max = Math.max(...gias)
+  return min === max ? `${vnd(min)}/buổi` : `${vnd(min)}–${vnd(max)}/buổi`
+}
+
 export function tinNhanPhuHuynh(tenHs: string, thang: Thang, th: TongHopThang, soBuoi: number): string {
   const [y, m] = thang.split('-')
   return [
@@ -308,9 +379,10 @@ const ngayVN = (n: string) => n.split('-').reverse().join('/')
 export function tinNhanGiaHan(tenHs: string, tt: TinhTrangGoi, soBuoiKe: number, donGia: number, tongTienKe?: number): string {
   const [y, m] = tt.thangKe.split('-')
   const dau = 'Trung tâm Anh ngữ Ms.Nhung xin thông báo'
+  const ngayKt = tt.buoiCuoi ? ` ngày ${ngayVN(tt.buoiCuoi)}` : ''
   const goi = !tt.goi ? `${dau} học phí của em ${tenHs}.`
-    : tt.loai === 'het' ? `${dau}: gói học của em ${tenHs} (${tenGoi(tt.goi)}) đã kết thúc ngày ${ngayVN(tt.buoiCuoi ?? '')}.`
-    : `${dau}: gói học của em ${tenHs} (${tenGoi(tt.goi)}) còn ${tt.conBuoi} buổi, kết thúc ngày ${ngayVN(tt.buoiCuoi ?? '')}.`
+    : tt.loai === 'het' ? `${dau}: gói học của em ${tenHs} (${tenGoi(tt.goi)}) đã kết thúc${ngayKt}.`
+    : `${dau}: gói học của em ${tenHs} (${tenGoi(tt.goi)}) còn ${tt.conBuoi} buổi${ngayKt ? `, kết thúc${ngayKt}` : ''}.`
   const dongTien = tongTienKe !== undefined && tongTienKe !== soBuoiKe * donGia
     ? `Học phí tháng ${m}/${y}: ${soBuoiKe} buổi = ${vnd(tongTienKe)}.`
     : `Học phí tháng ${m}/${y}: ${soBuoiKe} buổi × ${vnd(donGia)} = ${vnd(soBuoiKe * donGia)}.`

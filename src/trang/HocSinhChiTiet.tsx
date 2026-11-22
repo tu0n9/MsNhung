@@ -5,7 +5,7 @@ import { useToi } from '../App'
 import { MAU, O_TIEN } from '../giao-dien'
 import { homNay, laQuanLy, lopCuaHs, giaGhiDanh, q, sb, taiTongSticker, useMotLan, urlAnh, type BuoiHoc, type GhiDanh, type HocSinh, type Lop, type StickerCongTru } from '../supabase'
 import {
-  congThang, conNoGoi, daDongGoi, demBuoiDuKien, demBuoiDuKienNhieuLop, demChuaBu, duConLaiNhieuLop, tenGoi, thangHetGoi, tienDuGoiNhieuLop,
+  congThang, daDongGoi, demBuoiDuKien, demBuoiDuKienNhieuLop, demChuaBu, duConLaiNhieuLop, noThucCuaGoi, tenGoi, thangHetGoi, tienDuGoiNhieuLop,
   tinhTienThangNhieuLop, tinhTrangGoiNhieuLop, tinNhanPhuHuynh, tongGoi, tongHopHocSinh, vnd, type BuoiDacBietLop, type Goi, type PhieuThu, type Thang,
 } from '../hoc-phi'
 import { moTaLich } from '../gio-hoc'
@@ -55,21 +55,24 @@ export default function HocSinhChiTiet({ hs, lops, ghiDanh, quayLai }: { hs: Hoc
   }
 
   const tai = async () => {
-    const [d, g, b, h, ct, tong] = await Promise.all([
+    const [d, g, h, ct, tong] = await Promise.all([
       q(sb.from('diem_danh').select('trang_thai, sticker, buoi_hoc(*)').eq('hoc_sinh_id', hs.id)),
       q(sb.from('goi_hoc').select('*').eq('hoc_sinh_id', hs.id).order('thang_bat_dau')),
-      lopIdsTatCa.length
-        ? q(sb.from('buoi_hoc').select('*').in('lop_id', lopIdsTatCa).or('lop_nghi.eq.true,loai.eq.phu'))
-        : Promise.resolve([]),
       // khoản đã hoàn tiền dư cho em này (chỉ giáo viên đọc được chi_phi; trợ giảng nhận về rỗng)
       q(sb.from('chi_phi').select('so_tien').eq('hoc_sinh_id', hs.id).eq('danh_muc', 'Hoàn học phí')),
       q(sb.from('sticker_cong_tru').select('*').eq('hoc_sinh_id', hs.id).order('tao_luc', { ascending: false })),
       taiTongSticker([hs.id]),
     ])
+    const goiList = g as (Goi & { ly_do_dieu_chinh: string | null })[]
+    // Lấy thêm buổi của các lớp nằm trong ảnh chụp `lop_gia` phòng trường hợp ghi_danh lớp đó đã bị xoá.
+    const lopIdsBuoi = [...new Set([...lopIdsTatCa, ...goiList.flatMap((x) => x.lop_gia?.map((l) => l.lop_id) ?? [])])]
+    const b = lopIdsBuoi.length
+      ? await q(sb.from('buoi_hoc').select('*').in('lop_id', lopIdsBuoi).or('lop_nghi.eq.true,loai.eq.phu'))
+      : []
     setCongTru(ct as StickerCongTru[]); setTongSticker(tong[hs.id] ?? 0)
-    setDd(d as never); setGoi(g as never); setBuoiDb(b as BuoiHoc[])
+    setDd(d as never); setGoi(goiList); setBuoiDb(b as BuoiHoc[])
     setDaHoan((h as { so_tien: number }[]).reduce((s, x) => s + x.so_tien, 0))
-    const ids = (g as Goi[]).map((x) => x.id)
+    const ids = goiList.map((x) => x.id)
     setPhieu(ids.length ? await q(sb.from('phieu_thu').select('*').in('goi_id', ids).order('ngay_thu')) as Phieu[] : [])
     if (hs.avatar) setAvatar((await urlAnh([hs.avatar]))[hs.avatar])
   }
@@ -88,12 +91,16 @@ export default function HocSinhChiTiet({ hs, lops, ghiDanh, quayLai }: { hs: Hoc
     if (!g || b.ngay < g.ngay_vao) return false
     return g.trang_thai === 'dang_hoc' || b.lop_nghi
   }), [buoiThang, gdMap])
-  const ngayVaoMin = gdEm.map((g) => g.ngay_vao).sort()[0] ?? hs.ngay_vao
+  // Ưu tiên ngày vào sớm nhất của các lớp đang học; chỉ lùi về mọi lớp khi em đã ngừng toàn bộ
+  const ngayVaoMin = (gdDangHoc.length ? gdDangHoc : gdEm).map((g) => g.ngay_vao).sort()[0] ?? hs.ngay_vao
 
   const trongThang = dd.filter((x) => x.buoi_hoc.ngay.startsWith(thang)).sort((a, b) => a.buoi_hoc.ngay.localeCompare(b.buoi_hoc.ngay))
   const soCoMat = trongThang.filter((x) => x.trang_thai !== 'vang').length
   const chuaBu = demChuaBu(dd.map((x) => ({ trang_thai: x.trang_thai, loai: x.buoi_hoc.loai })))
   const th = useMemo(() => tongHopHocSinh(goi, phieu, thang), [goi, phieu, thang])
+  const noTheoGoi = useMemo(() => noThucCuaGoi(goi, phieu), [goi, phieu])
+  const dangNo = useMemo(() => goi.filter((g) => (noTheoGoi[g.id] ?? 0) > 0), [goi, noTheoGoi])
+  const chanThuTien = gdDangHoc.length === 0 && dangNo.length === 0
   const tinNhan = tinNhanPhuHuynh(hs.ho_ten, thang, th, soCoMat)
   const tt = tinhTrangGoiNhieuLop(goi, dsLopDangHoc, homNay())
   const ngayNgan = (n?: string) => n ? `${n.slice(8)}/${n.slice(5, 7)}` : ''
@@ -154,7 +161,11 @@ export default function HocSinhChiTiet({ hs, lops, ghiDanh, quayLai }: { hs: Hoc
         ]} />
       </Card>}
 
-      {ql && <Card size="small" title="Học phí" extra={<Button type="primary" onClick={() => setThuTien(true)}>Thu tiền</Button>}>
+      {ql && <Card size="small" title="Học phí" extra={
+        <Button type="primary" disabled={chanThuTien}
+          title={chanThuTien ? 'Học sinh đã ngừng học và không còn gói nợ' : undefined}
+          onClick={() => setThuTien(true)}>Thu tiền</Button>
+      }>
         {gdDangHoc.length > 0 && <div style={{ marginBottom: 8, color: tt.loai === 'con' ? undefined : MAU.do }} data-goi-hien-tai>
           {!tt.goi ? 'Chưa có gói' : tt.loai === 'het' ? `Gói: ${tenGoi(tt.goi)} · đã hết ngày ${ngayNgan(tt.buoiCuoi)}`
             : `Gói: ${tenGoi(tt.goi)} · còn ${tt.conBuoi} buổi`}
@@ -183,7 +194,7 @@ export default function HocSinhChiTiet({ hs, lops, ghiDanh, quayLai }: { hs: Hoc
           }}><a style={{ color: 'red' }}>Xoá</a></Popconfirm> },
         ]} />
         {goi.length > 0 && <div style={{ marginTop: 6, fontSize: 13 }}>
-          Tiền dư còn lại chưa trừ / chưa hoàn: <b>{vnd(duConLaiNhieuLop(goi, buoiDb as BuoiDacBietLop[], dsLopDu, daHoan, '9999-12'))}</b>
+          Tiền dư còn lại chưa trừ / chưa hoàn: <b>{vnd(duConLaiNhieuLop(goi, buoiDb as BuoiDacBietLop[], dsLopDu, daHoan, thangHetGoi(goi[goi.length - 1])))}</b>
         </div>}
 
         <Table size="small" style={{ marginTop: 12 }} rowKey="id" pagination={false} dataSource={phieu} scroll={{ x: true }}
@@ -263,17 +274,26 @@ function ThuTien({ hs, dsLopDangHoc, dsLopDu, ngayVaoMin, goi, phieu, buoiDb, da
 }) {
   const { message } = App.useApp()
   const [form] = Form.useForm()
-  const dangNo = goi.filter((g) => conNoGoi(g, phieu) > 0)
+  const noTheoGoi = noThucCuaGoi(goi, phieu)
+  const dangNo = goi.filter((g) => (noTheoGoi[g.id] ?? 0) > 0)
   const cuoi = goi[goi.length - 1]
   // chưa có gói nào: lấy tháng muộn hơn giữa tháng vào học và tháng này
   const thangKe = cuoi ? thangHetGoi(cuoi) : [dayjs(ngayVaoMin).format('YYYY-MM'), dayjs().format('YYYY-MM')].sort()[1]
-  const duCon = duConLaiNhieuLop(goi, buoiDb as BuoiDacBietLop[], dsLopDu, daHoan, thangKe)
+  const duConBanDau = duConLaiNhieuLop(goi, buoiDb as BuoiDacBietLop[], dsLopDu, daHoan, thangKe)
+  const buoiBanDau = demBuoiDuKienNhieuLop(dsLopDangHoc, thangKe, 1)
+  const tienThangBanDau = tinhTienThangNhieuLop(dsLopDangHoc, hs.don_gia, thangKe, 1)
+  const tongBanDau = tongGoi({
+    id: '', hoc_sinh_id: hs.id, thang_bat_dau: `${thangKe}-01`, so_thang: 1, don_gia: hs.don_gia,
+    buoi_du_kien: buoiBanDau, tien_thang: tienThangBanDau, tien_du_tru: 0, dieu_chinh: 0,
+  })
+  const truBanDau = Math.max(0, Math.min(duConBanDau, tongBanDau))
 
   const v = Form.useWatch([], form) ?? {}
   const coGiaOverride = typeof v.don_gia === 'number' && !Number.isNaN(v.don_gia)
   const donGia = coGiaOverride ? v.don_gia : hs.don_gia
   const thangBd: Thang = v.thang?.format?.('YYYY-MM') ?? thangKe
   const soThang = v.so_thang ?? 1
+  const duCon = duConLaiNhieuLop(goi, buoiDb as BuoiDacBietLop[], dsLopDu, daHoan, thangBd)
   const buoi = demBuoiDuKienNhieuLop(dsLopDangHoc, thangBd, soThang)
   const coGiaRiengLop = dsLopDangHoc.some((x) => x.don_gia !== hs.don_gia)
   const tienThang = coGiaOverride ? null : tinhTienThangNhieuLop(dsLopDangHoc, hs.don_gia, thangBd, soThang)
@@ -284,23 +304,36 @@ function ThuTien({ hs, dsLopDangHoc, dsLopDu, ngayVaoMin, goi, phieu, buoiDb, da
         return `${x.ten}: ${sbLop}b × ${vnd(x.don_gia)}`
       }).join(' + ')
     : null
+  const tongTruocDu = tongGoi({
+    id: '', hoc_sinh_id: hs.id, thang_bat_dau: `${thangBd}-01`, so_thang: soThang, don_gia: donGia,
+    buoi_du_kien: buoi, tien_thang: tienThang, tien_du_tru: 0, dieu_chinh: v.dieu_chinh ?? 0,
+  })
+  // trừ tiền dư không quá tổng gói, không thì gói âm
+  const truToiDa = Math.max(0, Math.min(duCon, tongTruocDu))
   const tongGoiMoi = tongGoi({
     id: '', hoc_sinh_id: hs.id, thang_bat_dau: `${thangBd}-01`, so_thang: soThang, don_gia: donGia,
     buoi_du_kien: buoi, tien_thang: tienThang, tien_du_tru: v.tien_du_tru ?? 0, dieu_chinh: v.dieu_chinh ?? 0,
   })
-  // trừ tiền dư không quá tổng gói, không thì gói âm
-  const truToiDa = Math.max(0, Math.min(duCon, tongGoiMoi + (v.tien_du_tru ?? 0)))
-  const noGoi = v.loai === 'no' ? conNoGoi(goi.find((g) => g.id === v.goi_id) ?? dangNo[0], phieu) : 0
+  const noGoi = v.loai === 'no' ? (noTheoGoi[(goi.find((g) => g.id === v.goi_id) ?? dangNo[0])?.id ?? ''] ?? 0) : 0
+
+  useEffect(() => {
+    if ((v.don_gia === 0 || truToiDa === 0) && (form.getFieldValue('tien_du_tru') ?? 0) > 0) {
+      form.setFieldValue('tien_du_tru', 0)
+    }
+  }, [v.don_gia, truToiDa, form])
 
   const [luu, dangLuu] = useMotLan(async () => {
     const x = await form.validateFields().catch(() => null)
     if (!x) return
     let goiId = x.goi_id
     if (x.loai === 'moi') {
+      if (!dsLopDangHoc.length) { message.error('Học sinh không có lớp đang học để đóng gói mới'); return }
       try {
         const g = await q(sb.from('goi_hoc').insert({
           hoc_sinh_id: hs.id, thang_bat_dau: `${thangBd}-01`, so_thang: x.so_thang, don_gia: donGia, buoi_du_kien: buoi,
-          tien_thang: tienThang, tien_du_tru: x.tien_du_tru ?? 0, dieu_chinh: x.dieu_chinh ?? 0, ly_do_dieu_chinh: x.ly_do || null,
+          tien_thang: tienThang,
+          lop_gia: dsLopDangHoc.map((l) => ({ lop_id: l.lop_id, ngay_vao: l.ngay_vao, don_gia: coGiaOverride ? donGia : l.don_gia })),
+          tien_du_tru: x.tien_du_tru ?? 0, dieu_chinh: x.dieu_chinh ?? 0, ly_do_dieu_chinh: x.ly_do || null,
         }).select().single()) as Goi
         goiId = g.id
       } catch (e) { message.error((e as Error).message); return }
@@ -323,11 +356,14 @@ function ThuTien({ hs, dsLopDangHoc, dsLopDu, ngayVaoMin, goi, phieu, buoiDb, da
     <Modal open title={`Thu tiền: ${hs.ho_ten}`} onCancel={dong} onOk={() => luu()} okText="Lưu" confirmLoading={dangLuu}>
       <Form form={form} layout="vertical" initialValues={{
         loai: dangNo.length ? 'no' : 'moi', goi_id: dangNo[0]?.id, so_thang: 1, thang: dayjs(thangKe),
-        tien_du_tru: duCon, ngay_thu: dayjs(), hinh_thuc: 'tien_mat',
+        tien_du_tru: truBanDau, ngay_thu: dayjs(), hinh_thuc: 'tien_mat',
       }}>
-        <Form.Item name="loai"><Radio.Group optionType="button" options={[{ value: 'moi', label: 'Đóng gói mới' }, { value: 'no', label: 'Trả gói đang nợ', disabled: !dangNo.length }]} /></Form.Item>
+        <Form.Item name="loai"><Radio.Group optionType="button" options={[
+          { value: 'moi', label: 'Đóng gói mới', disabled: !dsLopDangHoc.length },
+          { value: 'no', label: 'Trả gói đang nợ', disabled: !dangNo.length },
+        ]} /></Form.Item>
         {v.loai === 'no' ? (
-          <Form.Item name="goi_id" label="Gói"><Select options={dangNo.map((g) => ({ value: g.id, label: `${tenGoi(g)} · còn nợ ${vnd(conNoGoi(g, phieu))}` }))} /></Form.Item>
+          <Form.Item name="goi_id" label="Gói"><Select options={dangNo.map((g) => ({ value: g.id, label: `${tenGoi(g)} · còn nợ ${vnd(noTheoGoi[g.id] ?? 0)}` }))} /></Form.Item>
         ) : <>
           <Form.Item name="so_thang" label="Số tháng"><Radio.Group optionType="button" options={[1, 2, 3].map((n) => ({ value: n, label: `${n} tháng` }))} /></Form.Item>
           <Form.Item name="thang" label="Từ tháng"><DatePicker picker="month" format="MM/YYYY" allowClear={false} /></Form.Item>
@@ -337,6 +373,7 @@ function ThuTien({ hs, dsLopDangHoc, dsLopDu, ngayVaoMin, goi, phieu, buoiDb, da
             <InputNumber {...tien} placeholder={coGiaRiengLop ? 'Theo từng lớp' : `${donGia}`} />
           </Form.Item>
           <Form.Item name="tien_du_tru" label={`Trừ tiền dư (còn lại ${vnd(duCon)})`}
+            rules={[{ validator: (_, so) => (so ?? 0) >= 0 && (so ?? 0) <= truToiDa ? Promise.resolve() : Promise.reject(new Error(`Chỉ trừ tối đa ${vnd(truToiDa)}`)) }]}
             extra={!duCon && 'Chưa có tiền dư: tiền dư chỉ sinh từ buổi lớp nghỉ của gói đã kết thúc. Tiền dư ngoài app (sổ cũ) nhập ở ô Điều chỉnh bằng số âm.'}>
             <InputNumber {...tien} max={truToiDa} disabled={!duCon} />
           </Form.Item>

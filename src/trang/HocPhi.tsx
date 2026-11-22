@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { App, Avatar, Button, Card, DatePicker, Empty, Input, Segmented, Select, Space, Tag } from 'antd'
 import dayjs from 'dayjs'
 import { taiDuLieuThang, tongCong, type DongHs, type DuLieuThang } from '../du-lieu'
-import { demBuoiDuKienNhieuLop, tinhTienThangNhieuLop, tinhTrangGoiNhieuLop, tinNhanGiaHan, trangThaiThang, vnd, type Thang } from '../hoc-phi'
+import { chuaCoGoiThang, demBuoiDuKienNhieuLop, goiCuaThang, moTaGiaThang, tinhTienThangNhieuLop, tinhTrangGoiNhieuLop, tinNhanGiaHan, trangThaiThang, vnd, type Thang } from '../hoc-phi'
 import { giaGhiDanh, homNay, hsDangHoc, q, sb, taiHet, urlAnh, useMotLan, type HocSinh } from '../supabase'
 import HocSinhChiTiet from './HocSinhChiTiet'
 import { CHU_SO, MAU } from '../giao-dien'
@@ -41,14 +41,13 @@ export default function HocPhi() {
   const [khoaDen, setKhoaDen] = useState<string | null>(null)
   const [xem, setXem] = useState<HocSinh | null>(null)
   const [url, setUrl] = useState<Record<string, string>>({})
-  const [dangXuat, setDangXuat] = useState(false)
   const [dungLuong, setDungLuong] = useState<number>()
   useEffect(() => { sb.rpc('dung_luong_anh').then(({ data }) => setDungLuong(data ?? undefined)) }, [])
 
   // daHuy: đổi tháng nhanh thì số của tháng cũ về muộn không được hiện dưới tên tháng mới
-  const tai = async (daHuy = () => false) => {
+  const tai = async (daHuy: (() => boolean) | unknown = () => false) => {
     const [x, k] = await Promise.all([taiDuLieuThang(thang), q(sb.from('khoa_so').select('khoa_den').single())])
-    if (daHuy()) return
+    if (typeof daHuy === 'function' && daHuy()) return
     setD(x); setKhoaDen((k as { khoa_den: string | null }).khoa_den)
     setUrl(await urlAnh(x.dong.map((r) => r.hs.avatar!).filter(Boolean)))
   }
@@ -59,6 +58,15 @@ export default function HocPhi() {
     return () => { huy = true }
   }, [thang])
   const [saoLuu, dangSaoLuu] = useMotLan(() => saoLuuToanBo().catch((e) => message.error(e.message)))
+  // await và khoá bấm đúp qua useMotLan để bắt đủ lỗi xuất Excel vào UI thay vì unhandled rejection
+  const [xuat, dangXuat] = useMotLan(async () => {
+    if (!d) return
+    try {
+      await (await import('../xuat-excel')).xuatExcel(d)
+    } catch (e) {
+      message.error((e as Error).message)
+    }
+  })
 
   if (xem && d) return <HocSinhChiTiet hs={xem} lops={d.lops} ghiDanh={d.ghiDanh} quayLai={() => { setXem(null); taiLai() }} />
   if (!d) return null
@@ -69,15 +77,11 @@ export default function HocPhi() {
   const timK = khongDau(tim.trim())
   const khopBoLoc = (r: DongHs) =>
     (!lopId || r.lopIds.includes(lopId)) && (!timK || khongDau(r.hs.ho_ten).includes(timK) || khongDau(r.hs.ma_hs).includes(timK))
-  const loc1 = (r: DongHs) => (loc === 'tat_ca' || (loc === 'no' ? r.conPhaiThu > 0 : r.conPhaiThu <= 0)) && khopBoLoc(r)
+  const chuaGoi = (r: DongHs) => chuaCoGoiThang(r, d.goi, thang)
+  const loc1 = (r: DongHs) => (loc === 'tat_ca' || (loc === 'no' ? r.conPhaiThu > 0 : r.conPhaiThu <= 0 && !chuaGoi(r))) && khopBoLoc(r)
 
-  const moTaGia = (r: DongHs) => {
-    const gds = r.ghiDanh.filter((g) => g.trang_thai === 'dang_hoc')
-    const ds = gds.length ? gds : r.ghiDanh
-    const gias = ds.length ? ds.map((g) => giaGhiDanh(r.hs, g)) : [r.hs.don_gia]
-    const min = Math.min(...gias), max = Math.max(...gias)
-    return min === max ? `${vnd(min)}/buổi` : `${vnd(min)}–${vnd(max)}/buổi`
-  }
+  const moTaGia = (r: DongHs) =>
+    moTaGiaThang(r.hs, r.ghiDanh, goiCuaThang(d.goi.filter((x) => x.hoc_sinh_id === r.hs.id), thang))
 
   // báo gia hạn tính theo hôm nay trên mọi lớp đang học của em
   const hn = homNay()
@@ -86,15 +90,16 @@ export default function HocPhi() {
       const l = lopMap.get(g.lop_id)
       return l ? [{ lop_id: l.id, lich: l.lich, ngay_vao: g.ngay_vao, don_gia: giaGhiDanh(r.hs, g) }] : []
     })
-    if (!dsLop.length) return []
+    if (!dsLop.length || dsLop.every((x) => x.don_gia === 0)) return []
     const tt = tinhTrangGoiNhieuLop(d.goi.filter((g) => g.hoc_sinh_id === r.hs.id), dsLop, hn)
     if (tt.loai === 'con') return []
     const soBuoiKe = demBuoiDuKienNhieuLop(dsLop, tt.thangKe, 1)[tt.thangKe]
     const tienKe = tinhTienThangNhieuLop(dsLop, r.hs.don_gia, tt.thangKe, 1)?.[tt.thangKe]
     return [{ r, tt, tinNhan: tinNhanGiaHan(r.hs.ho_ten, tt, soBuoiKe, r.hs.don_gia, tienKe) }]
   }).sort((a, b) => a.tt.conBuoi - b.tt.conBuoi)
+  const ngayKt = (buoiCuoi?: string) => (buoiCuoi ? `${buoiCuoi.slice(8)}/${buoiCuoi.slice(5, 7)}` : 'chưa có lịch')
   const nhanGoi = (tt: (typeof giaHan)[number]['tt']) => tt.loai === 'chua_co' ? 'Chưa có gói'
-    : tt.loai === 'het' ? `Hết gói ${tt.buoiCuoi?.slice(8)}/${tt.buoiCuoi?.slice(5, 7)}` : `Còn ${tt.conBuoi} buổi · hết ${tt.buoiCuoi?.slice(8)}/${tt.buoiCuoi?.slice(5, 7)}`
+    : tt.loai === 'het' ? `Hết gói ${ngayKt(tt.buoiCuoi)}` : `Còn ${tt.conBuoi} buổi · hết ${ngayKt(tt.buoiCuoi)}`
 
   const chot = () => modal.confirm({
     title: `Chốt sổ tháng ${thang.slice(5)}/${thang.slice(0, 4)}?`,
@@ -111,12 +116,8 @@ export default function HocPhi() {
     modal.confirm({
       title: `Mở khoá tháng ${thang.slice(5)}/${thang.slice(0, 4)} (các tháng sau cũng mở)`,
       content: <Input placeholder="Lý do mở khoá" onChange={(e) => (lyDo = e.target.value)} />,
-      onOk: () => q(sb.rpc('mo_khoa', { thang: `${thang}-01`, ly_do: lyDo })).then(tai).catch((e) => { message.error(e.message); throw e }),
+      onOk: () => q(sb.rpc('mo_khoa', { thang: `${thang}-01`, ly_do: lyDo })).then(() => tai()).catch((e) => { message.error(e.message); throw e }),
     })
-  }
-  const xuat = async () => {
-    setDangXuat(true)
-    try { (await import('../xuat-excel')).xuatExcel(d) } catch (e) { message.error((e as Error).message) } finally { setDangXuat(false) }
   }
 
   const dsGiaHan = giaHan.filter((x) => khopBoLoc(x.r))
@@ -127,7 +128,7 @@ export default function HocPhi() {
       <Space wrap>
         <DatePicker picker="month" value={dayjs(thang)} onChange={(x) => x && setThang(x.format('YYYY-MM'))} format="MM/YYYY" allowClear={false} />
         {daChot ? <><Tag color="green">Đã chốt sổ</Tag><Button onClick={moKhoa}>Mở khoá</Button></> : <Button onClick={chot}>Chốt sổ tháng</Button>}
-        <Button type="primary" loading={dangXuat} onClick={xuat}>Xuất Excel</Button>
+        <Button type="primary" loading={dangXuat} onClick={() => xuat()}>Xuất Excel</Button>
         <Button loading={dangSaoLuu} onClick={() => saoLuu()}>Sao lưu toàn bộ</Button>
       </Space>
       {dungLuong !== undefined && <div style={{ fontSize: 13, color: dungLuong > 800 * 2 ** 20 ? MAU.do : MAU.chuPhu }} data-dung-luong-anh>
@@ -193,7 +194,9 @@ export default function HocPhi() {
                 </div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <b style={{ color: r.conPhaiThu > 0 ? MAU.do : MAU.tot }}>{r.conPhaiThu > 0 ? vnd(r.conPhaiThu) : trangThaiThang(r) === 'dong_truoc' ? 'Đã đủ (đóng trước)' : 'Đã đủ'}</b>
+                <b style={{ color: r.conPhaiThu > 0 ? MAU.do : chuaGoi(r) ? MAU.chuPhu : MAU.tot }}>
+                  {r.conPhaiThu > 0 ? vnd(r.conPhaiThu) : chuaGoi(r) ? 'Chưa có gói' : trangThaiThang(r) === 'dong_truoc' ? 'Đã đủ (đóng trước)' : 'Đã đủ'}
+                </b>
                 {r.conPhaiThu > 0 && <div style={{ fontSize: 12, color: MAU.chuPhu }}>còn nợ</div>}
               </div>
             </button>

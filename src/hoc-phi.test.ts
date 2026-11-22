@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   conNoGoi, demBuoiDuKien, demBuoiDuKienNhieuLop, demChuaBu, demNghiPhu, duConLai, duConLaiNhieuLop, goiCuaThang,
-  hocPhiGocThang, tenGoi, tienDuGoiNhieuLop, tinhTienThangNhieuLop, tinhTrangGoi, tinhTrangGoiNhieuLop, tinNhanGiaHan, vnd,
+  hocPhiGocThang, moTaGiaThang, noThucCuaGoi, tenGoi, tienDuGoiNhieuLop, tinhTienThangNhieuLop, tinhTrangGoi, tinhTrangGoiNhieuLop, tinNhanGiaHan, vnd,
   type PhieuThu, phaiThuTheoThang, tienDu, tongGoi, tongHopHocSinh,
   trangThaiThang, type BuoiDacBiet, type BuoiDacBietLop, type Goi,
 } from './hoc-phi'
@@ -165,6 +165,21 @@ describe('tinhTrangGoi, tinNhanGiaHan', () => {
     expect(c).not.toContain('gói học')
     expect(c).toContain('đóng học phí')
   })
+
+  it('tinNhanGiaHan: lớp chưa có lịch tuần (buoiCuoi = undefined) không in "ngày ." rỗng và xử lý đúng tongTienKe/donGia = 0', () => {
+    const ttHet = tinhTrangGoi([g11], [], '2026-11-01', '2026-11-20')
+    expect(ttHet.buoiCuoi).toBeUndefined()
+    const msgHet = tinNhanGiaHan('An', ttHet, 0, 150_000)
+    expect(msgHet).not.toContain('ngày .')
+    expect(msgHet).toContain('đã kết thúc.')
+
+    const msgSapHet = tinNhanGiaHan('An', { loai: 'sap_het', goi: g11, conBuoi: 2, buoiCuoi: undefined, thangKe: '2026-12' }, 4, 150_000)
+    expect(msgSapHet).not.toContain('ngày .')
+    expect(msgSapHet).toContain('còn 2 buổi.')
+
+    const msg0d = tinNhanGiaHan('Ngọc Minh', ttHet, 8, 0, 0)
+    expect(msg0d).toContain('8 buổi × ' + vnd(0) + ' = ' + vnd(0))
+  })
 })
 
 // Các ví dụ số trong docs/HUONG-DAN-SU-DUNG.md mục 5 (lớp T2-T4-T6, 120.000 đ/buổi, 13 buổi mỗi tháng 11, 12, 1).
@@ -269,6 +284,20 @@ describe('học sinh học nhiều lớp', () => {
     ], '2026-11-16')).toEqual({ loai: 'chua_co', conBuoi: 0, thangKe: '2026-11' })
   })
 
+  it('tinhTrangGoi & tinhTrangGoiNhieuLop: không lấy buoiCuoi từ ngày trước ngay_vao của lớp vào sau', () => {
+    const g11 = goi({ thang_bat_dau: '2026-11-01', so_thang: 1 })
+    // Lớp vào ngày 05/12 chưa học buổi nào trong gói tháng 11/2026 -> buoiCuoi phải là undefined
+    expect(tinhTrangGoi([g11], [1], '2026-12-05', '2026-11-20').buoiCuoi).toBeUndefined()
+    // Học sinh học T6 từ 01/11 (buổi cuối 27/11) và mới đăng ký thêm lớp T2 từ 05/12 -> buoiCuoi của gói 11/2026 là 27/11, không phải 30/11
+    const lT6 = { lop_id: 'T6', lich: [5], ngay_vao: '2026-11-01' }
+    const lT2Sau = { lop_id: 'T2', lich: [1], ngay_vao: '2026-12-05' }
+    expect(tinhTrangGoiNhieuLop([g11], [lT6, lT2Sau], '2026-11-20').buoiCuoi).toBe('2026-11-27')
+    // Gói đã hết hạn (homNay = '2026-12-01') của lớp có ngay_vao = '2026-11-01' vẫn giữ đúng buoiCuoi = '2026-11-30'
+    expect(tinhTrangGoi([g11], [1], '2026-11-01', '2026-12-01')).toMatchObject({
+      loai: 'het', conBuoi: 0, buoiCuoi: '2026-11-30',
+    })
+  })
+
   it('tinhTienThangNhieuLop & tien_thang: trường hợp Minh Trang (T6 500k + CN 1.000k)', () => {
     // T6 (5) trong 11/2026: 6,13,20,27 = 4 buổi × 500k = 2.000.000; CN (0): 1,8,15,22,29 = 5 buổi × 1.000k = 5.000.000 -> 7.000.000
     const l1h = { lop_id: 'T6', lich: [5], ngay_vao: '2026-11-01', don_gia: 500_000 }
@@ -294,7 +323,10 @@ describe('học sinh học nhiều lớp', () => {
   })
 
   it('tienDuGoiNhieuLop & tinNhanGiaHan với lớp có giá riêng', () => {
-    const g = goi({ thang_bat_dau: '2026-11-01', so_thang: 1, don_gia: 500_000, buoi_du_kien: { '2026-11': 9 } })
+    const g = goi({
+      thang_bat_dau: '2026-11-01', so_thang: 1, don_gia: 500_000,
+      buoi_du_kien: { '2026-11': 9 }, tien_thang: { '2026-11': 7_000_000 },
+    })
     const buoi: BuoiDacBietLop[] = [
       { lop_id: 'T6', ngay: '2026-11-06', loai: 'lich', lop_nghi: true }, // 500k
       { lop_id: 'CN', ngay: '2026-11-08', loai: 'lich', lop_nghi: true }, // 1.000k
@@ -310,5 +342,195 @@ describe('học sinh học nhiều lớp', () => {
     const msg = tinNhanGiaHan('Minh Trang', { loai: 'het', goi: g, conBuoi: 0, buoiCuoi: '2026-11-29', thangKe: '2026-12' }, 8, 500_000, 6_000_000)
     expect(msg).toContain('8 buổi = ' + vnd(6_000_000))
     expect(msg).not.toContain('8 buổi ×')
+  })
+
+  it('tienDuGoiNhieuLop: gói 0đ (tien_thang = null) không sinh dư ảo theo don_gia lớp', () => {
+    const buoiCn: BuoiDacBietLop[] = [
+      { lop_id: 'CN', ngay: '2026-11-08', loai: 'lich', lop_nghi: true },
+    ]
+    const dsGia = [
+      { lop_id: 'T6', ngay_vao: '2026-11-01', don_gia: undefined },
+      { lop_id: 'CN', ngay_vao: '2026-11-01', don_gia: 1_000_000 },
+    ]
+    const g0d = goi({ thang_bat_dau: '2026-11-01', so_thang: 1, don_gia: 0, tien_thang: null, buoi_du_kien: { '2026-11': 9 } })
+    expect(tienDuGoiNhieuLop(g0d, buoiCn, dsGia)).toBe(0)
+  })
+
+  it('tienDuGoiNhieuLop: gói đồng giá ghi đè (tien_thang = null) tính dư theo g.don_gia cho mọi lớp', () => {
+    const buoiHaiLop: BuoiDacBietLop[] = [
+      { lop_id: 'T6', ngay: '2026-11-06', loai: 'lich', lop_nghi: true },
+      { lop_id: 'CN', ngay: '2026-11-08', loai: 'lich', lop_nghi: true },
+    ]
+    const dsGia = [
+      { lop_id: 'T6', ngay_vao: '2026-11-01', don_gia: undefined },
+      { lop_id: 'CN', ngay_vao: '2026-11-01', don_gia: 1_000_000 },
+    ]
+    const gGhiDe = goi({ thang_bat_dau: '2026-11-01', so_thang: 1, don_gia: 300_000, tien_thang: null, buoi_du_kien: { '2026-11': 9 } })
+    expect(tienDuGoiNhieuLop(gGhiDe, buoiHaiLop, dsGia)).toBe(600_000)
+  })
+
+  it('tienDuGoiNhieuLop: gói hỗn hợp (tien_thang != null) có 1 lớp don_gia: 0 vẫn trả 0 cho lớp đó', () => {
+    const gHonHop0 = goi({
+      thang_bat_dau: '2026-11-01', so_thang: 1, don_gia: 500_000,
+      buoi_du_kien: { '2026-11': 9 }, tien_thang: { '2026-11': 2_000_000 },
+    })
+    const buoi: BuoiDacBietLop[] = [
+      { lop_id: 'T6', ngay: '2026-11-06', loai: 'lich', lop_nghi: true },
+      { lop_id: 'CN', ngay: '2026-11-08', loai: 'lich', lop_nghi: true },
+    ]
+    const ds = [
+      { lop_id: 'T6', ngay_vao: '2026-11-01', don_gia: undefined },
+      { lop_id: 'CN', ngay_vao: '2026-11-01', don_gia: 0 },
+    ]
+    expect(tienDuGoiNhieuLop(gHonHop0, buoi, ds)).toBe(500_000)
+    expect(tienDuGoiNhieuLop(gHonHop0, [{ lop_id: 'CN', ngay: '2026-11-08', loai: 'lich', lop_nghi: true }], ds)).toBe(0)
+  })
+
+  it('tienDuGoiNhieuLop: sửa don_gia_rieng lớp CN (500k -> 1.000k) không làm đổi tiền dư gói cũ', () => {
+    const gCu = {
+      ...goi({
+        thang_bat_dau: '2026-11-01', so_thang: 1, don_gia: 400_000,
+        buoi_du_kien: { '2026-11': 9 }, tien_thang: { '2026-11': 4_100_000 },
+      }),
+      lop_gia: [
+        { lop_id: 'T6', ngay_vao: '2026-11-01', don_gia: 400_000 },
+        { lop_id: 'CN', ngay_vao: '2026-11-01', don_gia: 500_000 },
+      ],
+    }
+    const buoi: BuoiDacBietLop[] = [
+      { lop_id: 'CN', ngay: '2026-11-08', loai: 'lich', lop_nghi: true },
+    ]
+    const dsSauSuaGia = [
+      { lop_id: 'T6', ngay_vao: '2026-11-01', don_gia: 400_000 },
+      { lop_id: 'CN', ngay_vao: '2026-11-01', don_gia: 1_000_000 },
+    ]
+    expect(tienDuGoiNhieuLop(gCu, buoi, dsSauSuaGia)).toBe(500_000)
+  })
+
+  it('tienDuGoiNhieuLop & duConLaiNhieuLop: xoá ghi_danh lớp CN không làm mất tiền dư gói cũ', () => {
+    const gCu = {
+      ...goi({
+        thang_bat_dau: '2026-11-01', so_thang: 1, don_gia: 400_000,
+        buoi_du_kien: { '2026-11': 9 }, tien_thang: { '2026-11': 4_100_000 },
+      }),
+      lop_gia: [
+        { lop_id: 'T6', ngay_vao: '2026-11-01', don_gia: 400_000 },
+        { lop_id: 'CN', ngay_vao: '2026-11-01', don_gia: 500_000 },
+      ],
+    }
+    const buoi: BuoiDacBietLop[] = [
+      { lop_id: 'CN', ngay: '2026-11-08', loai: 'lich', lop_nghi: true },
+    ]
+    const dsSauXoa = [{ lop_id: 'T6', ngay_vao: '2026-11-01', don_gia: 400_000 }]
+    expect(tienDuGoiNhieuLop(gCu, buoi, dsSauXoa)).toBe(500_000)
+    expect(duConLaiNhieuLop([gCu], buoi, dsSauXoa, 0, '2026-12')).toBe(500_000)
+  })
+
+  it('tienDuGoiNhieuLop: thêm lớp mới giữa gói 3 tháng không sinh tiền dư trên lớp chưa đóng tiền', () => {
+    const g3Thang = {
+      ...goi({
+        thang_bat_dau: '2026-10-01', so_thang: 3, don_gia: 500_000,
+        buoi_du_kien: { '2026-10': 5, '2026-11': 4, '2026-12': 4 },
+        tien_thang: { '2026-10': 2_500_000, '2026-11': 2_000_000, '2026-12': 2_000_000 },
+      }),
+      lop_gia: [{ lop_id: 'T6', ngay_vao: '2026-10-01', don_gia: 500_000 }],
+    }
+    const buoiCn: BuoiDacBietLop[] = [
+      { lop_id: 'CN', ngay: '2026-11-08', loai: 'lich', lop_nghi: true },
+    ]
+    const dsSauThem = [
+      { lop_id: 'T6', ngay_vao: '2026-10-01', don_gia: 500_000 },
+      { lop_id: 'CN', ngay_vao: '2026-11-01', don_gia: 1_000_000 },
+    ]
+    expect(tienDuGoiNhieuLop(g3Thang, buoiCn, dsSauThem)).toBe(0)
+  })
+
+  it('tienDuGoiNhieuLop: gói cũ chưa có lop_gia (null) vẫn lùi về ds hiện tại để tương thích ngược', () => {
+    const gCu = goi({
+      thang_bat_dau: '2026-11-01', so_thang: 1, don_gia: 400_000,
+      buoi_du_kien: { '2026-11': 9 }, tien_thang: { '2026-11': 4_100_000 }, lop_gia: null,
+    })
+    const buoi: BuoiDacBietLop[] = [{ lop_id: 'CN', ngay: '2026-11-08', loai: 'lich', lop_nghi: true }]
+    const ds = [
+      { lop_id: 'T6', ngay_vao: '2026-11-01', don_gia: 400_000 },
+      { lop_id: 'CN', ngay_vao: '2026-11-01', don_gia: 500_000 },
+    ]
+    expect(tienDuGoiNhieuLop(gCu, buoi, ds)).toBe(500_000)
+  })
+
+  it('noThucCuaGoi: phần đóng thừa của gói khác bù vào gói đang thiếu khớp với tongHopHocSinh.conPhaiThu', () => {
+    const g1 = goi({ id: 'g1', thang_bat_dau: '2026-10-01', so_thang: 1, don_gia: 100_000, buoi_du_kien: { '2026-10': 10 } }) // 1.000.000
+    const g2 = goi({ id: 'g2', thang_bat_dau: '2026-11-01', so_thang: 1, don_gia: 100_000, buoi_du_kien: { '2026-11': 10 } }) // 1.000.000
+    const g3 = goi({ id: 'g3', thang_bat_dau: '2026-12-01', so_thang: 1, don_gia: 100_000, buoi_du_kien: { '2026-12': 10 } }) // 1.000.000
+    // (a) g1 thừa 200k bù đủ g2 thiếu 200k -> noThuc = 0, khớp tongHopHocSinh.conPhaiThu
+    const phieuBuDu: PhieuThu[] = [
+      { goi_id: 'g1', so_tien: 1_200_000, ngay_thu: '2026-10-05' },
+      { goi_id: 'g2', so_tien: 800_000, ngay_thu: '2026-11-05' },
+    ]
+    const th = tongHopHocSinh([g1, g2], phieuBuDu, '2026-11')
+    expect(th.conPhaiThu).toBe(0)
+    expect(conNoGoi(g2, phieuBuDu)).toBe(200_000)
+    expect(noThucCuaGoi([g1, g2], phieuBuDu)).toEqual({ g1: 0, g2: 0 })
+
+    // (b) g1 thừa 200k bù một phần cho g2 thiếu 300k -> còn nợ 100k
+    const phieuBuMotPhan: PhieuThu[] = [
+      { goi_id: 'g1', so_tien: 1_200_000, ngay_thu: '2026-10-05' },
+      { goi_id: 'g2', so_tien: 700_000, ngay_thu: '2026-11-05' },
+    ]
+    expect(noThucCuaGoi([g1, g2], phieuBuMotPhan)).toEqual({ g1: 0, g2: 100_000 })
+
+    // (c) nhiều gói nợ: g1 thừa 200k trả hết g2 (thiếu 150k) và giảm 50k cho g3 (thiếu 200k -> còn 150k), kể cả khi truyền mảng chưa sắp xếp
+    const phieuNhieuGoi: PhieuThu[] = [
+      { goi_id: 'g1', so_tien: 1_200_000, ngay_thu: '2026-10-05' },
+      { goi_id: 'g2', so_tien: 850_000, ngay_thu: '2026-11-05' },
+      { goi_id: 'g3', so_tien: 800_000, ngay_thu: '2026-12-05' },
+    ]
+    expect(noThucCuaGoi([g3, g1, g2], phieuNhieuGoi)).toEqual({ g1: 0, g2: 0, g3: 150_000 })
+
+    // (d) không có gói đóng thừa -> khớp chính xác conNoGoi của từng gói
+    const phieuKhongThua: PhieuThu[] = [
+      { goi_id: 'g1', so_tien: 1_000_000, ngay_thu: '2026-10-05' },
+      { goi_id: 'g2', so_tien: 600_000, ngay_thu: '2026-11-05' },
+    ]
+    expect(noThucCuaGoi([g1, g2], phieuKhongThua)).toEqual({
+      g1: conNoGoi(g1, phieuKhongThua),
+      g2: conNoGoi(g2, phieuKhongThua),
+    })
+  })
+
+  it('moTaGiaThang: ưu tiên đơn giá lịch sử từ gói của tháng (lop_gia hoặc don_gia gói cũ), chỉ fallback về giá hiện tại khi chưa có gói', () => {
+    const hsHienTai = { don_gia: 250_000 }
+    const gdHienTai = [
+      { trang_thai: 'dang_hoc', don_gia_rieng: null },
+      { trang_thai: 'dang_hoc', don_gia_rieng: 1_200_000 },
+    ]
+    // 1. Có gói với lop_gia nhiều lớp khác giá (500k và 1.000k) -> hiển thị 500.000 đ–1.000.000 đ/buổi thay vì 250k–1.200k hiện tại
+    const gHonHop = goi({
+      don_gia: 500_000,
+      tien_thang: { '2026-10': 7_000_000 },
+      lop_gia: [
+        { lop_id: 'T6', ngay_vao: '2026-10-01', don_gia: 500_000 },
+        { lop_id: 'CN', ngay_vao: '2026-10-01', don_gia: 1_000_000 },
+      ],
+    })
+    expect(moTaGiaThang(hsHienTai, gdHienTai, gHonHop)).toBe(`${vnd(500_000)}–${vnd(1_000_000)}/buổi`)
+
+    // 2. Có gói với lop_gia nhiều lớp đồng giá (150k) -> hiển thị 150.000 đ/buổi
+    const gDongGia = goi({
+      don_gia: 150_000,
+      lop_gia: [
+        { lop_id: 'A', ngay_vao: '2026-10-01', don_gia: 150_000 },
+        { lop_id: 'B', ngay_vao: '2026-10-01', don_gia: 150_000 },
+      ],
+    })
+    expect(moTaGiaThang(hsHienTai, gdHienTai, gDongGia)).toBe(`${vnd(150_000)}/buổi`)
+
+    // 3. Gói cũ chưa có lop_gia (lop_gia: null) nhưng chốt don_gia = 150k -> hiển thị 150.000 đ/buổi
+    const gCu = goi({ don_gia: 150_000, lop_gia: null })
+    expect(moTaGiaThang(hsHienTai, [{ trang_thai: 'dang_hoc', don_gia_rieng: null }], gCu)).toBe(`${vnd(150_000)}/buổi`)
+
+    // 4. Chưa có gói trong tháng (g = undefined) -> fallback về giá hiện tại trên ghiDanh / hs
+    expect(moTaGiaThang(hsHienTai, gdHienTai, undefined)).toBe(`${vnd(250_000)}–${vnd(1_200_000)}/buổi`)
+    expect(moTaGiaThang(hsHienTai, [{ trang_thai: 'dang_hoc', don_gia_rieng: null }], undefined)).toBe(`${vnd(250_000)}/buổi`)
   })
 })
