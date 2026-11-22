@@ -1,5 +1,5 @@
 // Tạo tài khoản và đặt lại mật khẩu. Cần service role nên không làm được từ trình duyệt.
-// Quyền: admin làm mọi việc; giáo viên tạo/đặt lại trợ giảng và phụ huynh; trợ giảng chỉ đặt lại phụ huynh.
+// Quyền: admin làm mọi việc; giáo viên tạo/đặt lại trợ giảng (đã bỏ tài khoản phụ huynh theo SPEC-hoc-sinh-nhieu-lop.md).
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const cors = {
@@ -11,12 +11,11 @@ const tra = (body: unknown, status = 200) =>
 
 // vai trò được TẠO và được ĐẶT LẠI mật khẩu, theo vai trò người gọi (khớp policy "sua" của tai_khoan)
 const QUYEN_TAO: Record<string, string[]> = {
-  admin: ['giao_vien', 'tro_giang', 'phu_huynh'],
-  giao_vien: ['tro_giang', 'phu_huynh'],
+  admin: ['giao_vien', 'tro_giang'],
+  giao_vien: ['tro_giang'],
 }
 const QUYEN_DAT_LAI: Record<string, string[]> = {
   ...QUYEN_TAO,
-  tro_giang: ['phu_huynh'],
 }
 const chuanSdt = (s?: string) => (s ?? '').replace(/\D/g, '') || null
 
@@ -38,18 +37,6 @@ Deno.serve(async (req) => {
     const sdt = chuanSdt(b.so_dien_thoai)
     const ten = b.ten_dang_nhap?.trim().toLowerCase() || null
     if (!sdt && !ten) return tra({ loi: 'Cần tên đăng nhập hoặc số điện thoại' }, 400)
-    // Phụ huynh nhiều con dùng chung một số: trả lại tài khoản sẵn có thay vì báo lỗi
-    if (b.vai_tro === 'phu_huynh' && sdt) {
-      const { data: co } = await sb.from('tai_khoan').select('id, vai_tro, hoat_dong').eq('so_dien_thoai', sdt).maybeSingle()
-      if (co?.vai_tro === 'phu_huynh') {
-        // tài khoản đang khoá thì mở lại: gắn con mới vào tài khoản khoá thì phụ huynh không đăng nhập xem được
-        if (!co.hoat_dong) {
-          const { error: e } = await sb.from('tai_khoan').update({ hoat_dong: true }).eq('id', co.id)
-          if (e) return tra({ loi: e.message }, 400)
-        }
-        return tra({ id: co.id, da_co: true })
-      }
-    }
     const matKhau = b.mat_khau || sdt
     if (!matKhau || matKhau.length < 6) return tra({ loi: 'Mật khẩu tối thiểu 6 ký tự' }, 400)
     const email = `${crypto.randomUUID()}@msnhung.local`
