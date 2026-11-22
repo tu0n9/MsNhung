@@ -42,7 +42,8 @@ export default function HocSinhChiTiet({ hs, lops, ghiDanh, quayLai }: { hs: Hoc
     const l = lopMap.get(g.lop_id)
     return l ? [{ lop_id: l.id, ten: l.ten, lich: l.lich, ngay_vao: g.ngay_vao, don_gia: giaGhiDanh(hs, g) }] : []
   }), [gdDangHoc, lopMap, hs])
-  const dsLopDu = useMemo(() => gdEm.map((g) => ({ lop_id: g.lop_id, ngay_vao: g.ngay_vao, don_gia: giaGhiDanh(hs, g) })), [gdEm, hs])
+  // chỉ truyền don_gia_rieng thực sự của lớp: lớp đồng giá phải dùng g.don_gia đã chốt lúc tạo gói, không bị đổi khi sửa hs.don_gia
+  const dsLopDu = useMemo(() => gdEm.map((g) => ({ lop_id: g.lop_id, ngay_vao: g.ngay_vao, don_gia: g.don_gia_rieng ?? undefined })), [gdEm])
 
   const luuLink = async () => {
     const { link: moi, loi } = chuanLinkZalo(oLink)
@@ -257,7 +258,7 @@ function LuoiThang({ o, lopMap, lopIdsEm }: { o: (ONgay | null)[]; lopMap: Map<s
 
 function ThuTien({ hs, dsLopDangHoc, dsLopDu, ngayVaoMin, goi, phieu, buoiDb, daHoan, dong }: {
   hs: HocSinh; dsLopDangHoc: { lop_id: string; ten: string; lich: number[]; ngay_vao: string; don_gia: number }[]
-  dsLopDu: { lop_id: string; ngay_vao: string; don_gia: number }[]; ngayVaoMin: string
+  dsLopDu: { lop_id: string; ngay_vao: string; don_gia?: number }[]; ngayVaoMin: string
   goi: Goi[]; phieu: Phieu[]; buoiDb: BuoiHoc[]; daHoan: number; dong: () => void
 }) {
   const { message } = App.useApp()

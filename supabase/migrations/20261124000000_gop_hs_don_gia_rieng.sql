@@ -6,7 +6,18 @@
 alter table ghi_danh add column don_gia_rieng int check (don_gia_rieng >= 0);
 alter table goi_hoc add column tien_thang jsonb;
 
--- ============ 2. Cập nhật RPC gop_hoc_sinh giữ don_gia_rieng khi gộp cùng lớp ============
+-- ============ 2. Cho phép gộp học sinh đi qua trigger khoa_so & cập nhật RPC gop_hoc_sinh ============
+-- Gộp 2 hồ sơ trùng thành 1 chỉ đổi định danh hoc_sinh_id, không làm thay đổi số buổi/tiền của tháng đã chốt sổ.
+create or replace function trg_khoa_so() returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if current_setting('msnhung.dang_gop_hs', true) = '1' then
+    return coalesce(new, old);
+  end if;
+  if tg_op <> 'INSERT' then perform kiem_tra_khoa(ngay_cua(tg_table_name, to_jsonb(old))); end if;
+  if tg_op <> 'DELETE' then perform kiem_tra_khoa(ngay_cua(tg_table_name, to_jsonb(new))); end if;
+  return coalesce(new, old);
+end $$;
+
 create or replace function gop_hoc_sinh(p_giu uuid, p_bo uuid) returns text language plpgsql security definer set search_path = public as $$
 declare
   giu hoc_sinh%rowtype;
@@ -26,6 +37,8 @@ begin
   ) then
     raise exception 'Hai học sinh đều có gói học phủ chung tháng. Hãy kiểm tra hoặc xoá gói trùng trước khi gộp';
   end if;
+
+  perform set_config('msnhung.dang_gop_hs', '1', true);
 
   -- Gộp ghi danh: lớp trùng giữ ngày vào sớm hơn, ưu tiên đang học và giữ giá riêng nếu có
   update ghi_danh g1 set
@@ -107,6 +120,8 @@ declare
   giu hoc_sinh%rowtype;
   bo hoc_sinh%rowtype;
 begin
+  perform set_config('msnhung.dang_gop_hs', '1', true);
+
   -- Chuẩn hoá khoảng trắng họ tên
   update hoc_sinh set ho_ten = trim(regexp_replace(ho_ten, '\s+', ' ', 'g'))
   where ho_ten <> trim(regexp_replace(ho_ten, '\s+', ' ', 'g'));
@@ -260,7 +275,7 @@ begin
     when 'hoàng tuấn' then 400000
     when 'lâm tùng' then 400000
     when 'nam phong' then 400000
-    when 'ngọc minh' then 400000
+    when 'ngọc minh' then 0
     when 'minh trang' then 500000
     when 'nguyễn trung dũng' then 1000000
     when 'trung dũng' then 1000000
@@ -268,16 +283,11 @@ begin
   end
   where true;
 
-  -- Giá riêng từng lớp cho 2 học sinh học ca đặc biệt khác mức giá chính
+  -- Giá riêng từng lớp cho ca đặc biệt khác mức giá chính (Ngọc Minh sắp nghỉ cuối tháng, chỉ điểm danh, không tính tiền)
   update ghi_danh gd set don_gia_rieng = 1000000
   from hoc_sinh h, lop l
   where gd.hoc_sinh_id = h.id and gd.lop_id = l.id
     and lower(trim(h.ho_ten)) = 'minh trang' and trim(l.ten) = '1-1 Minh Trang (1)';
-
-  update ghi_danh gd set don_gia_rieng = 1000000
-  from hoc_sinh h, lop l
-  where gd.hoc_sinh_id = h.id and gd.lop_id = l.id
-    and lower(trim(h.ho_ten)) = 'ngọc minh' and trim(l.ten) = '1-1 Ngọc Minh';
 end $$;
 
 alter table hoc_sinh enable trigger nhat_ky;

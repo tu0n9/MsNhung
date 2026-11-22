@@ -300,10 +300,13 @@ describe('học sinh học nhiều lớp', () => {
       { lop_id: 'CN', ngay: '2026-11-08', loai: 'lich', lop_nghi: true }, // 1.000k
     ]
     const dsGia = [
-      { lop_id: 'T6', ngay_vao: '2026-11-01', don_gia: 500_000 },
+      { lop_id: 'T6', ngay_vao: '2026-11-01', don_gia: undefined },
       { lop_id: 'CN', ngay_vao: '2026-11-01', don_gia: 1_000_000 },
     ]
     expect(tienDuGoiNhieuLop(g, buoi, dsGia)).toBe(1_500_000)
+    // gói cũ chốt 150k: dù hs.don_gia hiện tại đổi lên 200k, lớp không có don_gia_rieng vẫn tính dư theo g.don_gia (150k)
+    const gCu = goi({ thang_bat_dau: '2026-10-01', so_thang: 1, don_gia: 150_000, buoi_du_kien: { '2026-10': 8 } })
+    expect(tienDuGoiNhieuLop(gCu, [{ lop_id: 'T6', ngay: '2026-10-09', loai: 'lich', lop_nghi: true }], [{ lop_id: 'T6', ngay_vao: '2026-10-01' }])).toBe(150_000)
     const msg = tinNhanGiaHan('Minh Trang', { loai: 'het', goi: g, conBuoi: 0, buoiCuoi: '2026-11-29', thangKe: '2026-12' }, 8, 500_000, 6_000_000)
     expect(msg).toContain('8 buổi = ' + vnd(6_000_000))
     expect(msg).not.toContain('8 buổi ×')
