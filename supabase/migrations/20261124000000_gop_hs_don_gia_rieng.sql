@@ -126,7 +126,7 @@ begin
   update hoc_sinh set ho_ten = trim(regexp_replace(ho_ten, '\s+', ' ', 'g'))
   where ho_ten <> trim(regexp_replace(ho_ten, '\s+', ' ', 'g'));
 
-  -- Gộp mọi nhóm trùng họ tên (dữ liệu hiện tại không có ai trùng tên khác người)
+  -- Gộp mọi nhóm trùng họ tên có cùng SĐT phụ huynh (hoặc tối đa 1 SĐT khác rỗng, tránh gộp nhầm 2 em trùng tên khác người)
   for nhom in
     select
       replace(lower(trim(regexp_replace(ho_ten, '\s+', ' ', 'g'))), 'uỳ', 'ùy') as ten_chuan,
@@ -135,6 +135,7 @@ begin
     from hoc_sinh
     group by 1
     having count(*) > 1
+      and count(distinct nullif(trim(sdt_phu_huynh), '')) <= 1
   loop
     foreach bo_id in array nhom.ds_bo loop
       -- Bỏ qua nếu 2 hồ sơ đều có gói học chồng tháng (an toàn khi chạy lại / dữ liệu thật khác)
@@ -288,6 +289,8 @@ begin
   from hoc_sinh h, lop l
   where gd.hoc_sinh_id = h.id and gd.lop_id = l.id
     and lower(trim(h.ho_ten)) = 'minh trang' and trim(l.ten) = '1-1 Minh Trang (1)';
+
+  perform set_config('msnhung.dang_gop_hs', '0', true);
 end $$;
 
 alter table hoc_sinh enable trigger nhat_ky;
