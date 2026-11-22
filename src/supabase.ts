@@ -11,11 +11,24 @@ export interface TaiKhoan {
 }
 export interface Lop { id: string; ten: string; don_gia: number; lich: number[]; gio_thu: GioThu; hoat_dong: boolean }
 export interface HocSinh {
-  id: string; ho_ten: string; lop_id: string; avatar: string | null; ten_phu_huynh: string | null
+  id: string; ma_hs: string; ho_ten: string; don_gia: number; avatar: string | null; ten_phu_huynh: string | null
   sdt_phu_huynh: string | null; phu_huynh_id: string | null; ngay_vao: string; don_gia_rieng: number | null
   trang_thai: 'dang_hoc' | 'ngung'; ghi_chu: string | null; sticker_dau_ky: number
   link_zalo: string | null
 }
+export interface GhiDanh {
+  id: string; hoc_sinh_id: string; lop_id: string; ngay_vao: string; trang_thai: 'dang_hoc' | 'ngung'
+  don_gia_rieng?: number | null
+}
+
+/** Đơn giá áp dụng cho một ghi danh: ưu tiên giá riêng theo lớp nếu có, mặc định lấy đơn giá cố định của học sinh. */
+export const giaGhiDanh = (hs: Pick<HocSinh, 'don_gia'>, gd?: Pick<GhiDanh, 'don_gia_rieng'>) => gd?.don_gia_rieng ?? hs.don_gia
+
+export const lopCuaHs = (gd: GhiDanh[], hsId: string, chiDangHoc = false) =>
+  gd.filter((x) => x.hoc_sinh_id === hsId && (!chiDangHoc || x.trang_thai === 'dang_hoc'))
+
+export const hsDangHoc = (gd: GhiDanh[], hsId: string) =>
+  gd.some((x) => x.hoc_sinh_id === hsId && x.trang_thai === 'dang_hoc')
 export interface BuoiHoc {
   id: string; lop_id: string; ngay: string; loai: 'lich' | 'phu' | 'bu'; lop_nghi: boolean; ghi_chu: string | null
   bat_dau: string | null; ket_thuc: string | null // cột time: '16:45:00'

@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
-  conNoGoi, demBuoiDuKien, demChuaBu, demNghiPhu, duConLai, goiCuaThang, hocPhiGocThang, tenGoi, tinhTrangGoi, tinNhanGiaHan, vnd,
+  conNoGoi, demBuoiDuKien, demBuoiDuKienNhieuLop, demChuaBu, demNghiPhu, duConLai, duConLaiNhieuLop, goiCuaThang,
+  hocPhiGocThang, tenGoi, tienDuGoiNhieuLop, tinhTienThangNhieuLop, tinhTrangGoi, tinhTrangGoiNhieuLop, tinNhanGiaHan, vnd,
   type PhieuThu, phaiThuTheoThang, tienDu, tongGoi, tongHopHocSinh,
-  trangThaiThang, type BuoiDacBiet, type Goi,
+  trangThaiThang, type BuoiDacBiet, type BuoiDacBietLop, type Goi,
 } from './hoc-phi'
 
 const goi = (g: Partial<Goi>): Goi => ({
@@ -214,5 +215,97 @@ describe('ví dụ trong hướng dẫn sử dụng', () => {
     const p = [thu(1_560_000, '2026-12-05')]
     expect(tongHopHocSinh([mot], p, '2026-11').conPhaiThu).toBe(1_560_000)
     expect(tongHopHocSinh([mot], p, '2026-12')).toMatchObject({ noKyTruoc: 1_560_000, daThu: 1_560_000, conPhaiThu: 0, thucThu: 1_560_000 })
+  })
+})
+
+describe('học sinh học nhiều lớp', () => {
+  const lA = { lop_id: 'A', lich: [1], ngay_vao: '2026-10-01' } // Thứ 2: tháng 11/2026 có 5 buổi (2,9,16,23,30)
+  const lB = { lop_id: 'B', lich: [3], ngay_vao: '2026-10-01' } // Thứ 4: tháng 11/2026 có 4 buổi (4,11,18,25)
+
+  it('demBuoiDuKienNhieuLop: cộng 2 lớp khác thứ và cùng thứ không bị gộp trùng ngày', () => {
+    expect(demBuoiDuKienNhieuLop([lA, lB], '2026-11', 1)).toEqual({ '2026-11': 9 })
+    expect(demBuoiDuKienNhieuLop([lA, lB], '2026-11', 3)).toEqual({ '2026-11': 9, '2026-12': 9, '2027-01': 8 })
+    // hai lớp cùng học T7 sáng + T7 chiều trong tháng 11/2026 (4 ngày T7 -> 8 buổi)
+    const sangT7 = { lop_id: 'S', lich: [6], ngay_vao: '2026-11-01' }
+    const chieuT7 = { lop_id: 'C', lich: [6], ngay_vao: '2026-11-01' }
+    expect(demBuoiDuKienNhieuLop([sangT7, chieuT7], '2026-11', 1)).toEqual({ '2026-11': 8 })
+  })
+
+  it('demBuoiDuKienNhieuLop: tôn trọng ngày vào học riêng từng lớp', () => {
+    // lớp B vào ngày 15/11 -> tháng 11 chỉ còn 18, 25 (2 buổi), cộng lớp A 5 buổi = 7; tháng 12 đủ 9 buổi
+    const bMuon = { lop_id: 'B', lich: [3], ngay_vao: '2026-11-15' }
+    expect(demBuoiDuKienNhieuLop([lA, bMuon], '2026-11', 2)).toEqual({ '2026-11': 7, '2026-12': 9 })
+    // lớp B vào ở tháng 12 (ngày 05/12): tháng 11 chỉ tính lớp A (5 buổi), tháng 12 tính A (4) + B từ 05/12 (4) = 8
+    const bThangSau = { lop_id: 'B', lich: [3], ngay_vao: '2026-12-05' }
+    expect(demBuoiDuKienNhieuLop([lA, bThangSau], '2026-11', 2)).toEqual({ '2026-11': 5, '2026-12': 8 })
+  })
+
+  it('tienDuGoiNhieuLop & duConLaiNhieuLop: buổi phụ lớp B không bù chéo cho lớp A và bỏ buổi trước ngay_vao', () => {
+    const g = goi({ thang_bat_dau: '2026-10-01', so_thang: 1, don_gia: 150_000, buoi_du_kien: { '2026-10': 8 } })
+    const bMuon = { lop_id: 'B', ngay_vao: '2026-10-15' }
+    const buoi: BuoiDacBietLop[] = [
+      { lop_id: 'A', ngay: '2026-10-12', loai: 'lich', lop_nghi: true }, // dư 1 buổi lớp A
+      { lop_id: 'B', ngay: '2026-10-07', loai: 'lich', lop_nghi: true }, // trước ngày vào B -> bỏ qua
+      { lop_id: 'B', ngay: '2026-10-24', loai: 'phu', lop_nghi: false }, // buổi phụ ở B -> không triệt tiêu nghỉ ở A
+    ]
+    expect(tienDuGoiNhieuLop(g, buoi, [lA, bMuon])).toBe(150_000)
+    expect(duConLaiNhieuLop([g], buoi, [lA, bMuon], 0, '2026-11')).toBe(150_000)
+    expect(duConLaiNhieuLop([g], buoi, [lA, bMuon], 50_000, '2026-11')).toBe(100_000)
+    expect(duConLaiNhieuLop([g], buoi, [lA, bMuon], 0, '2026-10')).toBe(0)
+  })
+
+  it('tinhTrangGoiNhieuLop: cộng buổi còn lại trên các lớp và lấy ngày buổi cuối muộn nhất', () => {
+    const g11 = goi({ thang_bat_dau: '2026-11-01', so_thang: 1 })
+    // Từ 2026-11-20: lA còn 23, 30 (2); lB còn 25 (1) -> tổng 3 buổi <= ngưỡng 4 ('sap_het'), buổi cuối 30/11
+    expect(tinhTrangGoiNhieuLop([g11], [lA, lB], '2026-11-20')).toMatchObject({
+      loai: 'sap_het', conBuoi: 3, buoiCuoi: '2026-11-30', thangKe: '2026-12',
+    })
+    // Từ 2026-11-10: lA còn 16, 23, 30 (3); lB còn 11, 18, 25 (3) -> tổng 6 buổi ('con')
+    expect(tinhTrangGoiNhieuLop([g11], [lA, lB], '2026-11-10')).toMatchObject({ loai: 'con', conBuoi: 6 })
+    // Chưa có gói: dùng ngày vào học sớm nhất
+    expect(tinhTrangGoiNhieuLop([], [
+      { lop_id: 'A', lich: [1], ngay_vao: '2026-10-05' },
+      { lop_id: 'B', lich: [3], ngay_vao: '2026-12-02' },
+    ], '2026-11-16')).toEqual({ loai: 'chua_co', conBuoi: 0, thangKe: '2026-11' })
+  })
+
+  it('tinhTienThangNhieuLop & tien_thang: trường hợp Minh Trang (T6 500k + CN 1.000k)', () => {
+    // T6 (5) trong 11/2026: 6,13,20,27 = 4 buổi × 500k = 2.000.000; CN (0): 1,8,15,22,29 = 5 buổi × 1.000k = 5.000.000 -> 7.000.000
+    const l1h = { lop_id: 'T6', lich: [5], ngay_vao: '2026-11-01', don_gia: 500_000 }
+    const l2h = { lop_id: 'CN', lich: [0], ngay_vao: '2026-11-01', don_gia: 1_000_000 }
+    expect(tinhTienThangNhieuLop([lA, lB], 150_000, '2026-11', 1)).toBeNull()
+    expect(tinhTienThangNhieuLop([l1h, l2h], 500_000, '2026-11', 2)).toEqual({
+      '2026-11': 7_000_000,
+      '2026-12': 6_000_000, // T6: 4,11,18,25 (4×500k=2M) + CN: 6,13,20,27 (4×1M=4M)
+    })
+
+    const gHonHop = goi({
+      thang_bat_dau: '2026-11-01', so_thang: 2, don_gia: 500_000,
+      buoi_du_kien: { '2026-11': 9, '2026-12': 8 },
+      tien_thang: { '2026-11': 7_000_000, '2026-12': 6_000_000 },
+      tien_du_tru: 500_000, dieu_chinh: -200_000,
+    })
+    expect(phaiThuTheoThang(gHonHop)).toEqual({ '2026-11': 6_300_000, '2026-12': 6_000_000 })
+    expect(hocPhiGocThang([gHonHop], '2026-11')).toBe(7_000_000)
+    expect(tongGoi(gHonHop)).toBe(12_300_000)
+    expect(tongHopHocSinh([gHonHop], [{ goi_id: 'g1', so_tien: 7_000_000, ngay_thu: '2026-11-05' }], '2026-12')).toMatchObject({
+      noKyTruoc: 0, phaiThu: 6_000_000, dongTruoc: 700_000, conPhaiThu: 5_300_000,
+    })
+  })
+
+  it('tienDuGoiNhieuLop & tinNhanGiaHan với lớp có giá riêng', () => {
+    const g = goi({ thang_bat_dau: '2026-11-01', so_thang: 1, don_gia: 500_000, buoi_du_kien: { '2026-11': 9 } })
+    const buoi: BuoiDacBietLop[] = [
+      { lop_id: 'T6', ngay: '2026-11-06', loai: 'lich', lop_nghi: true }, // 500k
+      { lop_id: 'CN', ngay: '2026-11-08', loai: 'lich', lop_nghi: true }, // 1.000k
+    ]
+    const dsGia = [
+      { lop_id: 'T6', ngay_vao: '2026-11-01', don_gia: 500_000 },
+      { lop_id: 'CN', ngay_vao: '2026-11-01', don_gia: 1_000_000 },
+    ]
+    expect(tienDuGoiNhieuLop(g, buoi, dsGia)).toBe(1_500_000)
+    const msg = tinNhanGiaHan('Minh Trang', { loai: 'het', goi: g, conBuoi: 0, buoiCuoi: '2026-11-29', thangKe: '2026-12' }, 8, 500_000, 6_000_000)
+    expect(msg).toContain('8 buổi = ' + vnd(6_000_000))
+    expect(msg).not.toContain('8 buổi ×')
   })
 })

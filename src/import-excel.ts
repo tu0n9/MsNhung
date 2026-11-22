@@ -1,8 +1,8 @@
-// Import lớp và học sinh từ file mẫu Excel. Quyết định ở docs/YEU-CAU.md mục "Import lớp và học sinh bằng Excel":
-// chỉ thêm mới, dòng đã có thì bỏ qua (import lại cùng file vẫn an toàn), dòng lỗi báo lý do và không nhập.
-// Ngoại lệ duy nhất: học sinh đã có được cập nhật link nhóm Zalo (mục "Link nhóm Zalo").
+// Import lớp và học sinh từ file mẫu Excel.
+// - Dòng đã có (khớp Mã HS hoặc Họ tên + SĐT trong đúng lớp) thì bỏ qua (ngoại lệ: cập nhật Link nhóm Zalo).
+// - Cùng học sinh (khớp Mã HS hoặc Họ tên + SĐT) nhưng ghi ở lớp mới -> thêm ghi_danh vào lớp mới, không tạo học sinh thứ 2.
 import type ExcelJS from 'exceljs'
-import type { HocSinh, Lop } from './supabase'
+import type { GhiDanh, HocSinh, Lop } from './supabase'
 import { docOGio, type GioThu } from './gio-hoc'
 
 // không import giá trị từ ./supabase: file đó tạo client ngay khi nạp, test chạy không có .env
@@ -15,18 +15,22 @@ const COT_THU = [1, 2, 3, 4, 5, 6, 0]
 
 export interface DongLopTho { so: number; ten: unknown; donGia: unknown; thu: unknown[] }
 export interface DongHsTho {
-  so: number; hoTen: unknown; lop: unknown; tenPh: unknown; sdt: unknown; ngayVao: unknown
-  donGiaRieng: unknown; sticker: unknown; ghiChu: unknown; linkZalo: unknown
+  so: number; maHs?: unknown; hoTen: unknown; lop: unknown; tenPh: unknown; sdt: unknown; ngayVao: unknown
+  donGia?: unknown; donGiaRieng?: unknown; sticker: unknown; ghiChu: unknown; linkZalo: unknown
 }
 
-export type TrangThai = 'moi' | 'da_co' | 'loi'
+export type TrangThai = 'moi' | 'them_lop' | 'da_co' | 'loi'
 export interface KqLop { loai: 'lop'; so: number; trangThai: TrangThai; loi?: string; ten: string; don_gia: number; lich: number[]; gio_thu: GioThu }
 export interface KqHs {
   loai: 'hs'; so: number; trangThai: TrangThai; loi?: string
-  ho_ten: string; tenLop: string; ten_phu_huynh: string | null; sdt_phu_huynh: string | null
-  ngay_vao: string; don_gia_rieng: number | null; sticker_dau_ky: number; ghi_chu: string | null
+  ma_hs: string | null; ho_ten: string; tenLop: string; ten_phu_huynh: string | null; sdt_phu_huynh: string | null
+  ngay_vao: string; don_gia: number; sticker_dau_ky: number; ghi_chu: string | null
   link_zalo: string | null
-  /** dòng "da_co" mà link trong file khác link đang có: id học sinh cần cập nhật link */
+  /** Học sinh đã có trong DB cần thêm ghi_danh vào lớp mới */
+  hocSinhId?: string
+  /** Dòng học sinh mới phía trên trong cùng file cần gộp lớp vào */
+  gopVoiDong?: number
+  /** Dòng đã có / thêm lớp mà link trong file khác link đang có: id học sinh cần cập nhật link */
   capNhatLink?: string
 }
 
@@ -96,9 +100,10 @@ export function chuanNgay(v: unknown, homNay: string): { ngay: string | null; lo
 // ---------- kiểm tra cả file ----------
 
 export function kiemTra(
-  lopTho: DongLopTho[], hsTho: DongHsTho[], lopCo: Lop[], hsCo: HocSinh[], homNay: string,
+  lopTho: DongLopTho[], hsTho: DongHsTho[], lopCo: Lop[], hsCo: HocSinh[], gdCo: GhiDanh[], homNay: string,
 ): { lops: KqLop[]; hss: KqHs[] } {
   const tenLopCo = new Map(lopCo.map((l) => [khoa(l.ten), l]))
+  const idToTenKhoa = new Map(lopCo.map((l) => [l.id, khoa(l.ten)]))
   const daGap = new Set<string>()
 
   const lops: KqLop[] = lopTho.map((r) => {
@@ -121,32 +126,87 @@ export function kiemTra(
   })
 
   // học sinh được xếp vào lớp đã có hoặc lớp mới hợp lệ trong cùng file
-  const lopDung = new Set([...tenLopCo.keys(), ...lops.filter((l) => l.trangThai === 'moi').map((l) => khoa(l.ten))])
-  const khoaHs = (ten: string, lop: string, sdt: string | null) => `${khoa(ten)}|${khoa(lop)}|${sdt ?? ''}`
-  const hsDaCo = new Map(hsCo.map((h) => [khoaHs(h.ho_ten, lopCo.find((l) => l.id === h.lop_id)?.ten ?? '', h.sdt_phu_huynh), h]))
-  const hsTrongFile = new Set<string>()
+  const giaLop = new Map<string, number>([
+    ...lopCo.map((l) => [khoa(l.ten), l.don_gia] as const),
+    ...lops.filter((l) => l.trangThai === 'moi').map((l) => [khoa(l.ten), l.don_gia] as const),
+  ])
+  const maCo = new Map(hsCo.filter((h) => h.ma_hs).map((h) => [khoa(h.ma_hs), h]))
+  const tenSdtCo = new Map<string, HocSinh>()
+  for (const h of hsCo) {
+    if (!h.sdt_phu_huynh) continue
+    const k = `${khoa(h.ho_ten)}|${h.sdt_phu_huynh}`
+    if (!tenSdtCo.has(k)) tenSdtCo.set(k, h)
+  }
+  const tenCo = new Set(hsCo.map((h) => khoa(h.ho_ten)))
+  const lopCuaHsCo = new Map<string, Set<string>>()
+  for (const g of gdCo) {
+    const t = idToTenKhoa.get(g.lop_id)
+    if (!t) continue
+    if (!lopCuaHsCo.has(g.hoc_sinh_id)) lopCuaHsCo.set(g.hoc_sinh_id, new Set())
+    lopCuaHsCo.get(g.hoc_sinh_id)!.add(t)
+  }
+
+  const lopThemTrongFile = new Map<string, Set<string>>()
+  const moiTheoTenSdt = new Map<string, { so: number; lops: Set<string> }>()
+  const moiKhongSdt = new Map<string, { so: number; lops: Set<string> }>()
 
   const hss: KqHs[] = hsTho.map((r) => {
-    const hoTen = chu(r.hoTen), tenLop = chu(r.lop)
+    const maRaw = chu(r.maHs)
+    const hoTen = chu(r.hoTen), tenLop = chu(r.lop), kLop = khoa(tenLop)
     const sdt = chuanSdt(r.sdt), ngay = chuanNgay(r.ngayVao, homNay), link = chuanLinkZalo(r.linkZalo)
-    const gia = chuanTien(r.donGiaRieng, 'Đơn giá riêng', false), st = chuanTien(r.sticker, 'Sticker đã có', false)
+    const gia = chuanTien(r.donGia ?? r.donGiaRieng, 'Đơn giá/buổi', false), st = chuanTien(r.sticker, 'Sticker đã có', false)
     const kq: KqHs = {
-      loai: 'hs', so: r.so, trangThai: 'moi', ho_ten: hoTen, tenLop, ten_phu_huynh: chu(r.tenPh) || null,
-      sdt_phu_huynh: sdt.sdt, ngay_vao: ngay.ngay ?? homNay, don_gia_rieng: gia.so, sticker_dau_ky: st.so ?? 0,
-      ghi_chu: chu(r.ghiChu) || null, link_zalo: link.link,
+      loai: 'hs', so: r.so, trangThai: 'moi', ma_hs: maRaw ? maRaw.toUpperCase() : null,
+      ho_ten: hoTen, tenLop, ten_phu_huynh: chu(r.tenPh) || null,
+      sdt_phu_huynh: sdt.sdt, ngay_vao: ngay.ngay ?? homNay, don_gia: gia.so ?? giaLop.get(kLop) ?? 0,
+      sticker_dau_ky: st.so ?? 0, ghi_chu: chu(r.ghiChu) || null, link_zalo: link.link,
     }
     const loi = (!hoTen && 'Thiếu họ tên') || (!tenLop && 'Chưa chọn lớp')
-      || (!lopDung.has(khoa(tenLop)) && `Lớp "${tenLop}" chưa có (hoặc dòng lớp đó đang lỗi)`)
+      || (!giaLop.has(kLop) && `Lớp "${tenLop}" chưa có (hoặc dòng lớp đó đang lỗi)`)
       || sdt.loi || ngay.loi || gia.loi || st.loi || link.loi
     if (loi) return { ...kq, trangThai: 'loi', loi }
-    const k = khoaHs(hoTen, tenLop, sdt.sdt)
-    const co = hsDaCo.get(k)
-    // ô link trống thì giữ link cũ: file mẫu điền sẵn học sinh nên nhiều em chưa có link trong file
-    if (co) return link.link && link.link !== co.link_zalo
-      ? { ...kq, trangThai: 'da_co', capNhatLink: co.id, loi: 'Sẽ cập nhật link nhóm Zalo' }
-      : { ...kq, trangThai: 'da_co' }
-    if (hsTrongFile.has(k)) return { ...kq, trangThai: 'da_co', loi: 'Trùng với dòng trên trong file' }
-    hsTrongFile.add(k)
+
+    if (maRaw && !maCo.has(khoa(maRaw))) {
+      return { ...kq, trangThai: 'loi', loi: `Không tìm thấy Mã HS "${maRaw}" (để trống nếu là học sinh mới)` }
+    }
+    const co = maRaw ? maCo.get(khoa(maRaw)) : (sdt.sdt ? tenSdtCo.get(`${khoa(hoTen)}|${sdt.sdt}`) : undefined)
+    if (co) {
+      const capNhat = link.link && link.link !== co.link_zalo ? { capNhatLink: co.id } : {}
+      if (lopCuaHsCo.get(co.id)?.has(kLop)) {
+        return capNhat.capNhatLink
+          ? { ...kq, trangThai: 'da_co', ...capNhat, loi: 'Sẽ cập nhật link nhóm Zalo' }
+          : { ...kq, trangThai: 'da_co' }
+      }
+      if (!lopThemTrongFile.has(co.id)) lopThemTrongFile.set(co.id, new Set())
+      const daThem = lopThemTrongFile.get(co.id)!
+      if (daThem.has(kLop)) return { ...kq, trangThai: 'da_co', loi: 'Trùng với dòng trên trong file' }
+      daThem.add(kLop)
+      return {
+        ...kq, trangThai: 'them_lop', hocSinhId: co.id, ...capNhat,
+        loi: `Thêm vào lớp ${tenLop} cho ${co.ho_ten} (${co.ma_hs})${capNhat.capNhatLink ? ' · cập nhật link Zalo' : ''}`,
+      }
+    }
+
+    if (!sdt.sdt && tenCo.has(khoa(hoTen))) {
+      return { ...kq, trangThai: 'loi', loi: `Đã có em "${hoTen}" trong trung tâm. Ghi Mã HS nếu học thêm lớp, hoặc nhập SĐT phụ huynh nếu là em khác` }
+    }
+    if (sdt.sdt) {
+      const k = `${khoa(hoTen)}|${sdt.sdt}`
+      const truoc = moiTheoTenSdt.get(k)
+      if (truoc) {
+        if (truoc.lops.has(kLop)) return { ...kq, trangThai: 'da_co', loi: 'Trùng với dòng trên trong file' }
+        truoc.lops.add(kLop)
+        return { ...kq, trangThai: 'them_lop', gopVoiDong: truoc.so, loi: `Gộp chung học sinh với dòng ${truoc.so}` }
+      }
+      moiTheoTenSdt.set(k, { so: r.so, lops: new Set([kLop]) })
+      return kq
+    }
+    const truoc = moiKhongSdt.get(khoa(hoTen))
+    if (truoc) {
+      if (truoc.lops.has(kLop)) return { ...kq, trangThai: 'da_co', loi: 'Trùng với dòng trên trong file' }
+      return { ...kq, trangThai: 'loi', loi: `Trùng tên dòng ${truoc.so} (chưa có SĐT): nhập SĐT phụ huynh nếu là cùng em học nhiều lớp` }
+    }
+    moiKhongSdt.set(khoa(hoTen), { so: r.so, lops: new Set([kLop]) })
     return kq
   })
   return { lops, hss }
@@ -169,11 +229,17 @@ export async function docFile(buf: ArrayBuffer): Promise<{ lopTho: DongLopTho[];
     if (![row.getCell(1).value, row.getCell(2).value, ...thu].some((v) => chu(v))) return
     lopTho.push({ so, ten: row.getCell(1).value, donGia: row.getCell(2).value, thu })
   })
+  const coMa = /^mã/i.test(chu(wsHs.getRow(1).getCell(1).value))
+  const d = coMa ? 1 : 0
   wsHs.eachRow((row, so) => {
-    if (so === 1 || laDongMau(row.getCell(1).value)) return
+    if (so === 1 || laDongMau(row.getCell(1).value) || laDongMau(row.getCell(1 + d).value)) return
     const o = (c: number) => row.getCell(c).value
-    if (![1, 2, 3, 4, 5, 6, 7, 8, 9].some((c) => chu(o(c)))) return
-    hsTho.push({ so, hoTen: o(1), lop: o(2), tenPh: o(3), sdt: o(4), ngayVao: o(5), donGiaRieng: o(6), sticker: o(7), ghiChu: o(8), linkZalo: o(9) })
+    const cols = coMa ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] : [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    if (!cols.some((c) => chu(o(c)))) return
+    hsTho.push({
+      so, maHs: coMa ? o(1) : '', hoTen: o(1 + d), lop: o(2 + d), tenPh: o(3 + d), sdt: o(4 + d),
+      ngayVao: o(5 + d), donGia: o(6 + d), sticker: o(7 + d), ghiChu: o(8 + d), linkZalo: o(9 + d),
+    })
   })
   return { lopTho, hsTho }
 }
@@ -189,7 +255,7 @@ function tieuDe(ws: ExcelJS.Worksheet, cot: { ten: string; rong: number; batBuoc
 
 const SO_DONG = 500
 
-export async function taiFileMau(lops: Lop[], hss: HocSinh[]) {
+export async function taiFileMau(lops: Lop[], hss: HocSinh[], gds: GhiDanh[]) {
   const { default: Excel } = await import('exceljs')
   const wb = new Excel.Workbook()
 
@@ -198,15 +264,14 @@ export async function taiFileMau(lops: Lop[], hss: HocSinh[]) {
   ;[
     'CÁCH DÙNG FILE MẪU',
     '1. Trang "Lớp": mỗi dòng một lớp. Các lớp đang có đã điền sẵn, import sẽ bỏ qua chúng. Cột thứ có học ghi giờ bắt đầu-kết thúc, ví dụ 17:30-19:00; thứ không học để trống.',
-    '2. Trang "Học sinh": mỗi dòng một học sinh. Cột Lớp chọn trong ô thả xuống (lấy từ trang Lớp).',
+    '2. Trang "Học sinh": mỗi dòng là 1 lượt ghi danh (1 học sinh vào 1 lớp). Cột Lớp chọn trong ô thả xuống (lấy từ trang Lớp).',
     '3. Cột có dấu * là bắt buộc. Dòng bắt đầu bằng "Ví dụ" sẽ được bỏ qua.',
-    '4. SĐT phụ huynh: 10 số, bắt đầu bằng 0. Mỗi SĐT tạo một tài khoản phụ huynh, mật khẩu đầu là chính SĐT. Anh chị em dùng chung SĐT.',
-    '5. Ngày vào học: dạng ngày/tháng/năm, để trống thì lấy ngày import.',
-    '6. Đơn giá riêng: để trống thì học theo đơn giá của lớp. Sticker đã có: số sticker tích luỹ từ trước.',
-    '7. Import chỉ THÊM MỚI. Học sinh trùng họ tên + lớp + SĐT phụ huynh với người đã có sẽ được bỏ qua, không bị sửa (trừ cột Link nhóm Zalo, xem mục 9).',
-    '8. Dòng lỗi không được nhập. Sửa trong file rồi import lại cùng file: những dòng đã nhập sẽ tự bỏ qua.',
-    '9. Link nhóm Zalo: dán link mời vào nhóm (https://zalo.me/g/...). Các học sinh đang học đã điền sẵn: chỉ cần dán link vào cột cuối rồi import, app cập nhật link cho em đó. Ô link để trống thì giữ link đang có.',
-    '10. CHÚ Ý: không sửa Họ tên, Lớp, SĐT phụ huynh của các dòng điền sẵn. Sửa thì dòng đó bị coi là học sinh MỚI và sẽ tạo trùng. Muốn sửa thông tin thì sửa trong app.',
+    '4. Mã HS: để trống với học sinh mới (app tự cấp HS001...). Muốn xếp thêm lớp cho học sinh đã có, ghi đúng Mã HS hoặc nhập giống hệt Họ tên + SĐT phụ huynh ở các dòng lớp khác nhau — app sẽ gộp thành 1 học sinh duy nhất.',
+    '5. SĐT phụ huynh: 10 số, bắt đầu bằng 0 (chỉ dùng để liên hệ và phân biệt học sinh trùng tên, không tạo tài khoản đăng nhập).',
+    '6. Ngày vào học: dạng ngày/tháng/năm, để trống thì lấy ngày import.',
+    '7. Đơn giá/buổi: mức cố định áp dụng cho học sinh ở mọi lớp; để trống thì lấy theo đơn giá của lớp đầu tiên.',
+    '8. Dòng đã có trong đúng lớp đó được bỏ qua (trừ cột Link nhóm Zalo: có link mới thì cập nhật). Dòng lỗi không được nhập; sửa rồi import lại vẫn an toàn.',
+    '9. CHÚ Ý: không sửa Mã HS, Họ tên, Lớp, SĐT của các dòng điền sẵn để tránh nhận nhầm thành học sinh mới. Muốn sửa thông tin thì sửa trực tiếp trong app.',
   ].forEach((t, i) => { const r = hd.addRow([t]); if (i === 0) r.font = { bold: true, size: 14 } })
 
   const wsLop = wb.addWorksheet(TRANG_LOP)
@@ -217,28 +282,33 @@ export async function taiFileMau(lops: Lop[], hss: HocSinh[]) {
   wsLop.getColumn(2).numFmt = '#,##0'
 
   const wsHs = wb.addWorksheet(TRANG_HS)
-  tieuDe(wsHs, [{ ten: 'Họ tên', rong: 24, batBuoc: true }, { ten: 'Lớp', rong: 18, batBuoc: true }, { ten: 'Tên phụ huynh', rong: 18 },
-    { ten: 'SĐT phụ huynh', rong: 15 }, { ten: 'Ngày vào học', rong: 13 }, { ten: 'Đơn giá riêng', rong: 13 },
-    { ten: 'Sticker đã có', rong: 12 }, { ten: 'Ghi chú', rong: 28 }, { ten: 'Link nhóm Zalo', rong: 34 }])
-  wsHs.addRow(['Ví dụ: Nguyễn Gia Bảo', lops[0]?.ten ?? 'Movers 2', 'Chị Hằng', '0987220413', new Date(), '', 12, 'Anh trai học lớp khác', 'https://zalo.me/g/abcxyz123'])
+  tieuDe(wsHs, [
+    { ten: 'Mã HS', rong: 10 }, { ten: 'Họ tên', rong: 24, batBuoc: true }, { ten: 'Lớp', rong: 18, batBuoc: true },
+    { ten: 'Tên phụ huynh', rong: 18 }, { ten: 'SĐT phụ huynh', rong: 15 }, { ten: 'Ngày vào học', rong: 13 },
+    { ten: 'Đơn giá/buổi', rong: 13 }, { ten: 'Sticker đã có', rong: 12 }, { ten: 'Ghi chú', rong: 28 }, { ten: 'Link nhóm Zalo', rong: 34 },
+  ])
+  wsHs.addRow(['', 'Ví dụ: Nguyễn Gia Bảo', lops[0]?.ten ?? 'Movers 2', 'Chị Hằng', '0987220413', new Date(), 150000, 12, 'Học 2 lớp ghi 2 dòng cùng tên + SĐT', 'https://zalo.me/g/abcxyz123'])
     .font = { italic: true, color: { argb: 'FF8C8C8C' } }
-  // điền sẵn học sinh đang học để dán link nhóm Zalo hàng loạt; import sẽ nhận ra là "đã có" theo họ tên + lớp + SĐT
   const tenLop = new Map(lops.map((l) => [l.id, l.ten]))
-  for (const h of hss.filter((x) => x.trang_thai === 'dang_hoc' && tenLop.has(x.lop_id))
-    .sort((a, b) => tenLop.get(a.lop_id)!.localeCompare(tenLop.get(b.lop_id)!) || a.ho_ten.localeCompare(b.ho_ten))) {
-    wsHs.addRow([h.ho_ten, tenLop.get(h.lop_id), h.ten_phu_huynh ?? '', h.sdt_phu_huynh ?? '', new Date(h.ngay_vao),
-      h.don_gia_rieng ?? '', h.sticker_dau_ky || '', h.ghi_chu ?? '', h.link_zalo ?? ''])
+  const hsMap = new Map(hss.map((h) => [h.id, h]))
+  const dongMau = gds
+    .filter((g) => g.trang_thai === 'dang_hoc' && tenLop.has(g.lop_id) && hsMap.has(g.hoc_sinh_id))
+    .map((g) => ({ g, h: hsMap.get(g.hoc_sinh_id)!, lopTen: tenLop.get(g.lop_id)! }))
+    .sort((a, b) => a.lopTen.localeCompare(b.lopTen) || a.h.ho_ten.localeCompare(b.h.ho_ten))
+  for (const { g, h, lopTen } of dongMau) {
+    wsHs.addRow([h.ma_hs, h.ho_ten, lopTen, h.ten_phu_huynh ?? '', h.sdt_phu_huynh ?? '', new Date(g.ngay_vao),
+      h.don_gia, h.sticker_dau_ky || '', h.ghi_chu ?? '', h.link_zalo ?? ''])
   }
   // SĐT để Text cho khỏi mất số 0 đầu; Lớp là danh sách thả xuống lấy từ trang Lớp
-  wsHs.getColumn(4).numFmt = '@'
-  wsHs.getColumn(5).numFmt = 'dd/mm/yyyy'
-  wsHs.getColumn(6).numFmt = '#,##0'
+  wsHs.getColumn(5).numFmt = '@'
+  wsHs.getColumn(6).numFmt = 'dd/mm/yyyy'
+  wsHs.getColumn(7).numFmt = '#,##0'
   for (let r = 2; r <= SO_DONG; r++) {
-    wsHs.getCell(r, 2).dataValidation = {
+    wsHs.getCell(r, 3).dataValidation = {
       type: 'list', allowBlank: true, formulae: [`'${TRANG_LOP}'!$A$2:$A$${SO_DONG}`],
       showErrorMessage: true, errorTitle: 'Lớp không có', error: 'Chọn lớp trong danh sách, hoặc thêm lớp ở trang Lớp trước.',
     }
-    wsHs.getCell(r, 4).numFmt = '@'
+    wsHs.getCell(r, 5).numFmt = '@'
   }
 
   const buf = await wb.xlsx.writeBuffer()

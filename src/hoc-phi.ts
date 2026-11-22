@@ -11,6 +11,8 @@ export interface Goi {
   so_thang: number
   don_gia: number
   buoi_du_kien: Record<Thang, number>
+  /** Tổng học phí gốc theo từng tháng khi học sinh học nhiều lớp khác giá; null khi đồng giá. */
+  tien_thang?: Record<Thang, number> | null
   tien_du_tru: number
   dieu_chinh: number
 }
@@ -49,7 +51,8 @@ export function phaiThuTheoThang(g: Goi): Record<Thang, number> {
   const kq: Record<Thang, number> = {}
   let du = g.dieu_chinh - g.tien_du_tru
   ts.forEach((t, i) => {
-    let v = g.buoi_du_kien[t] * g.don_gia + du
+    const goc = g.tien_thang?.[t] ?? g.buoi_du_kien[t] * g.don_gia
+    let v = goc + du
     du = 0
     if (v < 0 && i < ts.length - 1) { du = v; v = 0 }
     kq[t] = v
@@ -102,6 +105,18 @@ export function tongHopHocSinh(goi: Goi[], phieu: PhieuThu[], thang: Thang): Ton
   const goiIds = new Set(goi.map((g) => g.id))
   for (const p of phieu) if (goiIds.has(p.goi_id) && thangCua(p.ngay_thu) === thang) thucThu += p.so_tien
   return { phaiThu, noKyTruoc, daThu: phaiThu + noKyTruoc - conPhaiThu, conPhaiThu, thucThu, dongTruoc }
+}
+
+export function tongCong(d: {
+  dong: TongHopThang[]; chi: { so_tien: number }[]; luongTg: { thanhTien: number }[]; phieu: { so_tien: number }[]
+}) {
+  const cong = (k: keyof TongHopThang) => d.dong.reduce((s, x) => s + x[k], 0)
+  const tongChi = d.chi.reduce((s, x) => s + x.so_tien, 0) + d.luongTg.reduce((s, x) => s + x.thanhTien, 0)
+  const thucThu = d.phieu.reduce((s, p) => s + p.so_tien, 0)
+  return {
+    phaiThu: cong('phaiThu'), noKyTruoc: cong('noKyTruoc'), daThu: cong('daThu'), conPhaiThu: cong('conPhaiThu'),
+    thucThu, tongChi, chenhLech: thucThu - tongChi,
+  }
 }
 
 /** "Đã đủ (đóng trước)" khi tháng này được trả hết bằng tiền đóng trước khi tháng bắt đầu (spec vòng 3). */
@@ -159,9 +174,77 @@ export function tinhTrangGoi<G extends GoiNgan>(goi: G[], lich: number[], ngayVa
   return { loai, goi: cuoi, conBuoi, buoiCuoi, thangKe: thangHetGoi(cuoi) }
 }
 
-/** Học phí gốc của tháng (buổi × đơn giá), chưa trừ dư / điều chỉnh: cột "Học phí" của Excel; "Điều chỉnh" = phải thu − số này. */
+export interface LichLopEm { lop_id?: string; lich: number[]; ngay_vao: string; don_gia?: number }
+export interface BuoiDacBietLop extends BuoiDacBiet { lop_id: string }
+
+/** Tổng buổi dự kiến của nhiều lớp: cộng từng lớp (2 lớp cùng thứ vẫn tính 2 buổi), tôn trọng ngày vào học riêng mỗi lớp. */
+export function demBuoiDuKienNhieuLop(ds: LichLopEm[], thangBatDau: Thang, soThang: number): Record<Thang, number> {
+  const kq: Record<Thang, number> = {}
+  for (let i = 0; i < soThang; i++) kq[congThang(thangBatDau, i)] = 0
+  for (const x of ds) {
+    const tu = x.ngay_vao > `${thangBatDau}-01` ? x.ngay_vao : undefined
+    const t = demBuoiDuKien(x.lich, thangBatDau, soThang, tu)
+    for (const k of Object.keys(kq)) kq[k] += t[k] ?? 0
+  }
+  return kq
+}
+
+/**
+ * Tổng học phí gốc theo tháng khi học sinh có lớp áp đơn giá riêng (vd ca 1-1 khác thời lượng).
+ * Trả về `null` nếu mọi lớp đều dùng đúng `donGiaMacDinh` để giữ nguyên goi_hoc gọn nhẹ như cũ.
+ */
+export function tinhTienThangNhieuLop(
+  ds: LichLopEm[], donGiaMacDinh: number, thangBatDau: Thang, soThang: number,
+): Record<Thang, number> | null {
+  if (!ds.some((x) => (x.don_gia ?? donGiaMacDinh) !== donGiaMacDinh)) return null
+  const kq: Record<Thang, number> = {}
+  for (let i = 0; i < soThang; i++) kq[congThang(thangBatDau, i)] = 0
+  for (const x of ds) {
+    const tu = x.ngay_vao > `${thangBatDau}-01` ? x.ngay_vao : undefined
+    const t = demBuoiDuKien(x.lich, thangBatDau, soThang, tu)
+    const gia = x.don_gia ?? donGiaMacDinh
+    for (const k of Object.keys(kq)) kq[k] += (t[k] ?? 0) * gia
+  }
+  return kq
+}
+
+export function tinhTrangGoiNhieuLop<G extends GoiNgan>(goi: G[], ds: LichLopEm[], homNay: string): TinhTrangGoi<G> {
+  const cuoi = [...goi].sort((a, b) => a.thang_bat_dau.localeCompare(b.thang_bat_dau)).pop()
+  if (!cuoi) {
+    const ngayMin = ds.map((x) => x.ngay_vao).sort()[0] ?? homNay
+    return { loai: 'chua_co', conBuoi: 0, thangKe: [thangCua(ngayMin), thangCua(homNay)].sort()[1] }
+  }
+  let conBuoi = 0, buoiCuoi: string | undefined
+  for (const x of ds) {
+    const tt = tinhTrangGoi([cuoi], x.lich, x.ngay_vao, homNay)
+    conBuoi += tt.conBuoi
+    if (tt.buoiCuoi && (!buoiCuoi || tt.buoiCuoi > buoiCuoi)) buoiCuoi = tt.buoiCuoi
+  }
+  const loai = conBuoi === 0 ? 'het' : conBuoi <= NGUONG_GIA_HAN ? 'sap_het' : 'con'
+  return { loai, goi: cuoi, conBuoi, buoiCuoi, thangKe: thangHetGoi(cuoi) }
+}
+
+/** Tiền dư của gói qua nhiều lớp: buổi phụ lớp khác không bù chéo cho buổi lớp nghỉ của lớp kia. */
+export function tienDuGoiNhieuLop(
+  g: Goi, buoi: BuoiDacBietLop[], ds: { lop_id: string; ngay_vao: string; don_gia?: number }[],
+): number {
+  return ds.reduce((s, x) => {
+    const n = demNghiPhu(g, buoi.filter((b) => b.lop_id === x.lop_id), x.ngay_vao)
+    return s + Math.max(0, n.nghi - n.phu) * (x.don_gia ?? g.don_gia)
+  }, 0)
+}
+
+export function duConLaiNhieuLop(
+  goi: Goi[], buoi: BuoiDacBietLop[], ds: { lop_id: string; ngay_vao: string; don_gia?: number }[], daHoan: number, truocThang: Thang,
+): number {
+  const phatSinh = goi.filter((g) => thangHetGoi(g) <= truocThang).reduce((s, g) => s + tienDuGoiNhieuLop(g, buoi, ds), 0)
+  const daTru = goi.reduce((s, g) => s + g.tien_du_tru, 0)
+  return Math.max(0, phatSinh - daTru - daHoan)
+}
+
+/** Học phí gốc của tháng (buổi × đơn giá, hoặc tiền đã cộng theo từng lớp), chưa trừ dư / điều chỉnh. */
 export function hocPhiGocThang(goi: Goi[], thang: Thang): number {
-  return goi.reduce((s, g) => s + (g.buoi_du_kien[thang] ?? 0) * g.don_gia, 0)
+  return goi.reduce((s, g) => s + (g.tien_thang?.[thang] ?? (g.buoi_du_kien[thang] ?? 0) * g.don_gia), 0)
 }
 
 /** Tiền dư của gói: chỉ buổi lớp nghỉ (lễ, Tết, giáo viên nghỉ) mà chưa có buổi phụ bù lại. Học sinh tự nghỉ thì học bù. */
@@ -222,15 +305,18 @@ export function tinNhanPhuHuynh(tenHs: string, thang: Thang, th: TongHopThang, s
 const ngayVN = (n: string) => n.split('-').reverse().join('/')
 
 /** Tin nhắn nhắc gia hạn: học phí ghi theo 1 tháng kế tiếp (người dùng chốt 2026-11-16). */
-export function tinNhanGiaHan(tenHs: string, tt: TinhTrangGoi, soBuoiKe: number, donGia: number): string {
+export function tinNhanGiaHan(tenHs: string, tt: TinhTrangGoi, soBuoiKe: number, donGia: number, tongTienKe?: number): string {
   const [y, m] = tt.thangKe.split('-')
   const dau = 'Trung tâm Anh ngữ Ms.Nhung xin thông báo'
   const goi = !tt.goi ? `${dau} học phí của em ${tenHs}.`
     : tt.loai === 'het' ? `${dau}: gói học của em ${tenHs} (${tenGoi(tt.goi)}) đã kết thúc ngày ${ngayVN(tt.buoiCuoi ?? '')}.`
     : `${dau}: gói học của em ${tenHs} (${tenGoi(tt.goi)}) còn ${tt.conBuoi} buổi, kết thúc ngày ${ngayVN(tt.buoiCuoi ?? '')}.`
+  const dongTien = tongTienKe !== undefined && tongTienKe !== soBuoiKe * donGia
+    ? `Học phí tháng ${m}/${y}: ${soBuoiKe} buổi = ${vnd(tongTienKe)}.`
+    : `Học phí tháng ${m}/${y}: ${soBuoiKe} buổi × ${vnd(donGia)} = ${vnd(soBuoiKe * donGia)}.`
   return [
     goi,
-    `Học phí tháng ${m}/${y}: ${soBuoiKe} buổi × ${vnd(donGia)} = ${vnd(soBuoiKe * donGia)}.`,
+    dongTien,
     `Phụ huynh vui lòng ${tt.goi ? 'gia hạn' : 'đóng học phí'} để em tiếp tục học. Cảm ơn quý phụ huynh!`,
   ].join('\n')
 }
