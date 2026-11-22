@@ -379,6 +379,17 @@ Link nhóm Zalo của từng học sinh (grill 2026-11-20):
 - Thu "Trả gói đang nợ": số tiền bắt buộc, từ 1 đến số còn nợ. "Trừ tiền dư" không vượt tổng gói.
 - Excel: học 2 buổi cùng ngày ghi "C+B" trong một ô; cột "Có mặt" đếm từng chữ C / B.
 
+### Học sinh học nhiều lớp, đơn giá cố định & bỏ đăng nhập phụ huynh (chốt 2026-11-22)
+
+Chi tiết kỹ thuật xem [SPEC-hoc-sinh-nhieu-lop.md](../SPEC-hoc-sinh-nhieu-lop.md):
+
+- **1 học sinh nhiều lớp (`ghi_danh`):** Tách liên kết lớp sang bảng `ghi_danh (hoc_sinh_id, lop_id, ngay_vao, trang_thai)` (`unique (hoc_sinh_id, lop_id)`); bỏ `hoc_sinh.lop_id`. Bổ sung mã tự sinh `hoc_sinh.ma_hs` (`HS001`, `HS002`…), giữ nguyên `hoc_sinh.id` nên điểm danh, sticker, gói học, chi phí hoàn tiền và đánh giá tự gộp theo một học sinh.
+- **Đơn giá cố định trên `hoc_sinh.don_gia` & tuỳ chọn giá riêng theo lớp (`ghi_danh.don_gia_rieng`):** Mỗi học sinh có một mức đơn giá/buổi áp dụng chung cho mọi lớp em theo học (`lop.don_gia` chỉ dùng làm gợi ý mặc định khi tạo học sinh mới). Trường hợp đặc biệt học các ca khác nhau hoàn toàn về mức giá (vd `Minh Trang`: ca 1-1 1h `500.000đ` và ca 1-1 2h `1.000.000đ`) dùng `ghi_danh.don_gia_rieng` cho lớp riêng đó, và gói học lưu thêm `goi_hoc.tien_thang` để tính đúng tổng tiền từng lớp cộng lại. Đã gộp toàn bộ 128 hồ sơ trùng tên cũ về đúng 65 học sinh kèm bảng đơn giá chuẩn trung tâm (migration `20261124000000_gop_hs_don_gia_rieng.sql`).
+- **Quy trình tạo lớp trước → thêm học sinh & tự gộp trùng:** Form thêm học sinh chọn 1 hoặc nhiều lớp; nếu trùng `Họ tên + SĐT PH` thì tự gộp thêm `ghi_danh` vào học sinh sẵn có; nếu chỉ trùng tên (khác/thiếu SĐT) thì hỏi xác nhận Gộp hay Tạo mới. Import Excel bổ sung cột `Mã HS`, trạng thái `Thêm lớp`, và công cụ **Gộp học sinh** (`gop_hoc_sinh`) để giáo viên/admin gộp hồ sơ cũ bị tách đôi.
+- **Học phí & Xuất Excel theo học sinh:** Tab Học phí hiển thị phẳng 1 dòng / 1 học sinh (kèm `Mã HS`, `Các lớp`, tìm tên/mã và lọc theo lớp). Xuất Excel dùng 1 trang `Học phí` duy nhất (1 dòng / 1 học sinh) được trang `Tổng hợp` tham chiếu, đảm bảo học sinh học nhiều lớp không bị cộng trùng doanh thu.
+- **Đánh giá tháng:** Giữ `unique (thang, hoc_sinh_id)` → mỗi em chỉ gửi tối đa 1 phiếu / tháng bất kể học bao nhiêu lớp; `phieu_danh_gia` và `gui_danh_gia` đọc từ `ghi_danh`.
+- **Tắt đăng nhập & tài khoản phụ huynh:** Khoá `hoat_dong = false` các tài khoản `phu_huynh` cũ, bỏ luồng đăng nhập/tạo/đặt lại mật khẩu phụ huynh và video hướng dẫn phụ huynh; giữ nguyên `ten_phu_huynh`, `sdt_phu_huynh`, `link_zalo` và các nút Zalo/SMS/Sao chép tin nhắn.
+
 ## Câu hỏi còn mở
 
 Không còn.

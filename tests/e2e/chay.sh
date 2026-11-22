@@ -5,6 +5,7 @@
 set -e
 cd "$(dirname "$0")/../.."
 set -a; . ./.env; set +a
+node -e 'process.exit(typeof WebSocket === "function" ? 0 : 1)' 2>/dev/null || export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--experimental-websocket"
 # mốc bắt đầu: don-test.mjs xoá dòng nhật ký thao tác do test sinh ra từ lúc này
 export TU_LUC=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 TRUOC=$(node --env-file=.env tests/e2e/dem.mjs)

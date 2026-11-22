@@ -7,7 +7,7 @@ OUT = os.path.join(D, "out")
 os.makedirs(OUT, exist_ok=True)
 URL = "http://127.0.0.1:5180/"
 PW = sys.argv[1]
-REPO = r"C:\Users\TIENTUONG\MsNhung"
+REPO = os.path.dirname(os.path.dirname(D))
 KQ = []
 THANG_TEST = []  # tháng có link do test tạo, để xoá khi xong
 
@@ -70,8 +70,8 @@ with sync_playwright() as pw:
     def b_admin():
         dang_nhap(p, "admin", PW)
         expect(p.get_by_text("Thoát")).to_be_visible(timeout=20000)
-        huong_dan(lambda: p.get_by_role("button", name="Hướng dẫn").click(), 8)
-    buoc("admin đăng nhập, trang Hướng dẫn đủ 8 video phát được", b_admin)
+        huong_dan(lambda: p.get_by_role("button", name="Hướng dẫn").click(), 7)
+    buoc("admin đăng nhập, trang Hướng dẫn đủ 7 video phát được", b_admin)
 
     def b_tao_tg():
         nav("Tài khoản")
@@ -102,7 +102,9 @@ with sync_playwright() as pw:
         expect(p.get_by_text(re.compile("16:45–18:15"))).to_be_visible()
         p.get_by_role("button", name="Thêm học sinh").click()
         lab(p, "Họ tên").fill("TEST Nguyễn Bảo An")
-        chon(p, "Lớp", "TEST Lớp Starters")
+        chon(p, "Các lớp học", "TEST Lớp Starters")
+        p.keyboard.press("Escape")
+        expect(lab(p, "Đơn giá/buổi cố định của học sinh (đ)")).to_have_value(re.compile(r"100[.,]?000"))
         p.locator(".ant-modal input[type=file]").set_input_files(os.path.join(D, "avatar.jpg"))
         lab(p, "Tên phụ huynh").fill("TEST Chị Hoa")  # có chữ TEST để don-test.mjs nhận ra dòng nhật ký Hệ thống
         p.get_by_label(re.compile("SĐT phụ huynh")).fill("0922 000 002")
@@ -266,7 +268,7 @@ with sync_playwright() as pw:
         p.screenshot(path=os.path.join(OUT, "a-hoc-phi.png"), full_page=True)
         # bộ lọc báo gia hạn: TEST An có gói 3 tháng từ tháng này nên không nằm trong danh sách
         p.locator(".ant-segmented-item", has_text="Sắp hết gói").click()
-        expect(p.locator(".ant-card", has_text="TEST Lớp Starters")).to_have_count(0)
+        expect(p.locator("a", has_text="TEST Nguyễn Bảo An")).to_have_count(0)
         p.screenshot(path=os.path.join(OUT, "a-sap-het-goi.png"), full_page=True)
         p.locator(".ant-segmented-item", has_text="Tất cả").click()
         with p.expect_download() as dl:
@@ -274,16 +276,17 @@ with sync_playwright() as pw:
         f = os.path.join(OUT, "all-hoc-phi.xlsx")
         dl.value.save_as(f)
         js = ("const E=require('exceljs');const w=new E.Workbook();w.xlsx.readFile(process.argv[1]).then(()=>{"
-              "const s=w.getWorksheet('TEST Lớp Starters');"
-              "console.log(JSON.stringify({ten:w.worksheets.map(x=>x.name),goi:s&&[s.getCell('L1').value,s.getCell('L2').value]}))})")
+              "const s=w.getWorksheet('Học phí');let an=null;"
+              "s&&s.eachRow((r,i)=>{if(i>1&&r.getCell('C').value==='TEST Nguyễn Bảo An')an={dg:r.getCell('G').value,goi:r.getCell('O').value};});"
+              "console.log(JSON.stringify({ten:w.worksheets.map(x=>x.name),cotGoi:s&&s.getCell('O1').value,an}))})")
         kq = json.loads(subprocess.run(["node", "-e", js, f], cwd=REPO, capture_output=True, text=True, encoding="utf-8").stdout)
         ten = kq["ten"]
         # trang "Đánh giá" chỉ có khi tháng có phiếu (database dùng chung nên có thể đã có phiếu thật)
         ten = [x for x in ten if x != "Đánh giá"]
-        assert ten[0] == "Tổng hợp" and ten[-5:] == ["Điểm danh", "Sổ thu", "Chi phí", "Công nợ", "Trợ giảng"] and "TEST Lớp Starters" in ten, ten
-        # cột Gói ở cuối sheet lớp (gói TEST 3 tháng từ tháng này)
-        assert kq["goi"][0] == "Gói" and str(kq["goi"][1]).startswith("3 tháng · "), kq["goi"]
-    buoc("tab Học phí đúng số + dung lượng ảnh + Excel đủ trang đúng thứ tự", b_hoc_phi)
+        assert ten == ["Tổng hợp", "Học phí", "Điểm danh", "Sổ thu", "Chi phí", "Công nợ", "Trợ giảng"], ten
+        # cột Gói ở cuối sheet Học phí (gói TEST 3 tháng từ tháng này), đơn giá cố định 100000
+        assert kq["cotGoi"] == "Gói" and kq["an"] and kq["an"]["dg"] == 100000 and str(kq["an"]["goi"]).startswith("3 tháng · "), kq["an"]
+    buoc("tab Học phí đúng số + dung lượng ảnh + Excel sheet Học phí đủ trang đúng thứ tự", b_hoc_phi)
 
     def b_import():
         nav("Lớp")
@@ -297,22 +300,23 @@ with sync_playwright() as pw:
         p.locator("input[type=file]").set_input_files(dien)
         p.wait_for_timeout(2000)
         expect(p.locator("[role=alert]")).to_contain_text("4 dòng cần sửa")
-        p.get_by_role("button", name="Nhập 3 dòng mới").click()
-        expect(p.get_by_text("Đã thêm 1 lớp và 2 học sinh")).to_be_visible(timeout=60000)
+        p.get_by_role("button", name="3 dòng mới, 1 thêm lớp").click()
+        expect(p.get_by_text("Đã thêm 1 lớp, 2 học sinh mới, 1 lượt thêm lớp")).to_be_visible(timeout=60000)
         p.get_by_role("button", name="Về trang Lớp").click()
         p.get_by_role("button", name="Import Excel").click()
         p.locator("input[type=file]").set_input_files(dien)
         p.wait_for_timeout(2000)
         expect(p.locator(".ant-segmented")).to_contain_text("Mới 0")
-    buoc("import Excel: 4 lỗi, nhập 1 lớp 2 học sinh, import lại → Mới 0", b_import)
+        expect(p.locator(".ant-segmented")).to_contain_text("Thêm lớp 0")
+    buoc("import Excel: 4 lỗi, nhập 1 lớp 2 học sinh mới + 1 thêm lớp, import lại → Mới 0, Thêm lớp 0", b_import)
 
     def b_go_hoc_bu():
         nav("Điểm danh")
         p.locator(".ant-list-item", has_text="TEST Lớp Starters", has_not_text="Buổi bù").get_by_role("button", name="Điểm danh").click()
         p.locator(".ant-select", has_text="+ Thêm học sinh lớp khác học bù buổi này").click()
-        p.keyboard.type("TEST Lê Minh")
-        p.locator(".ant-select-dropdown:visible .ant-select-item-option", has_text="TEST Lê Minh Châu").click()
-        row = p.locator(".ant-list-item", has_text="TEST Lê Minh Châu")
+        p.keyboard.type("TEST Nguyễn Gia")
+        p.locator(".ant-select-dropdown:visible .ant-select-item-option", has_text="TEST Nguyễn Gia Bảo").click()
+        row = p.locator(".ant-list-item", has_text="TEST Nguyễn Gia Bảo")
         expect(row.get_by_role("button", name="Gỡ")).to_be_visible(timeout=10000)
         expect(p.locator(".ant-list-item", has_text="TEST Nguyễn Bảo An").get_by_role("button", name="Gỡ")).to_have_count(0)
         row.get_by_role("button", name="Gỡ").click()
@@ -392,8 +396,10 @@ with sync_playwright() as pw:
         hop.get_by_role("button", name="Xoá hẳn").click()
         expect(p.get_by_text("Đã xoá lớp TEST Movers 2")).to_be_visible(timeout=15000)
         expect(p.locator(".ant-collapse-item", has_text="TEST Movers 2")).to_have_count(0)
-        assert p.get_by_text("TEST Lê Minh Châu").count() == 0, "học sinh của lớp đã xoá vẫn còn"
-    buoc("xoá lớp có học sinh: gõ sai tên thì nút Xoá hẳn bị khoá, gõ đúng thì lớp + học sinh biến mất", b_xoa_lop)
+        assert p.get_by_text("TEST Nguyễn Gia Bảo").count() == 0, "học sinh chỉ học lớp đã xoá vẫn còn"
+        tim_hs("TEST Lê Minh Châu")
+        expect(p.get_by_text("TEST Lê Minh Châu")).to_be_visible(timeout=10000)
+    buoc("xoá lớp có học sinh: em 1 lớp biến mất, em học 2 lớp vẫn giữ lại ở lớp còn lại", b_xoa_lop)
 
     def b_danh_gia():
         nav("Học phí")
@@ -439,34 +445,56 @@ with sync_playwright() as pw:
         finally:
             p.goto(URL)
     buoc("đánh giá: tạo link, học sinh chọn lớp + tên gửi phiếu, tên mờ 'đã gửi', giáo viên thấy điểm + nhận xét", b_danh_gia)
+    def b_nhieu_lop():
+        nav("Lớp")
+        for ten_lop, thu, gia in [("TEST Lớp Đa Lớp A", "T2", "100000"), ("TEST Lớp Đa Lớp B", "T4", "150000")]:
+            p.get_by_role("button", name="Thêm lớp").click()
+            lab(p, "Tên lớp").fill(ten_lop)
+            lab(p, "Đơn giá một buổi (đ)").fill(gia)
+            m = p.locator(".ant-modal")
+            m.get_by_text(thu, exact=True).click()
+            m.get_by_label(f"{thu} bắt đầu").fill("17:30")
+            m.get_by_label(f"{thu} kết thúc").fill("19:00")
+            m.get_by_role("button", name="Lưu").click()
+            expect(p.get_by_text(ten_lop)).to_be_visible(timeout=15000)
+
+        p.get_by_role("button", name="Thêm học sinh").click()
+        lab(p, "Họ tên").fill("TEST Em Đa Lớp")
+        chon(p, "Các lớp học", "TEST Lớp Đa Lớp A")
+        p.keyboard.press("Escape")
+        p.get_by_label(re.compile("SĐT phụ huynh")).fill("0988777666")
+        p.locator(".ant-modal").get_by_role("button", name="Lưu").click()
+        expect(p.locator(".ant-modal")).to_have_count(0, timeout=15000)
+
+        # Thêm lại cùng tên + SĐT ở lớp B → tự gộp vào cùng học sinh
+        p.get_by_role("button", name="Thêm học sinh").click()
+        lab(p, "Họ tên").fill("TEST Em Đa Lớp")
+        chon(p, "Các lớp học", "TEST Lớp Đa Lớp B")
+        p.keyboard.press("Escape")
+        p.get_by_label(re.compile("SĐT phụ huynh")).fill("0988777666")
+        p.locator(".ant-modal").get_by_role("button", name="Lưu").click()
+        expect(p.locator(".ant-modal")).to_have_count(0, timeout=15000)
+
+        tim_hs("TEST Em Đa Lớp")
+        expect(p.locator(".ant-list-item", has_text="TEST Em Đa Lớp").first.get_by_text("+1 lớp")).to_be_visible(timeout=10000)
+
+        # Tab Học phí: đúng 1 dòng cho TEST Em Đa Lớp
+        nav("Học phí")
+        p.get_by_label("Tìm học sinh").fill("TEST Em Đa Lớp")
+        expect(p.locator("button", has_text="TEST Em Đa Lớp")).to_have_count(1, timeout=10000)
+        expect(p.locator("button", has_text="TEST Em Đa Lớp")).to_contain_text("100.000 đ/buổi")
+
+        # Mở modal Gộp học sinh kiểm tra không tràn 412px
+        nav("Lớp")
+        p.get_by_role("button", name="Gộp học sinh").click()
+        expect(p.locator(".ant-modal", has_text="Gộp 2 hồ sơ học sinh")).to_be_visible(timeout=10000)
+        p.locator(".ant-modal").get_by_role("button", name="Cancel").or_(p.locator(".ant-modal .ant-modal-close")).first.click()
+    buoc("nhiều lớp: thêm trùng tự gộp (+1 lớp), Học phí đúng 1 dòng, modal Gộp mở sạch", b_nhieu_lop)
+
     def thoat():
         p.get_by_text("Thoát").click()
         expect(lab(p, "Tên đăng nhập hoặc số điện thoại")).to_be_visible(timeout=15000)
     thoat()
-
-    def b_phu_huynh():
-        dang_nhap(p, "0922000002", "0922000002")
-        expect(p.get_by_text("Lần đầu đăng nhập")).to_be_visible(timeout=15000)
-        lab(p, "Mật khẩu mới").fill("phuhuynh123")
-        lab(p, "Nhập lại").fill("phuhuynh123")
-        p.get_by_role("button", name="Lưu").click()
-        # phụ huynh chỉ có một trang nên trên điện thoại không có menu "Con tôi"
-        expect(p.get_by_text("TEST Nguyễn Bảo An").first).to_be_visible(timeout=15000)
-        p.wait_for_timeout(3000)
-        expect(p.get_by_text("Tổng sticker")).to_be_visible()
-        the_st = p.locator(".ant-card", has_text="Sticker ngoài buổi")
-        expect(the_st).to_contain_text("Thưởng")
-        assert the_st.get_by_text("Người ghi").count() == 0, "phụ huynh thấy tên người ghi sticker"
-        expect(p.get_by_text("Ảnh lớp")).to_be_visible()
-        assert p.get_by_text("Học phí", exact=True).count() == 0 or p.locator("nav").count() == 0
-        # ô "chưa điểm danh" chỉ có khi phụ huynh đọc được buoi_hoc của lớp con (RLS), ô học bù khi đọc được buổi bù
-        kiem_luoi()
-        expect(p.get_by_text(re.compile("16:45–18:15")).first).to_be_visible()
-        expect(p.locator("[data-goi-hien-tai]").first).to_contain_text("Gói: 3 tháng · ")
-        p.screenshot(path=os.path.join(OUT, "a-phu-huynh.png"), full_page=True)
-        huong_dan(lambda: p.get_by_text("Xem hướng dẫn").click(), 1)
-        thoat()
-    buoc("phụ huynh: SĐT, bắt đổi mật khẩu, thấy con + sticker ngoài buổi (không tên người ghi) + ảnh lớp + lưới tháng + giờ học + 1 video hướng dẫn, không có tab quản lý", b_phu_huynh)
 
     def b_tro_giang():
         dang_nhap(p, "testlan", "0911000001")
@@ -482,17 +510,18 @@ with sync_playwright() as pw:
         nav("Tài khoản")
         p.wait_for_timeout(2000)
         vai = p.locator(".ant-table-tbody .ant-tag").all_inner_texts()
-        assert "Quản trị" not in vai and "Giáo viên" not in vai and vai.count("Trợ giảng") == 1, vai
+        assert "Quản trị" not in vai and "Giáo viên" not in vai and "Phụ huynh" not in vai and vai.count("Trợ giảng") == 1, vai
         p.screenshot(path=os.path.join(OUT, "a-tro-giang.png"), full_page=True)
         huong_dan(lambda: p.get_by_role("button", name="Hướng dẫn").click(), 2)
         thoat()
-    buoc("trợ giảng: không có tab tiền, chỉ thấy tài khoản mình + phụ huynh, 2 video hướng dẫn", b_tro_giang)
+    buoc("trợ giảng: không có tab tiền, không còn vai trò phụ huynh, 2 video hướng dẫn", b_tro_giang)
 
     # link do test tạo thì xoá (phiếu TEST do don-test.mjs dọn), để số dòng database về như trước
     if THANG_TEST and THANG_TEST[0]:
         subprocess.run(["node", "--env-file=.env", "-e",
             "const{createClient}=require('@supabase/supabase-js');createClient(process.env.VITE_SUPABASE_URL,process.env.SUPABASE_SECRET_KEY)"
-            ".from('link_danh_gia').delete().eq('thang',process.argv[1]).then(r=>{if(r.error)process.exit(1)})", THANG_TEST[0]], cwd=REPO, check=True)
+            ".from('link_danh_gia').delete().eq('thang',process.argv[1]).then(r=>{if(r.error)process.exit(1)})", THANG_TEST[0]],
+            cwd=REPO, check=True, env={**os.environ, "NODE_OPTIONS": "--experimental-websocket"})
 
     KQ.append(("PASS" if not loi else "FAIL", f"không lỗi JS ({len(loi)})" + (": " + loi[0][:150] if loi else "")))
     b.close()
