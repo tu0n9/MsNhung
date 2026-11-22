@@ -4,7 +4,7 @@ import { App, Button, Card, Collapse, DatePicker, Progress, Select, Space, Table
 import dayjs from 'dayjs'
 import { CAU_VIET, hanNhan, taoMa, TIEU_CHI, tongHop, urlPhieu, type PhieuDanhGia } from '../danh-gia'
 import { congThang, type Thang } from '../hoc-phi'
-import { goiHam, q, sb, useMotLan, type HocSinh, type Lop } from '../supabase'
+import { goiHam, q, sb, taiHet, useMotLan, type GhiDanh, type HocSinh, type Lop } from '../supabase'
 import { MAU } from '../giao-dien'
 
 const TEN_NGAN: Record<keyof typeof CAU_VIET, string> = {
@@ -31,20 +31,22 @@ export default function DanhGia() {
   const [truoc, setTruoc] = useState<PhieuDanhGia[]>([])
   const [lops, setLops] = useState<Lop[]>([])
   const [hss, setHss] = useState<HocSinh[]>([])
+  const [gds, setGds] = useState<GhiDanh[]>([])
   const [lopId, setLopId] = useState<string>()
   const [tomTat, setTomTat] = useState<TomTat | null>(null)
 
   const tai = async () => {
     const thangTruoc = `${congThang(thang, -1)}-01`
-    const [l, p, pt, lo, hs] = await Promise.all([
+    const [l, p, pt, lo, hs, gd] = await Promise.all([
       q(sb.from('link_danh_gia').select('ma').eq('thang', `${thang}-01`).maybeSingle()),
       q(sb.from('danh_gia').select('*').eq('thang', `${thang}-01`).order('gui_luc')),
       q(sb.from('danh_gia').select('*').eq('thang', thangTruoc)),
       q(sb.from('lop').select('*').eq('hoat_dong', true).order('ten')),
-      q(sb.from('hoc_sinh').select('*').eq('trang_thai', 'dang_hoc').order('ho_ten')),
+      taiHet((a, b) => sb.from('hoc_sinh').select('*').order('ho_ten').order('id').range(a, b)),
+      taiHet((a, b) => sb.from('ghi_danh').select('*').eq('trang_thai', 'dang_hoc').order('id').range(a, b)),
     ])
     setMa((l as { ma: string } | null)?.ma ?? null)
-    setPhieus(p as PhieuDanhGia[]); setTruoc(pt as PhieuDanhGia[]); setLops(lo as Lop[]); setHss(hs as HocSinh[])
+    setPhieus(p as PhieuDanhGia[]); setTruoc(pt as PhieuDanhGia[]); setLops(lo as Lop[]); setHss(hs as HocSinh[]); setGds(gd as GhiDanh[])
   }
   useEffect(() => { tai().catch((e) => message.error(e.message)) }, [thang])
   // bản tóm tắt theo (tháng, lớp): lọc "Tất cả lớp" thì không có
@@ -81,15 +83,16 @@ export default function DanhGia() {
   const kTruoc = tongHop(truoc, lopId)
   const han = hanNhan(thang)
   const conNhan = dayjs().format('YYYY-MM-DD') <= han
-  // em chưa gửi: tính trên học sinh đang học của lớp đang hoạt động
+  // em chưa gửi: tính trên ghi_danh đang học của lớp đang hoạt động; mỗi em mỗi tháng chỉ gửi 1 phiếu duy nhất
   const daGui = new Set(phieus.map((p) => p.hoc_sinh_id))
   const lopXet = lops.filter((l) => !lopId || l.id === lopId)
-  // theo lớp, lớp còn nhiều em chưa gửi lên đầu. Một em học nhiều lớp có hồ sơ riêng ở mỗi lớp nên hiện ở từng lớp đó.
+  const hsMap = new Map(hss.map((h) => [h.id, h]))
   const nhomLop = lopXet.map((l) => {
-    const ds = hss.filter((h) => h.lop_id === l.id)
+    const ds = gds.filter((g) => g.lop_id === l.id).map((g) => hsMap.get(g.hoc_sinh_id)).filter((h): h is HocSinh => !!h)
+      .sort((a, b) => a.ho_ten.localeCompare(b.ho_ten))
     return { l, tong: ds.length, chua: ds.filter((h) => !daGui.has(h.id)) }
   }).filter((x) => x.tong > 0).sort((a, b) => b.chua.length - a.chua.length || a.l.ten.localeCompare(b.l.ten))
-  const tongEm = nhomLop.reduce((s, x) => s + x.tong, 0)
+  const tongEm = new Set(nhomLop.flatMap((x) => gds.filter((g) => g.lop_id === x.l.id && hsMap.has(g.hoc_sinh_id)).map((g) => g.hoc_sinh_id))).size
   // mỗi em có nhóm Zalo riêng với phụ huynh (không có nhóm chung của lớp): chép sẵn lời nhắc rồi mở nhóm của em
   const loiNhac = (h: HocSinh) => `Nhắc con ${h.ho_ten} gửi phiếu đánh giá tháng ${thang.slice(5)}/${thang.slice(0, 4)}`
     + ` (hạn ${han.slice(8)}/${han.slice(5, 7)}): ${ma ? urlPhieu(ma) : ''}`
@@ -118,8 +121,8 @@ export default function DanhGia() {
         ) : <Button type="primary" loading={dangGhiMa} onClick={() => ghiMa()}>Tạo link tháng {thang.slice(5)}/{thang.slice(0, 4)}</Button>}
       </Card>
 
-      {/* đếm phiếu chứ không đếm em: em học nhiều lớp gửi mỗi lớp một phiếu, có hồ sơ riêng ở mỗi lớp */}
-      <Card size="small" title={`Đã gửi ${k.soPhieu} / ${tongEm} phiếu`} extra={<span style={{ fontSize: 12, color: MAU.chuPhu }}>mỗi lớp một phiếu</span>}>
+      {/* mỗi em chỉ gửi 1 phiếu duy nhất mỗi tháng, kể cả khi học nhiều lớp */}
+      <Card size="small" title={`Đã gửi ${k.soPhieu} / ${tongEm} học sinh`} extra={<span style={{ fontSize: 12, color: MAU.chuPhu }}>mỗi em một phiếu</span>}>
         <Collapse size="small" key={lopId ?? ''} defaultActiveKey={lopId ? [lopId] : []} items={nhomLop.map(({ l, tong, chua }) => {
           // em có nút nhắc thì mỗi em một dòng; em chưa có link Zalo chỉ cần tên, xếp sát nhau cho danh sách ngắn lại
           const coNut = ma ? chua.filter((h) => h.link_zalo) : []

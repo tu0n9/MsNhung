@@ -5,14 +5,14 @@ import { Alert, App, Button, Card, Grid, List, Progress, Result, Segmented, Spac
 import { DownloadOutlined, FileExcelOutlined } from '@ant-design/icons'
 import { docFile, kiemTra, taiDanhSachLoi, taiFileMau, type KqHs, type KqLop } from '../import-excel'
 import { nhapDuLieu, type KetQuaNhap, type TienDo } from '../nhap-du-lieu'
-import { homNay, q, sb, THU, type HocSinh, type Lop } from '../supabase'
+import { homNay, q, sb, taiHet, type GhiDanh, type HocSinh, type Lop } from '../supabase'
 import { moTaLich } from '../gio-hoc'
 import { vnd } from '../hoc-phi'
 import { MAU } from '../giao-dien'
 
 type Dong = KqLop | KqHs
-type Loc = 'tat_ca' | 'loi' | 'da_co' | 'moi'
-const NHAN = { moi: ['Mới', 'green'], da_co: ['Đã có', 'default'], loi: ['Lỗi', 'red'] } as const
+type Loc = 'tat_ca' | 'loi' | 'da_co' | 'them_lop' | 'moi'
+const NHAN = { moi: ['Mới', 'green'], them_lop: ['Thêm lớp', 'blue'], da_co: ['Đã có', 'default'], loi: ['Lỗi', 'red'] } as const
 const idDong = (d: Dong) => `dong-${d.loai}-${d.so}`
 
 export default function ImportExcel() {
@@ -21,6 +21,7 @@ export default function ImportExcel() {
   const dienThoai = !Grid.useBreakpoint().md
   const [lopCo, setLopCo] = useState<Lop[]>([])
   const [hsCo, setHsCo] = useState<HocSinh[]>([])
+  const [gdCo, setGdCo] = useState<GhiDanh[]>([])
   const [tenFile, setTenFile] = useState<string>()
   const [kq, setKq] = useState<{ lops: KqLop[]; hss: KqHs[] }>()
   const [loc, setLoc] = useState<Loc>('tat_ca')
@@ -28,23 +29,27 @@ export default function ImportExcel() {
   const [ketQua, setKetQua] = useState<KetQuaNhap>()
 
   const taiCo = async () => {
-    const [l, h] = await Promise.all([q(sb.from('lop').select('*').order('ten')), q(sb.from('hoc_sinh').select('*'))])
-    setLopCo(l as Lop[]); setHsCo(h as HocSinh[])
+    const [l, h, g] = await Promise.all([
+      q(sb.from('lop').select('*').order('ten')),
+      taiHet((a, b) => sb.from('hoc_sinh').select('*').order('id').range(a, b)),
+      taiHet((a, b) => sb.from('ghi_danh').select('*').order('id').range(a, b)),
+    ])
+    setLopCo(l as Lop[]); setHsCo(h as HocSinh[]); setGdCo(g as GhiDanh[])
   }
   useEffect(() => { taiCo().catch((e) => message.error(e.message)) }, [])
 
   const chonFile = async (f: File) => {
     try {
-      // tải lại dữ liệu đang có ngay lúc kiểm: nếu dùng bản nạp lúc mở trang mà chưa về kịp (hoặc đã cũ),
-      // mọi dòng bị coi là "Mới" và bấm Nhập sẽ tạo trùng
-      const [{ lopTho, hsTho }, l, h] = await Promise.all([
+      // tải lại dữ liệu đang có ngay lúc kiểm để không nhận nhầm dòng đã có thành Mới
+      const [{ lopTho, hsTho }, l, h, g] = await Promise.all([
         docFile(await f.arrayBuffer()),
         q(sb.from('lop').select('*').order('ten')),
-        q(sb.from('hoc_sinh').select('*')),
+        taiHet((a, b) => sb.from('hoc_sinh').select('*').order('id').range(a, b)),
+        taiHet((a, b) => sb.from('ghi_danh').select('*').order('id').range(a, b)),
       ])
-      setLopCo(l as Lop[]); setHsCo(h as HocSinh[])
+      setLopCo(l as Lop[]); setHsCo(h as HocSinh[]); setGdCo(g as GhiDanh[])
       if (!lopTho.length && !hsTho.length) return message.warning('File không có dòng nào để nhập')
-      setTenFile(f.name); setLoc('tat_ca'); setKq(kiemTra(lopTho, hsTho, l as Lop[], h as HocSinh[], homNay()))
+      setTenFile(f.name); setLoc('tat_ca'); setKq(kiemTra(lopTho, hsTho, l as Lop[], h as HocSinh[], g as GhiDanh[], homNay()))
     } catch (e) { message.error((e as Error).message) }
   }
 
@@ -52,10 +57,11 @@ export default function ImportExcel() {
   const dem = (t: Exclude<Loc, 'tat_ca'>) => dong.filter((d) => d.trangThai === t).length
   const loi = dong.filter((d) => d.trangThai === 'loi')
   const soLink = kq?.hss.filter((h) => h.capNhatLink).length ?? 0
+  const tongViec = dem('moi') + dem('them_lop') + soLink
 
   const nhap = async () => {
     if (!kq) return
-    setTienDo({ xong: 0, tong: dem('moi') + soLink, dang: 'Bắt đầu' })
+    setTienDo({ xong: 0, tong: tongViec, dang: 'Bắt đầu' })
     try { setKetQua(await nhapDuLieu(kq.lops, kq.hss, lopCo, setTienDo)) }
     catch (e) { message.error((e as Error).message); setTienDo(undefined) }
   }
@@ -77,12 +83,11 @@ export default function ImportExcel() {
       </ol>
 
       {ketQua ? (
-        <Result status={ketQua.loi.length ? 'warning' : 'success'} title={`Đã thêm ${ketQua.lopMoi} lớp và ${ketQua.hsMoi} học sinh`}
+        <Result status={ketQua.loi.length ? 'warning' : 'success'}
+          title={`Đã thêm ${ketQua.lopMoi} lớp, ${ketQua.hsMoi} học sinh mới, ${ketQua.lopThem} lượt thêm lớp`}
           subTitle={<>
-            Tạo {ketQua.phMoi} tài khoản phụ huynh mới, {ketQua.phDungChung} em dùng chung tài khoản đã có.<br />
-            {ketQua.linkMoi > 0 && <>Cập nhật link nhóm Zalo cho {ketQua.linkMoi} học sinh đã có.<br /></>}
-            Bỏ qua {dem('da_co')} dòng đã có, {loi.length + ketQua.loi.length} dòng chưa nhập.<br />
-            Phụ huynh đăng nhập bằng số điện thoại, mật khẩu đầu là chính số điện thoại.
+            {ketQua.linkMoi > 0 && <>Cập nhật link nhóm Zalo cho {ketQua.linkMoi} học sinh.<br /></>}
+            Bỏ qua {dem('da_co')} dòng đã có, {loi.length + ketQua.loi.length} dòng chưa nhập.
           </>}
           extra={<Space direction="vertical">
             {ketQua.loi.map((x) => <Alert key={x.so} type="error" showIcon message={`Dòng ${x.so}, ${x.ten}: ${x.loi}`} />)}
@@ -101,8 +106,8 @@ export default function ImportExcel() {
       ) : !kq ? (
         <>
           <Card size="small" title="1. Tải file mẫu">
-            <p style={{ marginTop: 0, color: MAU.chuPhu }}>File có 3 trang: Hướng dẫn, Lớp (đã điền sẵn các lớp đang có), Học sinh (đã điền sẵn các em đang học, dán link nhóm Zalo vào cột cuối). Cột có dấu * là bắt buộc.</p>
-            <Button icon={<DownloadOutlined />} onClick={() => taiFileMau(lopCo, hsCo).catch((e) => message.error(e.message))}>Tải file mẫu</Button>
+            <p style={{ marginTop: 0, color: MAU.chuPhu }}>File có 3 trang: Hướng dẫn, Lớp (đã điền sẵn các lớp đang có), Học sinh (đã điền sẵn các lượt ghi danh cùng Mã HS). Muốn xếp thêm lớp cho em đã có thì dùng Mã HS hoặc giống hệt Họ tên + SĐT.</p>
+            <Button icon={<DownloadOutlined />} onClick={() => taiFileMau(lopCo, hsCo, gdCo).catch((e) => message.error(e.message))}>Tải file mẫu</Button>
           </Card>
           <Card size="small" title="2. Chọn file đã điền">
             <Upload.Dragger accept=".xlsx" showUploadList={false} beforeUpload={(f) => { chonFile(f); return false }}>
@@ -118,7 +123,7 @@ export default function ImportExcel() {
               <FileExcelOutlined style={{ fontSize: 22, color: MAU.chinh }} />
               <div style={{ flexGrow: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tenFile}</div>
-                <div style={{ fontSize: 12, color: MAU.chuPhu }}>{kq.lops.length} lớp, {kq.hss.length} học sinh</div>
+                <div style={{ fontSize: 12, color: MAU.chuPhu }}>{kq.lops.length} lớp, {kq.hss.length} dòng học sinh</div>
               </div>
               <Button type="link" onClick={() => setKq(undefined)}>Đổi file</Button>
             </div>
@@ -138,6 +143,7 @@ export default function ImportExcel() {
 
           <Segmented value={loc} onChange={(v) => setLoc(v as Loc)} options={[
             { value: 'tat_ca', label: `Tất cả ${dong.length}` }, { value: 'loi', label: `Lỗi ${dem('loi')}` },
+            { value: 'them_lop', label: `Thêm lớp ${dem('them_lop')}` },
             { value: 'da_co', label: `Đã có ${dem('da_co')}` }, { value: 'moi', label: `Mới ${dem('moi')}` },
           ]} />
 
@@ -151,7 +157,7 @@ export default function ImportExcel() {
                 </> : <>
                   <b>{d.ho_ten || '(chưa có tên)'}</b>
                   <div style={{ fontSize: 12, color: MAU.chuPhu }}>
-                    {[d.tenLop, d.ten_phu_huynh, d.sdt_phu_huynh, d.sticker_dau_ky ? `${d.sticker_dau_ky} sticker` : ''].filter(Boolean).join(', ')}
+                    {[d.ma_hs, d.tenLop, `${vnd(d.don_gia)}/buổi`, d.ten_phu_huynh, d.sdt_phu_huynh, d.sticker_dau_ky ? `${d.sticker_dau_ky} sticker` : ''].filter(Boolean).join(', ')}
                   </div>
                 </>}
                 {d.loi && <div style={{ fontSize: 12, color: d.trangThai === 'loi' ? MAU.do : MAU.chuPhu, marginTop: 2 }}>{d.loi}</div>}
@@ -162,8 +168,9 @@ export default function ImportExcel() {
 
           <div style={chan}>
             <Space direction="vertical" style={{ width: '100%' }}>
-              <Button type="primary" size="large" block disabled={!dem('moi') && !soLink} onClick={nhap}>
-                Nhập {dem('moi')} dòng mới{soLink ? `, cập nhật ${soLink} link nhóm Zalo` : ''}</Button>
+              <Button type="primary" size="large" block disabled={!tongViec} onClick={nhap}>
+                {[dem('moi') && `${dem('moi')} dòng mới`, dem('them_lop') && `${dem('them_lop')} thêm lớp`, soLink && `${soLink} link Zalo`].filter(Boolean).join(', ') || 'Không có gì để nhập'}
+              </Button>
               {loi.length > 0 && <Button type="link" block icon={<DownloadOutlined />} onClick={() => taiDanhSachLoi(kq.lops, kq.hss)}>Tải danh sách lỗi (.xlsx)</Button>}
             </Space>
           </div>

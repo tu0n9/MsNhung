@@ -3,10 +3,10 @@ import { App, Avatar, Button, Card, DatePicker, Descriptions, Form, Input, Input
 import dayjs from 'dayjs'
 import { useToi } from '../App'
 import { MAU, O_TIEN } from '../giao-dien'
-import { goiTaiKhoan, homNay, laQuanLy, q, sb, taiTongSticker, useMotLan, urlAnh, type BuoiHoc, type HocSinh, type Lop, type StickerCongTru } from '../supabase'
+import { homNay, laQuanLy, lopCuaHs, giaGhiDanh, q, sb, taiTongSticker, useMotLan, urlAnh, type BuoiHoc, type GhiDanh, type HocSinh, type Lop, type StickerCongTru } from '../supabase'
 import {
-  congThang, conNoGoi, daDongGoi, demBuoiDuKien, demChuaBu, duConLai, tenGoi, thangHetGoi, tienDuGoi, tinhTrangGoi, tinNhanPhuHuynh, tongGoi, tongHopHocSinh, vnd,
-  type Goi, type PhieuThu, type Thang,
+  congThang, conNoGoi, daDongGoi, demBuoiDuKien, demBuoiDuKienNhieuLop, demChuaBu, duConLaiNhieuLop, tenGoi, thangHetGoi, tienDuGoiNhieuLop,
+  tinhTienThangNhieuLop, tinhTrangGoiNhieuLop, tinNhanPhuHuynh, tongGoi, tongHopHocSinh, vnd, type BuoiDacBietLop, type Goi, type PhieuThu, type Thang,
 } from '../hoc-phi'
 import { moTaLich } from '../gio-hoc'
 import { luoiThang, type ONgay, type TrangThaiO } from '../diem-danh-thang'
@@ -14,10 +14,10 @@ import { chuanLinkZalo } from '../import-excel'
 
 type Phieu = PhieuThu & { id: string; hinh_thuc: string; ghi_chu: string | null }
 
-export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSinh; lop: Lop; quayLai?: () => void; chiXem?: boolean }) {
+export default function HocSinhChiTiet({ hs, lops, ghiDanh, quayLai }: { hs: HocSinh; lops: Lop[]; ghiDanh: GhiDanh[]; quayLai?: () => void }) {
   const { message } = App.useApp()
   const toi = useToi()
-  const ql = laQuanLy(toi.vai_tro) && !chiXem
+  const ql = laQuanLy(toi.vai_tro)
   const [thang, setThang] = useState<Thang>(dayjs().format('YYYY-MM'))
   const [dd, setDd] = useState<{ trang_thai: 'co_mat' | 'vang' | 'hoc_bu'; sticker: number; buoi_hoc: BuoiHoc }[]>([])
   const [buoiThang, setBuoiThang] = useState<BuoiHoc[]>([])
@@ -26,13 +26,24 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
   const [buoiDb, setBuoiDb] = useState<BuoiHoc[]>([])
   const [avatar, setAvatar] = useState<string>()
   const [thuTien, setThuTien] = useState(false)
-  const [anh, setAnh] = useState<{ duong_dan: string; ngay: string }[]>([])
-  const [urlA, setUrlA] = useState<Record<string, string>>({})
   const [daHoan, setDaHoan] = useState(0)
   const [congTru, setCongTru] = useState<StickerCongTru[]>([])
   const [tongSticker, setTongSticker] = useState(0)
   const [link, setLink] = useState(hs.link_zalo)
   const [oLink, setOLink] = useState(hs.link_zalo ?? '')
+
+  const gdEm = useMemo(() => lopCuaHs(ghiDanh, hs.id), [ghiDanh, hs.id])
+  const gdDangHoc = useMemo(() => gdEm.filter((g) => g.trang_thai === 'dang_hoc'), [gdEm])
+  const lopMap = useMemo(() => new Map(lops.map((l) => [l.id, l])), [lops])
+  const gdMap = useMemo(() => new Map(gdEm.map((g) => [g.lop_id, g])), [gdEm])
+  const lopIdsTatCa = useMemo(() => gdEm.map((g) => g.lop_id), [gdEm])
+  const lopIdsEm = useMemo(() => new Set(lopIdsTatCa), [lopIdsTatCa])
+  const dsLopDangHoc = useMemo(() => gdDangHoc.flatMap((g) => {
+    const l = lopMap.get(g.lop_id)
+    return l ? [{ lop_id: l.id, ten: l.ten, lich: l.lich, ngay_vao: g.ngay_vao, don_gia: giaGhiDanh(hs, g) }] : []
+  }), [gdDangHoc, lopMap, hs])
+  const dsLopDu = useMemo(() => gdEm.map((g) => ({ lop_id: g.lop_id, ngay_vao: g.ngay_vao, don_gia: giaGhiDanh(hs, g) })), [gdEm, hs])
+
   const luuLink = async () => {
     const { link: moi, loi } = chuanLinkZalo(oLink)
     if (loi) return message.error(loi)
@@ -46,8 +57,10 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
     const [d, g, b, h, ct, tong] = await Promise.all([
       q(sb.from('diem_danh').select('trang_thai, sticker, buoi_hoc(*)').eq('hoc_sinh_id', hs.id)),
       q(sb.from('goi_hoc').select('*').eq('hoc_sinh_id', hs.id).order('thang_bat_dau')),
-      q(sb.from('buoi_hoc').select('*').eq('lop_id', hs.lop_id).or('lop_nghi.eq.true,loai.eq.phu')),
-      // khoản đã hoàn tiền dư cho em này (chỉ giáo viên đọc được chi_phi; người khác nhận về rỗng)
+      lopIdsTatCa.length
+        ? q(sb.from('buoi_hoc').select('*').in('lop_id', lopIdsTatCa).or('lop_nghi.eq.true,loai.eq.phu'))
+        : Promise.resolve([]),
+      // khoản đã hoàn tiền dư cho em này (chỉ giáo viên đọc được chi_phi; trợ giảng nhận về rỗng)
       q(sb.from('chi_phi').select('so_tien').eq('hoc_sinh_id', hs.id).eq('danh_muc', 'Hoàn học phí')),
       q(sb.from('sticker_cong_tru').select('*').eq('hoc_sinh_id', hs.id).order('tao_luc', { ascending: false })),
       taiTongSticker([hs.id]),
@@ -59,29 +72,29 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
     setPhieu(ids.length ? await q(sb.from('phieu_thu').select('*').in('goi_id', ids).order('ngay_thu')) as Phieu[] : [])
     if (hs.avatar) setAvatar((await urlAnh([hs.avatar]))[hs.avatar])
   }
-  useEffect(() => { tai().catch((e) => message.error(e.message)) }, [hs.id])
-  // cần cả buổi em chưa có điểm danh để biết ngày có lịch, lớp nghỉ, buổi quên điểm danh
+  useEffect(() => { tai().catch((e) => message.error(e.message)) }, [hs.id, lopIdsTatCa.join()])
+
+  // cần cả buổi em chưa có điểm danh của mọi lớp em học để biết ngày có lịch, lớp nghỉ, buổi quên điểm danh
   useEffect(() => {
-    q(sb.from('buoi_hoc').select('*').eq('lop_id', hs.lop_id).gte('ngay', `${thang}-01`).lt('ngay', `${congThang(thang, 1)}-01`))
+    if (!lopIdsTatCa.length) { setBuoiThang([]); return }
+    q(sb.from('buoi_hoc').select('*').in('lop_id', lopIdsTatCa).gte('ngay', `${thang}-01`).lt('ngay', `${congThang(thang, 1)}-01`))
       .then((b) => setBuoiThang(b as BuoiHoc[])).catch((e) => message.error(e.message))
-  }, [hs.id, thang])
+  }, [hs.id, thang, lopIdsTatCa.join()])
+
+  // lọc trước buổi theo ngày vào học & trạng thái từng lớp để luoiThang không báo "chưa điểm danh" nhầm cho lớp vào sau / đã ngừng
+  const buoiHien = useMemo(() => buoiThang.filter((b) => {
+    const g = gdMap.get(b.lop_id)
+    if (!g || b.ngay < g.ngay_vao) return false
+    return g.trang_thai === 'dang_hoc' || b.lop_nghi
+  }), [buoiThang, gdMap])
+  const ngayVaoMin = gdEm.map((g) => g.ngay_vao).sort()[0] ?? hs.ngay_vao
 
   const trongThang = dd.filter((x) => x.buoi_hoc.ngay.startsWith(thang)).sort((a, b) => a.buoi_hoc.ngay.localeCompare(b.buoi_hoc.ngay))
-  const buoiIdsCoMat = trongThang.filter((x) => x.trang_thai !== 'vang').map((x) => x.buoi_hoc.id)
-  useEffect(() => {
-    if (!buoiIdsCoMat.length) { setAnh([]); return }
-    q(sb.from('anh_buoi').select('duong_dan, buoi_hoc(ngay)').in('buoi_id', buoiIdsCoMat)).then(async (a) => {
-      const ds = (a as unknown as { duong_dan: string; buoi_hoc: { ngay: string } }[]).map((x) => ({ duong_dan: x.duong_dan, ngay: x.buoi_hoc.ngay }))
-      setAnh(ds); setUrlA(await urlAnh(ds.map((x) => x.duong_dan)))
-    }).catch((e) => message.error(e.message))
-  // theo danh sách buổi có mặt chứ không theo số dòng: đổi vắng ↔ có mặt không đổi số dòng nhưng đổi ảnh được xem
-  }, [thang, buoiIdsCoMat.join()])
-
-  const soCoMat = buoiIdsCoMat.length
+  const soCoMat = trongThang.filter((x) => x.trang_thai !== 'vang').length
   const chuaBu = demChuaBu(dd.map((x) => ({ trang_thai: x.trang_thai, loai: x.buoi_hoc.loai })))
   const th = useMemo(() => tongHopHocSinh(goi, phieu, thang), [goi, phieu, thang])
   const tinNhan = tinNhanPhuHuynh(hs.ho_ten, thang, th, soCoMat)
-  const tt = tinhTrangGoi(goi, lop?.lich ?? [], hs.ngay_vao, homNay())
+  const tt = tinhTrangGoiNhieuLop(goi, dsLopDangHoc, homNay())
   const ngayNgan = (n?: string) => n ? `${n.slice(8)}/${n.slice(5, 7)}` : ''
 
   return (
@@ -89,7 +102,21 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
       <Space wrap>
         {quayLai && <Button onClick={quayLai}>← Quay lại</Button>}
         <Avatar shape="square" size={64} src={avatar}>{hs.ho_ten.split(' ').pop()?.[0]}</Avatar>
-        <div><b style={{ fontSize: 18 }}>{hs.ho_ten}</b><br />{lop?.ten}{lop?.lich.length ? ` · ${moTaLich(lop)}` : ''} {hs.trang_thai === 'ngung' && <Tag>Ngừng học</Tag>}</div>
+        <div>
+          <Space wrap size={6}>
+            <b style={{ fontSize: 18 }}>{hs.ho_ten}</b>
+            <Tag>{hs.ma_hs}</Tag>
+            {ql && <Tag color="pink">{vnd(hs.don_gia)}/buổi</Tag>}
+            {gdDangHoc.length === 0 && <Tag>Ngừng học</Tag>}
+          </Space>
+          <div style={{ fontSize: 13, color: MAU.chuPhu }}>
+            {(gdDangHoc.length ? gdDangHoc : gdEm).map((g) => {
+              const l = lopMap.get(g.lop_id)
+              if (!l) return null
+              return `${l.ten}${l.lich.length ? ` (${moTaLich(l)})` : ''}${g.don_gia_rieng != null && g.don_gia_rieng !== hs.don_gia ? ` · riêng ${vnd(g.don_gia_rieng)}/buổi` : ''}${g.trang_thai === 'ngung' ? ' [Đã ngừng]' : ''}`
+            }).filter(Boolean).join(' · ')}
+          </div>
+        </div>
         <DatePicker picker="month" value={dayjs(thang)} onChange={(d) => d && setThang(d.format('YYYY-MM'))} format="MM/YYYY" allowClear={false} />
       </Space>
 
@@ -105,35 +132,29 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
           <Statistic title="Buổi đi học tháng này" value={soCoMat} />
           <Statistic title="Tổng sticker" value={tongSticker} prefix="⭐" />
           <Statistic title="Buổi chưa học bù" value={chuaBu} />
-          {(ql || chiXem) && <Statistic title="Cần nộp" value={vnd(Math.max(th.conPhaiThu, 0))} />}
+          {ql && <Statistic title="Cần nộp" value={vnd(Math.max(th.conPhaiThu, 0))} />}
         </Space>
       </Card>
 
       <Card size="small" title={`Điểm danh tháng ${thang.slice(5)}/${thang.slice(0, 4)}`}>
-        <LuoiThang key={thang} o={luoiThang(thang, buoiThang, dd, hs.ngay_vao, hs.trang_thai === 'dang_hoc', homNay())} lopId={hs.lop_id} />
+        <LuoiThang key={thang} o={luoiThang(thang, buoiHien, dd, ngayVaoMin, gdDangHoc.length > 0, homNay())}
+          lopMap={lopMap} lopIdsEm={lopIdsEm} />
       </Card>
 
       {congTru.length > 0 && <Card size="small" title="Sticker ngoài buổi">
-        {/* phụ huynh (chiXem) không thấy tên người ghi */}
         <Table size="small" rowKey="id" pagination={false} dataSource={congTru} scroll={{ x: true }} columns={[
           { title: 'Ngày', render: (_, x) => dayjs(x.ngay).format('DD/MM/YYYY') },
           { title: 'Sticker', render: (_, x) => <b style={{ color: x.so > 0 ? MAU.tot : MAU.do }}>{x.so > 0 ? `+${x.so}` : x.so}</b> },
           { title: 'Lý do', dataIndex: 'ly_do' },
-          ...(chiXem ? [] : [{ title: 'Người ghi', dataIndex: 'ten_nguoi' },
-            { title: '', render: (_: unknown, x: StickerCongTru) => <Popconfirm title="Xoá lần cộng/trừ này?" onConfirm={async () => {
-              const { error } = await sb.from('sticker_cong_tru').delete().eq('id', x.id); if (error) message.error(error.message); else tai()
-            }}><a style={{ color: 'red' }}>Xoá</a></Popconfirm> }]),
+          { title: 'Người ghi', dataIndex: 'ten_nguoi' },
+          { title: '', render: (_: unknown, x: StickerCongTru) => <Popconfirm title="Xoá lần cộng/trừ này?" onConfirm={async () => {
+            const { error } = await sb.from('sticker_cong_tru').delete().eq('id', x.id); if (error) message.error(error.message); else tai()
+          }}><a style={{ color: 'red' }}>Xoá</a></Popconfirm> },
         ]} />
       </Card>}
 
-      {/* ảnh đã được workflow don-anh cất lên GitHub thì không còn file, không ký được link: ẩn thay vì hiện ảnh vỡ */}
-      {chiXem && anh.some((a) => urlA[a.duong_dan]) && <Card size="small" title="Ảnh lớp">
-        <Space wrap>{anh.filter((a) => urlA[a.duong_dan]).map((a) => <a key={a.duong_dan} href={urlA[a.duong_dan]} target="_blank" rel="noreferrer">
-          <img src={urlA[a.duong_dan]} width={100} height={100} style={{ objectFit: 'cover' }} alt={a.ngay} /></a>)}</Space>
-      </Card>}
-
-      {(ql || chiXem) && <Card size="small" title="Học phí" extra={ql && <Button type="primary" onClick={() => setThuTien(true)}>Thu tiền</Button>}>
-        {hs.trang_thai === 'dang_hoc' && <div style={{ marginBottom: 8, color: tt.loai === 'con' ? undefined : MAU.do }} data-goi-hien-tai>
+      {ql && <Card size="small" title="Học phí" extra={<Button type="primary" onClick={() => setThuTien(true)}>Thu tiền</Button>}>
+        {gdDangHoc.length > 0 && <div style={{ marginBottom: 8, color: tt.loai === 'con' ? undefined : MAU.do }} data-goi-hien-tai>
           {!tt.goi ? 'Chưa có gói' : tt.loai === 'het' ? `Gói: ${tenGoi(tt.goi)} · đã hết ngày ${ngayNgan(tt.buoiCuoi)}`
             : `Gói: ${tenGoi(tt.goi)} · còn ${tt.conBuoi} buổi`}
         </div>}
@@ -143,25 +164,25 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
           { label: 'Đã thu', children: vnd(th.daThu) },
           { label: 'Còn phải thu', children: <b>{vnd(th.conPhaiThu)}</b> },
         ]} />
-        {ql && <Space wrap style={{ marginTop: 8 }}>
+        <Space wrap style={{ marginTop: 8 }}>
           <Button onClick={() => navigator.clipboard.writeText(tinNhan).then(() => message.success('Đã sao chép, dán vào Zalo')).catch(() => message.error('Không sao chép được, hãy chép tay'))}>Sao chép tin nhắn</Button>
           {hs.sdt_phu_huynh && <Button href={`https://zalo.me/${hs.sdt_phu_huynh}`} target="_blank">Mở Zalo PH</Button>}
           {link && <Button href={link} target="_blank" rel="noreferrer">Mở nhóm Zalo</Button>}
           {hs.sdt_phu_huynh && <Button href={`sms:${hs.sdt_phu_huynh}?body=${encodeURIComponent(tinNhan)}`}>Gửi SMS</Button>}
-        </Space>}
+        </Space>
 
         <Table size="small" style={{ marginTop: 12 }} rowKey="id" pagination={false} dataSource={goi} scroll={{ x: true }} columns={[
           { title: 'Gói', render: (_, g) => tenGoi(g) },
           { title: 'Buổi', render: (_, g) => Object.values(g.buoi_du_kien).reduce((s, x) => s + x, 0) },
           { title: 'Phải thu', render: (_, g) => vnd(tongGoi(g)) },
           { title: 'Đã đóng', render: (_, g) => vnd(daDongGoi(g, phieu)) },
-          { title: 'Dư phát sinh', render: (_, g) => vnd(tienDuGoi(g, buoiDb, hs.ngay_vao)) },
-          ...(ql ? [{ title: '', render: (_: unknown, g: Goi) => <Popconfirm title="Xoá gói (chỉ khi chưa có phiếu thu)?" onConfirm={async () => {
+          { title: 'Dư phát sinh', render: (_, g) => vnd(tienDuGoiNhieuLop(g, buoiDb as BuoiDacBietLop[], dsLopDu)) },
+          { title: '', render: (_: unknown, g: Goi) => <Popconfirm title="Xoá gói (chỉ khi chưa có phiếu thu)?" onConfirm={async () => {
             const { error } = await sb.from('goi_hoc').delete().eq('id', g.id); if (error) message.error(error.message); else tai()
-          }}><a style={{ color: 'red' }}>Xoá</a></Popconfirm> }] : []),
+          }}><a style={{ color: 'red' }}>Xoá</a></Popconfirm> },
         ]} />
         {goi.length > 0 && <div style={{ marginTop: 6, fontSize: 13 }}>
-          Tiền dư còn lại chưa trừ / chưa hoàn: <b>{vnd(duConLai(goi, buoiDb, hs.ngay_vao, daHoan, '9999-12'))}</b>
+          Tiền dư còn lại chưa trừ / chưa hoàn: <b>{vnd(duConLaiNhieuLop(goi, buoiDb as BuoiDacBietLop[], dsLopDu, daHoan, '9999-12'))}</b>
         </div>}
 
         <Table size="small" style={{ marginTop: 12 }} rowKey="id" pagination={false} dataSource={phieu} scroll={{ x: true }}
@@ -170,18 +191,14 @@ export default function HocSinhChiTiet({ hs, lop, quayLai, chiXem }: { hs: HocSi
             { title: 'Số tiền', render: (_, p) => vnd(p.so_tien) },
             { title: 'Hình thức', render: (_, p) => p.hinh_thuc === 'tien_mat' ? 'Tiền mặt' : 'Chuyển khoản' },
             { title: 'Ghi chú', dataIndex: 'ghi_chu' },
-            ...(ql ? [{ title: '', render: (_: unknown, p: Phieu) => <Popconfirm title="Xoá phiếu thu?" onConfirm={async () => {
+            { title: '', render: (_: unknown, p: Phieu) => <Popconfirm title="Xoá phiếu thu?" onConfirm={async () => {
               const { error } = await sb.from('phieu_thu').delete().eq('id', p.id); if (error) message.error(error.message); else tai()
-            }}><a style={{ color: 'red' }}>Xoá</a></Popconfirm> }] : []),
+            }}><a style={{ color: 'red' }}>Xoá</a></Popconfirm> },
           ]} />
       </Card>}
 
-      {!chiXem && hs.phu_huynh_id && <Popconfirm title="Đặt lại mật khẩu phụ huynh về số điện thoại?" onConfirm={() =>
-        goiTaiKhoan({ hanh_dong: 'dat_lai', id: hs.phu_huynh_id }).then(() => message.success('Đã đặt lại')).catch((e) => message.error(e.message))}>
-        <Button>Đặt lại mật khẩu tài khoản phụ huynh</Button>
-      </Popconfirm>}
-
-      {thuTien && <ThuTien hs={hs} lop={lop} goi={goi} phieu={phieu} buoiDb={buoiDb} daHoan={daHoan} dong={() => { setThuTien(false); tai() }} />}
+      {thuTien && <ThuTien hs={hs} dsLopDangHoc={dsLopDangHoc} dsLopDu={dsLopDu} ngayVaoMin={ngayVaoMin}
+        goi={goi} phieu={phieu} buoiDb={buoiDb} daHoan={daHoan} dong={() => { setThuTien(false); tai() }} />}
     </Space>
   )
 }
@@ -197,9 +214,7 @@ const O: Record<TrangThaiO, { ten: string; style: React.CSSProperties }> = {
 }
 const LOAI_BUOI = { lich: '', phu: 'Buổi phụ: ', bu: 'Buổi bù: ' }
 
-function LuoiThang({ o, lopId }: { o: (ONgay | null)[]; lopId: string }) {
-  // giữ ngày được chọn, không giữ bản dữ liệu của ngày: lưới dựng lần đầu khi buổi chưa tải xong, giữ bản cũ thì hôm nay
-  // hiện "Không có buổi học" dù ô đã tô màu
+function LuoiThang({ o, lopMap, lopIdsEm }: { o: (ONgay | null)[]; lopMap: Map<string, Lop>; lopIdsEm: Set<string> }) {
   const [chonNgay, setChonNgay] = useState(() => o.find((x) => x?.hom_nay)?.ngay)
   const chon = o.find((x) => x?.ngay === chonNgay) ?? null
   return <>
@@ -224,8 +239,9 @@ function LuoiThang({ o, lopId }: { o: (ONgay | null)[]; lopId: string }) {
         <b style={{ textTransform: 'capitalize' }}>{dayjs(chon.ngay).format('dddd DD/MM')}</b>
         {chon.buoi.length === 0 && <div style={{ color: MAU.chuPhu }}>Không có buổi học</div>}
         {chon.buoi.map((b) => <div key={b.buoi.id}>
+          {lopMap.get(b.buoi.lop_id)?.ten ? <b>{lopMap.get(b.buoi.lop_id)!.ten} · </b> : null}
           {LOAI_BUOI[b.buoi.loai]}<span style={{ color: O[b.trang_thai].style.color }}>{O[b.trang_thai].ten}</span>
-          {b.buoi.lop_id !== lopId && ' (ở lớp khác)'}
+          {!lopIdsEm.has(b.buoi.lop_id) && ' (ở lớp khác)'}
           {(b.trang_thai === 'co_mat' || b.trang_thai === 'hoc_bu') && ` · ⭐ ${b.sticker}`}
         </div>)}
       </>}
@@ -239,32 +255,43 @@ function LuoiThang({ o, lopId }: { o: (ONgay | null)[]; lopId: string }) {
   </>
 }
 
-function ThuTien({ hs, lop, goi, phieu, buoiDb, daHoan, dong }: {
-  hs: HocSinh; lop: Lop; goi: Goi[]; phieu: Phieu[]; buoiDb: BuoiHoc[]; daHoan: number; dong: () => void
+function ThuTien({ hs, dsLopDangHoc, dsLopDu, ngayVaoMin, goi, phieu, buoiDb, daHoan, dong }: {
+  hs: HocSinh; dsLopDangHoc: { lop_id: string; ten: string; lich: number[]; ngay_vao: string; don_gia: number }[]
+  dsLopDu: { lop_id: string; ngay_vao: string; don_gia: number }[]; ngayVaoMin: string
+  goi: Goi[]; phieu: Phieu[]; buoiDb: BuoiHoc[]; daHoan: number; dong: () => void
 }) {
   const { message } = App.useApp()
   const [form] = Form.useForm()
   const dangNo = goi.filter((g) => conNoGoi(g, phieu) > 0)
   const cuoi = goi[goi.length - 1]
-  // chưa có gói nào: lấy tháng muộn hơn giữa tháng vào học và tháng này. Học sinh chuyển từ sổ giấy (vào học từ lâu)
-  // mà mặc định tháng vào học thì gói đầu tiên bị ghi lùi về quá khứ, thành nợ kỳ trước.
-  const thangKe = cuoi ? thangHetGoi(cuoi) : [dayjs(hs.ngay_vao).format('YYYY-MM'), dayjs().format('YYYY-MM')].sort()[1]
-  const duCon = duConLai(goi, buoiDb, hs.ngay_vao, daHoan, thangKe)
+  // chưa có gói nào: lấy tháng muộn hơn giữa tháng vào học và tháng này
+  const thangKe = cuoi ? thangHetGoi(cuoi) : [dayjs(ngayVaoMin).format('YYYY-MM'), dayjs().format('YYYY-MM')].sort()[1]
+  const duCon = duConLaiNhieuLop(goi, buoiDb as BuoiDacBietLop[], dsLopDu, daHoan, thangKe)
 
   const v = Form.useWatch([], form) ?? {}
-  const donGia = v.don_gia ?? hs.don_gia_rieng ?? lop.don_gia
+  const coGiaOverride = typeof v.don_gia === 'number' && !Number.isNaN(v.don_gia)
+  const donGia = coGiaOverride ? v.don_gia : hs.don_gia
   const thangBd: Thang = v.thang?.format?.('YYYY-MM') ?? thangKe
-  const buoi = demBuoiDuKien(lop.lich, thangBd, v.so_thang ?? 1, hs.ngay_vao > `${thangBd}-01` ? hs.ngay_vao : undefined)
+  const soThang = v.so_thang ?? 1
+  const buoi = demBuoiDuKienNhieuLop(dsLopDangHoc, thangBd, soThang)
+  const coGiaRiengLop = dsLopDangHoc.some((x) => x.don_gia !== hs.don_gia)
+  const tienThang = coGiaOverride ? null : tinhTienThangNhieuLop(dsLopDangHoc, hs.don_gia, thangBd, soThang)
+  const chiTietLop = tienThang
+    ? dsLopDangHoc.map((x) => {
+        const tu = x.ngay_vao > `${thangBd}-01` ? x.ngay_vao : undefined
+        const sbLop = Object.values(demBuoiDuKien(x.lich, thangBd, soThang, tu)).reduce((s, n) => s + n, 0)
+        return `${x.ten}: ${sbLop}b × ${vnd(x.don_gia)}`
+      }).join(' + ')
+    : null
   const tongGoiMoi = tongGoi({
-    id: '', hoc_sinh_id: hs.id, thang_bat_dau: `${thangBd}-01`, so_thang: v.so_thang ?? 1, don_gia: donGia,
-    buoi_du_kien: buoi, tien_du_tru: v.tien_du_tru ?? 0, dieu_chinh: v.dieu_chinh ?? 0,
+    id: '', hoc_sinh_id: hs.id, thang_bat_dau: `${thangBd}-01`, so_thang: soThang, don_gia: donGia,
+    buoi_du_kien: buoi, tien_thang: tienThang, tien_du_tru: v.tien_du_tru ?? 0, dieu_chinh: v.dieu_chinh ?? 0,
   })
   // trừ tiền dư không quá tổng gói, không thì gói âm
   const truToiDa = Math.max(0, Math.min(duCon, tongGoiMoi + (v.tien_du_tru ?? 0)))
   const noGoi = v.loai === 'no' ? conNoGoi(goi.find((g) => g.id === v.goi_id) ?? dangNo[0], phieu) : 0
 
   const [luu, dangLuu] = useMotLan(async () => {
-    // form chưa hợp lệ thì antd đã hiện lỗi dưới ô; không để promise bị reject thành lỗi JS không ai bắt
     const x = await form.validateFields().catch(() => null)
     if (!x) return
     let goiId = x.goi_id
@@ -272,7 +299,7 @@ function ThuTien({ hs, lop, goi, phieu, buoiDb, daHoan, dong }: {
       try {
         const g = await q(sb.from('goi_hoc').insert({
           hoc_sinh_id: hs.id, thang_bat_dau: `${thangBd}-01`, so_thang: x.so_thang, don_gia: donGia, buoi_du_kien: buoi,
-          tien_du_tru: x.tien_du_tru ?? 0, dieu_chinh: x.dieu_chinh ?? 0, ly_do_dieu_chinh: x.ly_do || null,
+          tien_thang: tienThang, tien_du_tru: x.tien_du_tru ?? 0, dieu_chinh: x.dieu_chinh ?? 0, ly_do_dieu_chinh: x.ly_do || null,
         }).select().single()) as Goi
         goiId = g.id
       } catch (e) { message.error((e as Error).message); return }
@@ -283,7 +310,6 @@ function ThuTien({ hs, lop, goi, phieu, buoiDb, daHoan, dong }: {
           goi_id: goiId, so_tien: x.so_tien, ngay_thu: x.ngay_thu.format('YYYY-MM-DD'), hinh_thuc: x.hinh_thuc, ghi_chu: x.ghi_chu || null,
         }))
       } catch (e) {
-        // gói đã tạo rồi: đóng form để lần sau thu qua "Trả gói đang nợ", giữ form thì bấm Lưu lại sẽ tạo gói thứ hai
         if (x.loai === 'moi') { message.error(`Đã tạo gói nhưng chưa ghi được tiền thu: ${(e as Error).message}`); dong(); return }
         message.error((e as Error).message); return
       }
@@ -304,18 +330,24 @@ function ThuTien({ hs, lop, goi, phieu, buoiDb, daHoan, dong }: {
         ) : <>
           <Form.Item name="so_thang" label="Số tháng"><Radio.Group optionType="button" options={[1, 2, 3].map((n) => ({ value: n, label: `${n} tháng` }))} /></Form.Item>
           <Form.Item name="thang" label="Từ tháng"><DatePicker picker="month" format="MM/YYYY" allowClear={false} /></Form.Item>
-          <Form.Item name="don_gia" label={`Đơn giá/buổi (mặc định ${vnd(hs.don_gia_rieng ?? lop.don_gia)})`}
-            extra={v.don_gia === 0 && <span style={{ color: MAU.do }}>0 = gói này 0đ. Để trống để dùng giá mặc định.</span>}><InputNumber {...tien} placeholder={`${donGia}`} /></Form.Item>
+          <Form.Item name="don_gia"
+            label={coGiaRiengLop ? 'Đơn giá/buổi chung (để trống = tính theo từng lớp)' : `Đơn giá/buổi (mặc định ${vnd(hs.don_gia)})`}
+            extra={v.don_gia === 0 && <span style={{ color: MAU.do }}>0 = gói này 0đ. Để trống để dùng giá mặc định.</span>}>
+            <InputNumber {...tien} placeholder={coGiaRiengLop ? 'Theo từng lớp' : `${donGia}`} />
+          </Form.Item>
           <Form.Item name="tien_du_tru" label={`Trừ tiền dư (còn lại ${vnd(duCon)})`}
             extra={!duCon && 'Chưa có tiền dư: tiền dư chỉ sinh từ buổi lớp nghỉ của gói đã kết thúc. Tiền dư ngoài app (sổ cũ) nhập ở ô Điều chỉnh bằng số âm.'}>
             <InputNumber {...tien} max={truToiDa} disabled={!duCon} />
           </Form.Item>
           <Form.Item name="dieu_chinh" label="Điều chỉnh (giảm thì nhập số âm)"><InputNumber {...tien} min={undefined} /></Form.Item>
           {!!v.dieu_chinh && <Form.Item name="ly_do" label="Lý do điều chỉnh" rules={[{ required: true }]}><Input /></Form.Item>}
-          <p>Buổi dự kiến: {Object.entries(buoi).map(([t, n]) => `T${t.slice(5)}: ${n}`).join(', ')} → <b>Tổng gói: {vnd(tongGoiMoi)}</b></p>
+          <p>
+            Buổi dự kiến: {Object.entries(buoi).map(([t, n]) => `T${t.slice(5)}: ${n}`).join(', ')}
+            {chiTietLop && <span style={{ display: 'block', fontSize: 12, color: MAU.chuPhu }}>({chiTietLop})</span>}
+            {' → '}<b>Tổng gói: {vnd(tongGoiMoi)}</b>
+          </p>
         </>}
         {v.loai === 'no'
-          // trả nợ mà không có số tiền thì chẳng ghi gì; thu quá số nợ thì phần dư không thuộc gói nào
           ? <Form.Item name="so_tien" label={`Số tiền thu lần này (còn nợ ${vnd(noGoi)})`} rules={[{ required: true, message: 'Nhập số tiền thu' },
             { validator: (_, so) => so > 0 && so <= noGoi ? Promise.resolve() : Promise.reject(new Error(`Số tiền từ 1 đến ${vnd(noGoi)}`)) }]}>
             <InputNumber {...tien} /></Form.Item>

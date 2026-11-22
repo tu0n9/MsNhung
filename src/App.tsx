@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Button, Grid, Layout, Menu, Result, Spin } from 'antd'
-import { BankOutlined, CheckSquareOutlined, DollarOutlined, MoonOutlined, StarOutlined, SunOutlined, TeamOutlined, UserOutlined, WalletOutlined } from '@ant-design/icons'
+import { BankOutlined, CheckSquareOutlined, DollarOutlined, MoonOutlined, StarOutlined, SunOutlined, TeamOutlined, WalletOutlined } from '@ant-design/icons'
 import type { Session } from '@supabase/supabase-js'
 import { laQuanLy, q, sb, type TaiKhoan } from './supabase'
 import { CHU_SO, MAU, useCheDo } from './giao-dien'
@@ -12,7 +12,6 @@ import LopHoc from './trang/LopHoc'
 import HocPhi from './trang/HocPhi'
 import ChiPhi from './trang/ChiPhi'
 import TaiKhoanTrang from './trang/TaiKhoan'
-import PhuHuynh from './trang/PhuHuynh'
 import ImportExcel from './trang/ImportExcel'
 import HuongDan from './trang/HuongDan'
 import DanhGia from './trang/DanhGia'
@@ -54,17 +53,18 @@ export default function App() {
   if (!phien) return <DangNhap />
   if (!toi) return null
   if (toi.phai_doi_mat_khau) return <DoiMatKhau batBuoc xong={taiToi} />
+  if (toi.vai_tro === 'phu_huynh') {
+    return <Result status="403" title="Tài khoản phụ huynh đã ngừng sử dụng" extra={<Button onClick={() => sb.auth.signOut()}>Thoát</Button>} />
+  }
 
   const ql = laQuanLy(toi.vai_tro)
-  const menu = toi.vai_tro === 'phu_huynh'
-    ? [{ key: '/', label: 'Con tôi', icon: <UserOutlined /> }]
-    : [
-        { key: '/', label: 'Điểm danh', icon: <CheckSquareOutlined /> },
-        { key: '/lop', label: 'Lớp', icon: <TeamOutlined /> },
-        ...(ql ? [{ key: '/hoc-phi', label: 'Học phí', icon: <DollarOutlined /> }, { key: '/chi-phi', label: 'Chi phí', icon: <WalletOutlined /> }] : []),
-        ...(ql ? [{ key: '/danh-gia', label: 'Đánh giá', icon: <StarOutlined /> }] : []),
-        { key: '/tai-khoan', label: 'Tài khoản', icon: <BankOutlined /> },
-      ]
+  const menu = [
+    { key: '/', label: 'Điểm danh', icon: <CheckSquareOutlined /> },
+    { key: '/lop', label: 'Lớp', icon: <TeamOutlined /> },
+    ...(ql ? [{ key: '/hoc-phi', label: 'Học phí', icon: <DollarOutlined /> }, { key: '/chi-phi', label: 'Chi phí', icon: <WalletOutlined /> }] : []),
+    ...(ql ? [{ key: '/danh-gia', label: 'Đánh giá', icon: <StarOutlined /> }] : []),
+    { key: '/tai-khoan', label: 'Tài khoản', icon: <BankOutlined /> },
+  ]
   // điện thoại: thanh điều hướng dưới đáy, vì menu ngang bị gom vào nút "..." khó bấm
   const dienThoai = !manHinh.md
   const dangO = (k: string) => loc.pathname === k || (k === '/lop' && loc.pathname === '/import')
@@ -77,28 +77,21 @@ export default function App() {
           <b style={{ color: MAU.chinh, whiteSpace: 'nowrap', fontFamily: CHU_SO, fontSize: 18 }}>Ms.Nhung</b>
           {dienThoai ? <span style={{ flex: 1 }} /> : <Menu theme={cheDo === 'toi' ? 'dark' : 'light'} mode="horizontal" selectedKeys={[loc.pathname === '/import' ? '/lop' : loc.pathname]} items={menu}
             onClick={(e) => nav(e.key)} style={{ flex: 1, minWidth: 0 }} />}
-          {/* thanh dưới đã đủ 5 mục, thêm mục thứ 6 thì chật trên điện thoại; phụ huynh có liên kết riêng ở trang Con tôi */}
           <Button shape="circle" icon={cheDo === 'toi' ? <SunOutlined /> : <MoonOutlined />} onClick={doi}
             aria-label={cheDo === 'toi' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'} />
-          {toi.vai_tro !== 'phu_huynh' && <Button size="small" onClick={() => nav('/huong-dan')}>Hướng dẫn</Button>}
+          <Button size="small" onClick={() => nav('/huong-dan')}>Hướng dẫn</Button>
           <Button size="small" onClick={() => sb.auth.signOut()}>Thoát</Button>
         </Layout.Header>
         <Layout.Content style={{ padding: 12, paddingBottom: dienThoai ? 76 : 12, maxWidth: 1200, width: '100%', margin: '0 auto' }}>
           <Routes>
-            {toi.vai_tro === 'phu_huynh' ? (
-              <Route path="/" element={<PhuHuynh />} />
-            ) : (
-              <>
-                <Route path="/" element={<DiemDanh />} />
-                <Route path="/lop" element={<LopHoc />} />
-                {ql && <Route path="/hoc-phi" element={<HocPhi />} />}
-                {ql && <Route path="/chi-phi" element={<ChiPhi />} />}
-                {ql && <Route path="/import" element={<ImportExcel />} />}
-                {ql && <Route path="/danh-gia" element={<DanhGia />} />}
-                {ql && <Route path="/nhat-ky" element={<NhatKy />} />}
-                <Route path="/tai-khoan" element={<TaiKhoanTrang />} />
-              </>
-            )}
+            <Route path="/" element={<DiemDanh />} />
+            <Route path="/lop" element={<LopHoc />} />
+            {ql && <Route path="/hoc-phi" element={<HocPhi />} />}
+            {ql && <Route path="/chi-phi" element={<ChiPhi />} />}
+            {ql && <Route path="/import" element={<ImportExcel />} />}
+            {ql && <Route path="/danh-gia" element={<DanhGia />} />}
+            {ql && <Route path="/nhat-ky" element={<NhatKy />} />}
+            <Route path="/tai-khoan" element={<TaiKhoanTrang />} />
             <Route path="/doi-mat-khau" element={<DoiMatKhau xong={() => nav('/')} />} />
             <Route path="/huong-dan" element={<HuongDan />} />
             <Route path="*" element={<Navigate to="/" />} />

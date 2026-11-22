@@ -4,7 +4,7 @@ import { CameraOutlined, PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { CHU_SO, MAU } from '../giao-dien'
 import { cong2Gio, gioBuoi, nhomBuoi } from '../gio-hoc'
-import { homNay, q, useMotLan, sb, taiAnhLen, taiTongSticker, urlAnh, type BuoiHoc, type DiemDanh as DD, type HocSinh, type Lop, type TaiKhoan } from '../supabase'
+import { homNay, hsDangHoc, q, taiHet, useMotLan, sb, taiAnhLen, taiTongSticker, urlAnh, type BuoiHoc, type DiemDanh as DD, type GhiDanh, type HocSinh, type Lop, type TaiKhoan } from '../supabase'
 
 const LOAI = { lich: 'Theo lịch', phu: 'Buổi phụ', bu: 'Buổi bù' }
 
@@ -106,21 +106,23 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
   // null = chưa tải: thẻ học sinh chỉ dựng khi đã có, để mỗi thẻ tải đúng một lần. Tải hai lần (lần đầu với danh sách
   // rỗng) thì lần sau về muộn có thể ghi đè dấu "Học bù" vừa bấm, làm nút "Không đến" bấm không ăn.
   const [tatCaHs, setTatCaHs] = useState<HocSinh[] | null>(null)
+  const [ghiDanh, setGhiDanh] = useState<GhiDanh[]>([])
   const ids = buois.map((b) => b.id)
   const dangHoc = buois.filter((b) => !b.lop_nghi)
 
   const tai = async () => {
-    const [tg, tgb, a, tatCa] = await Promise.all([
+    const [tg, tgb, a, tatCa, gd] = await Promise.all([
       q(sb.rpc('ds_tro_giang')),  // chỉ tên, không đơn giá: trợ giảng không xem được lương nhau
       q(sb.from('tro_giang_buoi').select('tro_giang_id').in('buoi_id', ids)),
       q(sb.from('anh_buoi').select('id, duong_dan').in('buoi_id', ids).order('tao_luc')),
-      q(sb.from('hoc_sinh').select('*').eq('trang_thai', 'dang_hoc').order('ho_ten')),
+      taiHet((x, y) => sb.from('hoc_sinh').select('*').order('ho_ten').order('id').range(x, y)),
+      taiHet((x, y) => sb.from('ghi_danh').select('*').eq('trang_thai', 'dang_hoc').order('id').range(x, y)),
     ])
     setTgs(tg as TaiKhoan[]); setTgCo([...new Set((tgb as { tro_giang_id: string }[]).map((x) => x.tro_giang_id))])
     // ảnh lớp gộp được chép sang từng buổi cùng tên file: chỉ hiện một lần
     const daCo = new Set<string>()
     const ds = (a as { id: string; duong_dan: string }[]).filter((x) => !daCo.has(tenFile(x.duong_dan)) && daCo.add(tenFile(x.duong_dan)))
-    setAnh(ds); setTatCaHs(tatCa as HocSinh[])
+    setAnh(ds); setGhiDanh(gd as GhiDanh[]); setTatCaHs(tatCa as HocSinh[])
     setUrl(await urlAnh(ds.map((x) => x.duong_dan)))
   }
   useEffect(() => { tai().catch((e) => message.error(e.message)) }, [])
@@ -176,7 +178,7 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
       </Card>}
 
       {/* key theo cả lop_nghi: bỏ nghỉ thì dựng lại thẻ, không hiện lại dấu tick cũ (đã bị xoá) còn trong state */}
-      {tatCaHs && buois.map((b) => <DsHocSinh key={`${b.id}-${b.lop_nghi}`} buoi={b} lop={lopCua(b)} tatCaHs={tatCaHs}
+      {tatCaHs && buois.map((b) => <DsHocSinh key={`${b.id}-${b.lop_nghi}`} buoi={b} lop={lopCua(b)} tatCaHs={tatCaHs} ghiDanh={ghiDanh}
         nhieuLop={buois.length > 1} doiNghi={(v) => doiNghi(b, v)} />)}
 
       <Card size="small" title="Ảnh lớp (minh chứng)">
@@ -206,8 +208,8 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
   )
 }
 
-function DsHocSinh({ buoi, lop, tatCaHs, nhieuLop, doiNghi }: {
-  buoi: BuoiHoc; lop: Lop; tatCaHs: HocSinh[]; nhieuLop: boolean; doiNghi: (v: boolean) => void
+function DsHocSinh({ buoi, lop, tatCaHs, ghiDanh, nhieuLop, doiNghi }: {
+  buoi: BuoiHoc; lop: Lop; tatCaHs: HocSinh[]; ghiDanh: GhiDanh[]; nhieuLop: boolean; doiNghi: (v: boolean) => void
 }) {
   const { message, modal } = App.useApp()
   const [hs, setHs] = useState<HocSinh[]>([])
@@ -217,15 +219,15 @@ function DsHocSinh({ buoi, lop, tatCaHs, nhieuLop, doiNghi }: {
   const [stickerKhac, setStickerKhac] = useState<Record<string, number>>({})
   const [url, setUrl] = useState<Record<string, string>>({})
 
+  const cuaLopIds = new Set(ghiDanh.filter((g) => g.lop_id === lop.id && g.ngay_vao <= buoi.ngay).map((g) => g.hoc_sinh_id))
+
   const tai = async () => {
-    const [cuaLop, d] = await Promise.all([
-      q(sb.from('hoc_sinh').select('*').eq('lop_id', lop.id).eq('trang_thai', 'dang_hoc').lte('ngay_vao', buoi.ngay).order('ho_ten')),
-      q(sb.from('diem_danh').select('*').eq('buoi_id', buoi.id)),
-    ])
+    const d = await q(sb.from('diem_danh').select('*').eq('buoi_id', buoi.id))
     const ddMap = Object.fromEntries((d as DD[]).map((x) => [x.hoc_sinh_id, x]))
+    const cuaLop = tatCaHs.filter((h) => cuaLopIds.has(h.id))
     // học sinh lớp khác sang học bù cũng hiện trong danh sách buổi này
-    const ngoai = tatCaHs.filter((h) => ddMap[h.id] && h.lop_id !== lop.id)
-    const ds = [...(cuaLop as HocSinh[]), ...ngoai]
+    const ngoai = tatCaHs.filter((h) => ddMap[h.id] && !cuaLopIds.has(h.id))
+    const ds = [...cuaLop, ...ngoai]
     setHs(ds); setDd(ddMap)
     const ids = ds.map((h) => h.id)
     if (ids.length) {
@@ -283,7 +285,7 @@ function DsHocSinh({ buoi, lop, tatCaHs, nhieuLop, doiNghi }: {
       {buoiBu && <p style={{ marginTop: 0, color: MAU.chuPhu, fontSize: 13 }}>Buổi bù riêng: em nào đến thì chọn "Học bù" (trừ 1 buổi chưa bù). Em không đến thì để "Không đến", không bị tính thêm buổi chưa bù.</p>}
       <List dataSource={hs} renderItem={(h) => {
         const x = dd[h.id]
-        const laBu = h.lop_id !== lop.id
+        const laBu = !cuaLopIds.has(h.id)
         return (
           <List.Item style={{ flexWrap: 'wrap', gap: 8, background: x || buoiBu ? undefined : MAU.vang }}>
             <Space>
@@ -323,7 +325,7 @@ function DsHocSinh({ buoi, lop, tatCaHs, nhieuLop, doiNghi }: {
         )
       }} />
       <Select showSearch optionFilterProp="label" placeholder="+ Thêm học sinh lớp khác học bù buổi này" style={{ width: '100%', marginTop: 8 }}
-        value={null} options={tatCaHs.filter((h) => !hs.some((x) => x.id === h.id)).map((h) => ({ value: h.id, label: h.ho_ten }))}
+        value={null} options={tatCaHs.filter((h) => hsDangHoc(ghiDanh, h.id) && !hs.some((x) => x.id === h.id)).map((h) => ({ value: h.id, label: `${h.ho_ten} (${h.ma_hs})` }))}
         onChange={async (id) => {
           try { await q(sb.from('diem_danh').insert({ buoi_id: buoi.id, hoc_sinh_id: id, trang_thai: 'hoc_bu' })); tai() }
           catch (e) { message.error((e as Error).message) }

@@ -8,8 +8,9 @@ import { vnd } from '../hoc-phi'
 import { O_TIEN } from '../giao-dien'
 
 const TEN_VAI: Record<VaiTro, string> = { admin: 'Quản trị', giao_vien: 'Giáo viên', tro_giang: 'Trợ giảng', phu_huynh: 'Phụ huynh' }
+const VAI_HIEN: VaiTro[] = ['admin', 'giao_vien', 'tro_giang']
 // khớp QUYEN_DAT_LAI trong supabase/functions/tai-khoan; Edge Function và RLS mới là chốt chặn thật, đây chỉ để ẩn nút
-const DUOC_QUAN_LY: Record<VaiTro, VaiTro[]> = { admin: ['giao_vien', 'tro_giang', 'phu_huynh'], giao_vien: ['tro_giang', 'phu_huynh'], tro_giang: ['phu_huynh'], phu_huynh: [] }
+const DUOC_QUAN_LY: Record<VaiTro, VaiTro[]> = { admin: ['giao_vien', 'tro_giang'], giao_vien: ['tro_giang'], tro_giang: [], phu_huynh: [] }
 
 export default function TaiKhoan() {
   const { message } = App.useApp()
@@ -22,7 +23,7 @@ export default function TaiKhoan() {
 
   // tăng sau mỗi lần tải để ô đơn giá (không kiểm soát) dựng lại theo số trong database, kể cả khi lưu lỗi hay bị xoá trắng
   const [lanTai, setLanTai] = useState(0)
-  const tai = () => q(sb.from('tai_khoan').select('*').order('vai_tro').order('ho_ten'))
+  const tai = () => q(sb.from('tai_khoan').select('*').neq('vai_tro', 'phu_huynh').order('vai_tro').order('ho_ten'))
     .then((x) => { setDs(x as TK[]); setLanTai((n) => n + 1) }).catch((e) => message.error(e.message))
   useEffect(() => { tai() }, [])
 
@@ -39,9 +40,9 @@ export default function TaiKhoan() {
         {laQuanLy(toi.vai_tro) && <Button type="primary" icon={<PlusOutlined />} onClick={() => setTao(true)}>Tạo tài khoản</Button>}
         <Button onClick={() => nav('/doi-mat-khau')}>Đổi mật khẩu của tôi</Button>
         {laQuanLy(toi.vai_tro) && <Button onClick={() => nav('/nhat-ky')}>Nhật ký thao tác</Button>}
-        <Select value={loc} onChange={setLoc} style={{ width: 150 }} options={[{ value: 'tat_ca', label: 'Tất cả' }, ...Object.entries(TEN_VAI).map(([v, l]) => ({ value: v, label: l }))]} />
+        <Select value={loc} onChange={setLoc} style={{ width: 150 }} options={[{ value: 'tat_ca', label: 'Tất cả' }, ...VAI_HIEN.map((v) => ({ value: v, label: TEN_VAI[v] }))]} />
       </Space>
-      <Table size="small" rowKey="id" dataSource={ds.filter((x) => loc === 'tat_ca' || x.vai_tro === loc)} scroll={{ x: true }} columns={[
+      <Table size="small" rowKey="id" dataSource={ds.filter((x) => x.vai_tro !== 'phu_huynh' && (loc === 'tat_ca' || x.vai_tro === loc))} scroll={{ x: true }} columns={[
         { title: 'Họ tên', dataIndex: 'ho_ten' },
         { title: 'Đăng nhập', render: (_, r) => [r.ten_dang_nhap, r.so_dien_thoai].filter(Boolean).join(' / ') },
         { title: 'Vai trò', render: (_, r) => <Tag>{TEN_VAI[r.vai_tro]}</Tag> },
