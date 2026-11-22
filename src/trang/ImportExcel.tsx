@@ -3,9 +3,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Alert, App, Button, Card, Grid, List, Progress, Result, Segmented, Space, Tag, Upload } from 'antd'
 import { DownloadOutlined, FileExcelOutlined } from '@ant-design/icons'
-import { docFile, kiemTra, taiDanhSachLoi, taiFileMau, type KqHs, type KqLop } from '../import-excel'
+import { demCongViecImport, docFile, kiemTra, taiDanhSachLoi, taiFileMau, type KqHs, type KqLop } from '../import-excel'
 import { nhapDuLieu, type KetQuaNhap, type TienDo } from '../nhap-du-lieu'
-import { homNay, q, sb, taiHet, type GhiDanh, type HocSinh, type Lop } from '../supabase'
+import { homNay, q, sb, taiHet, useMotLan, type GhiDanh, type HocSinh, type Lop } from '../supabase'
 import { moTaLich } from '../gio-hoc'
 import { vnd } from '../hoc-phi'
 import { MAU } from '../giao-dien'
@@ -56,15 +56,18 @@ export default function ImportExcel() {
   const dong: Dong[] = useMemo(() => (kq ? [...kq.lops, ...kq.hss] : []), [kq])
   const dem = (t: Exclude<Loc, 'tat_ca'>) => dong.filter((d) => d.trangThai === t).length
   const loi = dong.filter((d) => d.trangThai === 'loi')
-  const soLink = kq?.hss.filter((h) => h.capNhatLink).length ?? 0
-  const tongViec = dem('moi') + dem('them_lop') + soLink
+  // Dùng chung demCongViecImport với nhapDuLieu để không đếm trùng dòng them_lop kiêm capNhatLink
+  const { capNhatLink: soLinkDaCo, tong: tongViec } = useMemo(
+    () => (kq ? demCongViecImport(kq.lops, kq.hss) : { capNhatLink: 0, tong: 0 }),
+    [kq],
+  )
 
-  const nhap = async () => {
+  const [nhap, dangNhap] = useMotLan(async () => {
     if (!kq) return
     setTienDo({ xong: 0, tong: tongViec, dang: 'Bắt đầu' })
     try { setKetQua(await nhapDuLieu(kq.lops, kq.hss, lopCo, setTienDo)) }
     catch (e) { message.error((e as Error).message); setTienDo(undefined) }
-  }
+  })
 
   const buoc = ketQua || tienDo ? 4 : kq ? 3 : 2
   const chan = { position: 'sticky' as const, bottom: dienThoai ? 60 : 0, background: MAU.nen, padding: '10px 0', borderTop: `1px solid ${MAU.vien}` }
@@ -91,7 +94,7 @@ export default function ImportExcel() {
           </>}
           extra={<Space direction="vertical">
             {ketQua.loi.map((x) => <Alert key={x.so} type="error" showIcon message={`Dòng ${x.so}, ${x.ten}: ${x.loi}`} />)}
-            {loi.length > 0 && <Button icon={<DownloadOutlined />} onClick={() => taiDanhSachLoi(kq!.lops, kq!.hss)}>Tải danh sách lỗi để sửa</Button>}
+            {loi.length > 0 && <Button icon={<DownloadOutlined />} onClick={() => taiDanhSachLoi(kq!.lops, kq!.hss).catch((e) => message.error((e as Error).message))}>Tải danh sách lỗi để sửa</Button>}
             <Button type="primary" onClick={() => nav('/lop')}>Về trang Lớp</Button>
           </Space>} />
       ) : tienDo ? (
@@ -168,10 +171,10 @@ export default function ImportExcel() {
 
           <div style={chan}>
             <Space direction="vertical" style={{ width: '100%' }}>
-              <Button type="primary" size="large" block disabled={!tongViec} onClick={nhap}>
-                {[dem('moi') && `${dem('moi')} dòng mới`, dem('them_lop') && `${dem('them_lop')} thêm lớp`, soLink && `${soLink} link Zalo`].filter(Boolean).join(', ') || 'Không có gì để nhập'}
+              <Button type="primary" size="large" block loading={dangNhap} disabled={!tongViec} onClick={() => nhap()}>
+                {[dem('moi') && `${dem('moi')} dòng mới`, dem('them_lop') && `${dem('them_lop')} thêm lớp`, soLinkDaCo && `${soLinkDaCo} link Zalo`].filter(Boolean).join(', ') || 'Không có gì để nhập'}
               </Button>
-              {loi.length > 0 && <Button type="link" block icon={<DownloadOutlined />} onClick={() => taiDanhSachLoi(kq.lops, kq.hss)}>Tải danh sách lỗi (.xlsx)</Button>}
+              {loi.length > 0 && <Button type="link" block icon={<DownloadOutlined />} onClick={() => taiDanhSachLoi(kq.lops, kq.hss).catch((e) => message.error((e as Error).message))}>Tải danh sách lỗi (.xlsx)</Button>}
             </Space>
           </div>
         </>

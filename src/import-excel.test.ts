@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import ExcelJS from 'exceljs'
-import { chuanLinkZalo, chuanNgay, chuanSdt, chuanTien, docFile, kiemTra, type DongHsTho, type DongLopTho } from './import-excel'
+import { chuanLinkZalo, chuanNgay, chuanSdt, chuanTien, demCongViecImport, docFile, kiemTra, taoBufferFileMau, type DongHsTho, type DongLopTho } from './import-excel'
 import type { GhiDanh, HocSinh, Lop } from './supabase'
 
 const HOM_NAY = '2026-11-15'
@@ -165,5 +165,83 @@ describe('docFile', () => {
     const wb = new ExcelJS.Workbook()
     wb.addWorksheet('Sheet1')
     await expect(docFile((await wb.xlsx.writeBuffer()) as ArrayBuffer)).rejects.toThrow(/Lớp/)
+  })
+})
+
+describe('sửa lỗi Bug 8 (8a, 8b, 8c, 8d, 8f, round-trip taiFileMau)', () => {
+  it('8a: dòng 1 có SĐT + dòng 2 cùng tên không SĐT trong cùng file phải báo loi', () => {
+    const { hss } = kiemTra([], [
+      hs(2, { hoTen: 'Phạm Minh An', lop: 'Starters 1', sdt: '0911223344' }),
+      hs(3, { hoTen: 'Phạm Minh An', lop: 'Starters 2', sdt: '' }),
+    ], lopCo, [], [], HOM_NAY)
+    expect(hss[0].trangThai).toBe('moi')
+    expect(hss[1].trangThai).toBe('loi')
+  })
+
+  it('8b: maHs khớp DB nhưng hoTen khác học sinh của mã đó phải báo loi', () => {
+    const { hss } = kiemTra([], [
+      hs(2, { maHs: 'HS001', hoTen: 'Nguyễn Văn Sai', lop: 'Starters 2' }),
+    ], lopCo, hsCo, gdCo, HOM_NAY)
+    expect(hss[0].trangThai).toBe('loi')
+    expect(hss[0].loi).toMatch(/HS001/)
+  })
+
+  it('8c: học sinh từng ngung ở lớp cũ khi import lại phải thành them_lop (bật lại)', () => {
+    const gdNgung: GhiDanh[] = [
+      { id: 'gd1', hoc_sinh_id: 'h1', lop_id: 'l1', ngay_vao: '2026-10-01', trang_thai: 'ngung' },
+    ]
+    const { hss } = kiemTra([], [
+      hs(2, { maHs: 'HS001', hoTen: 'Trần Khánh Linh', lop: 'Starters 1', ngayVao: '15/11/2026' }),
+    ], lopCo, hsCo, gdNgung, HOM_NAY)
+    expect(hss[0].trangThai).toBe('them_lop')
+    expect(hss[0].hocSinhId).toBe('h1')
+    expect((hss[0] as { batLai?: boolean }).batLai).toBe(true)
+  })
+
+  it('8d: chuanNgay không văng RangeError với NaN/Infinity/Invalid Date và từ chối năm < 2000', () => {
+    expect(chuanNgay(Number.NaN, HOM_NAY).loi).toBeTruthy()
+    expect(chuanNgay(Number.POSITIVE_INFINITY, HOM_NAY).loi).toBeTruthy()
+    expect(chuanNgay(new Date('invalid'), HOM_NAY).loi).toBeTruthy()
+    expect(chuanNgay('01/11/0026', HOM_NAY).loi).toBeTruthy()
+    expect(chuanNgay('01/11/1999', HOM_NAY).loi).toBeTruthy()
+  })
+
+  it('8d: chuanTien từ chối số thập phân ("150.5") và chữ lẫn số ("abc 123")', () => {
+    expect(chuanTien('150.5', 'Đơn giá', true).loi).toBeTruthy()
+    expect(chuanTien('abc 123', 'Đơn giá', true).loi).toBeTruthy()
+    expect(chuanTien('150.000 đ', 'Đơn giá', true).so).toBe(150000)
+  })
+
+  it('8d: chuanLinkZalo bỏ dấu câu cuối link và chặn scheme nguy hiểm / giả mạo domain', () => {
+    expect(chuanLinkZalo('Vào nhóm: https://zalo.me/g/abc123.').link).toBe('https://zalo.me/g/abc123')
+    expect(chuanLinkZalo('(https://zalo.me/g/abc123)').link).toBe('https://zalo.me/g/abc123')
+    expect(chuanLinkZalo("javascript:alert('zalo.me/g/1')").loi).toBeTruthy()
+    expect(chuanLinkZalo('https://evil.com/zalo.me/g/1').loi).toBeTruthy()
+  })
+
+  it('8f: demCongViecImport không đếm trùng dòng them_lop kiêm capNhatLink', () => {
+    const { lops, hss } = kiemTra([], [
+      hs(2, { maHs: 'HS001', hoTen: 'Trần Khánh Linh', lop: 'Starters 2', linkZalo: 'https://zalo.me/g/moi' }),
+    ], lopCo, hsCo, gdCo, HOM_NAY)
+    expect(hss[0].trangThai).toBe('them_lop')
+    expect(hss[0].capNhatLink).toBe('h1')
+    expect(demCongViecImport(lops, hss).tong).toBe(1)
+  })
+
+  it('round-trip taiFileMau -> docFile -> kiemTra ra toàn bộ da_co và 0 lỗi', async () => {
+    const hsMau = [{
+      ...hsCo[0],
+      ten_phu_huynh: 'Chị Mai',
+      ngay_vao: '2026-10-01',
+      sticker_dau_ky: 5,
+      ghi_chu: 'Ghi chú',
+      link_zalo: 'https://zalo.me/g/mau',
+      trang_thai: 'dang_hoc',
+    }] as HocSinh[]
+    const buf = await taoBufferFileMau(lopCo, hsMau, gdCo)
+    const { lopTho, hsTho } = await docFile(buf)
+    const { lops, hss } = kiemTra(lopTho, hsTho, lopCo, hsMau, gdCo, HOM_NAY)
+    expect(lops.every((l) => l.trangThai === 'da_co' && !l.loi)).toBe(true)
+    expect(hss.every((h) => h.trangThai === 'da_co' && !h.loi)).toBe(true)
   })
 })

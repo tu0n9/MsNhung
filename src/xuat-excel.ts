@@ -1,7 +1,7 @@
 // Xuất sổ học phí của một tháng. Cột tính toán là công thức để giáo viên sửa số trong Excel vẫn tự cập nhật.
 import ExcelJS from 'exceljs'
 import type { DuLieuThang } from './du-lieu'
-import { goiCuaThang, tenGoi, tongCong } from './hoc-phi'
+import { chuaCoGoiThang, goiCuaThang, tenGoi, tongCong } from './hoc-phi'
 import { TIEU_CHI, tongHop } from './danh-gia'
 
 const TIEN = '#,##0'
@@ -63,13 +63,17 @@ export async function taoWorkbookExcel(d: DuLieuThang): Promise<ExcelJS.Workbook
   dsHp.forEach((r, i) => {
     const n = i + 2
     const g = goiCuaThang(d.goi.filter((x) => x.hoc_sinh_id === r.hs.id), d.thang)
+    const chuaGoi = chuaCoGoiThang(r, d.goi, d.thang)
     wsHp.addRow({
       stt: i + 1, ma: r.hs.ma_hs, ten: r.hs.ho_ten, lop: r.tenLops,
       ph: r.hs.ten_phu_huynh ?? '', sdt: r.hs.sdt_phu_huynh ?? '',
-      dg: r.hs.don_gia, buoi: r.soBuoi, hp: r.phaiThu - r.dieuChinh, dc: r.dieuChinh,
+      // Ưu tiên đơn giá đã chốt trên gói của tháng đó để xuất lại tháng cũ không bị nhảy theo đơn giá mới
+      dg: g ? g.don_gia : r.hs.don_gia, buoi: r.soBuoi, hp: r.phaiThu - r.dieuChinh, dc: r.dieuChinh,
       no: r.noKyTruoc, thu: r.daThu,
       con: { formula: `I${n}+J${n}+K${n}-L${n}`, result: r.conPhaiThu },
-      tt: { formula: `IF(M${n}>0,"Còn nợ","Đã đủ")`, result: r.conPhaiThu > 0 ? 'Còn nợ' : 'Đã đủ' },
+      tt: chuaGoi
+        ? { formula: `IF(M${n}>0,"Còn nợ",IF(M${n}=0,"Chưa có gói","Đã đủ"))`, result: 'Chưa có gói' }
+        : { formula: `IF(M${n}>0,"Còn nợ","Đã đủ")`, result: r.conPhaiThu > 0 ? 'Còn nợ' : 'Đã đủ' },
       goi: g ? tenGoi(g) : 'Chưa có gói',
     })
   })
@@ -86,8 +90,12 @@ export async function taoWorkbookExcel(d: DuLieuThang): Promise<ExcelJS.Workbook
     ...ngays.map((n) => ({ header: n.slice(8) + '/' + n.slice(5, 7), key: n, width: 6 })),
     { header: 'Có mặt', key: 'tong', width: 8 }, { header: 'Sticker', key: 'st', width: 8 }])
   const kyHieu: Record<string, string> = { co_mat: 'C', vang: 'V', hoc_bu: 'B' }
-  const cotCuoi = wsDd.getColumn(ngays.length + 2).letter
-  for (const r of d.dong) {
+  const cotCuoi = ngays.length ? wsDd.getColumn(ngays.length + 2).letter : 'C'
+  // Duyệt trên toàn bộ d.hocSinh (kể cả em đã ngừng học nằm ngoài d.dong) để không mất điểm danh / sticker trong tháng
+  const dsDd = d.hocSinh
+    .map((h) => ({ hs: h, tenLops: lopCuaHsTen(h.id) }))
+    .sort((a, b) => a.tenLops.localeCompare(b.tenLops) || a.hs.ho_ten.localeCompare(b.hs.ho_ten))
+  for (const r of dsDd) {
     const cua = d.diemDanh.filter((x) => x.hoc_sinh_id === r.hs.id)
     const ngoai = d.stickerNgoai.filter((x) => x.hoc_sinh_id === r.hs.id)
     if (!cua.length && !ngoai.length) continue

@@ -32,6 +32,17 @@ export interface KqHs {
   gopVoiDong?: number
   /** Dòng đã có / thêm lớp mà link trong file khác link đang có: id học sinh cần cập nhật link */
   capNhatLink?: string
+  /** Ghi danh cũ từng ngừng học, nay import lại cần bật thành đang học thay vì insert mới */
+  batLai?: boolean
+}
+
+/** Đếm số đầu việc sẽ thực thi (dòng thêm lớp kèm đổi link Zalo vẫn tính 1 lượt nhập). */
+export function demCongViecImport(lops: KqLop[], hss: KqHs[]) {
+  const lopMoi = lops.filter((l) => l.trangThai === 'moi').length
+  const hsMoi = hss.filter((h) => h.trangThai === 'moi').length
+  const themLop = hss.filter((h) => h.trangThai === 'them_lop').length
+  const capNhatLink = hss.filter((h) => h.trangThai === 'da_co' && !!h.capNhatLink).length
+  return { lopMoi, hsMoi, themLop, capNhatLink, tong: lopMoi + hsMoi + themLop + capNhatLink }
 }
 
 // ---------- chuẩn hoá từng ô ----------
@@ -61,39 +72,66 @@ export function chuanSdt(v: unknown): { sdt: string | null; loi?: string } {
   return { sdt: s }
 }
 
-/** Link nhóm Zalo: lọc link zalo.me ra khỏi đoạn chữ dán vào (lời mời của Zalo có kèm chữ), thiếu https thì thêm. */
+/** Link nhóm Zalo: lọc link zalo.me ra khỏi đoạn chữ dán vào (lời mời của Zalo có kèm chữ), bỏ dấu câu cuối & chặn scheme nguy hiểm. */
 export function chuanLinkZalo(v: unknown): { link: string | null; loi?: string } {
   // ô hyperlink có nhãn chữ ("Nhóm lớp 3"): link thật nằm trong .hyperlink, nhãn không có URL
   const lienKet = typeof v === 'object' && v !== null ? (v as { hyperlink?: unknown }).hyperlink : undefined
   const tho = `${typeof lienKet === 'string' ? lienKet : ''} ${chu(v)}`.trim()
   if (!tho) return { link: null }
-  const m = tho.match(/(?:https?:\/\/)?(?:www\.)?zalo\.me\/\S+/i)
+  if (/(?:javascript|data|vbscript):/i.test(tho)) {
+    return { link: null, loi: 'Link nhóm Zalo chứa đường dẫn không an toàn' }
+  }
+  // Chỉ nhận host zalo.me ở đầu hoặc sau khoảng trắng/ngoặc mở để không dính domain giả mạo kiểu evil.com/zalo.me/...
+  const m = tho.match(/(?:^|[\s(["'<])((?:https?:\/\/)?(?:www\.)?zalo\.me\/[^\s"'<>]+)/i)
   if (!m) return { link: null, loi: `"${tho.slice(0, 40)}" không có link nhóm Zalo (https://zalo.me/…)` }
-  return { link: 'https://zalo.me/' + m[0].replace(/^(?:https?:\/\/)?(?:www\.)?zalo\.me\//i, '') }
+  const sach = m[1].replace(/[.,;:!?)\]"'>]+$/, '')
+  const duong = sach.replace(/^(?:https?:\/\/)?(?:www\.)?zalo\.me\//i, '')
+  if (!duong) return { link: null, loi: `"${tho.slice(0, 40)}" thiếu đường dẫn nhóm Zalo` }
+  return { link: `https://zalo.me/${duong}` }
 }
 
-/** Tiền: số, hoặc chữ kiểu "150.000" / "150,000 đ". */
+/** Tiền: số nguyên không âm, hoặc chữ kiểu "150.000" / "150,000 đ". Chặn số thập phân ("150.5") và chữ lẫn số ("abc 123"). */
 export function chuanTien(v: unknown, ten: string, batBuoc: boolean): { so: number | null; loi?: string } {
-  if (typeof v === 'number') return v < 0 || !Number.isInteger(v) ? { so: null, loi: `${ten} không hợp lệ` } : { so: v }
+  if (typeof v === 'number') {
+    return !Number.isFinite(v) || v < 0 || !Number.isInteger(v) ? { so: null, loi: `${ten} không hợp lệ` } : { so: v }
+  }
   const tho = chu(v)
   if (!tho) return batBuoc ? { so: null, loi: `Thiếu ${ten.toLowerCase()}` } : { so: null }
   if (tho.includes('-')) return { so: null, loi: `${ten} không được âm` }
-  const s = tho.replace(/[^\d]/g, '')
-  if (!s) return { so: null, loi: `${ten} "${tho}" không phải số` }
-  return { so: Number(s) }
+  const sach = tho.replace(/\s*(?:vn[dđ]|đồng|đ)\.?$/i, '').trim()
+  const hopLe = /^(?:\d+|\d{1,3}(?:\.\d{3})+|\d{1,3}(?:,\d{3})+|\d{1,3}(?: \d{3})+)$/.test(sach)
+  if (!hopLe) return { so: null, loi: `${ten} "${tho}" không phải số nguyên hợp lệ` }
+  const so = Number(sach.replace(/\D/g, ''))
+  if (!Number.isSafeInteger(so)) return { so: null, loi: `${ten} "${tho}" không hợp lệ` }
+  return { so }
 }
 
-/** Ngày: ô ngày của Excel, số serial, hoặc chữ dd/mm/yyyy. Trống = hôm nay. */
+/** Ngày: ô ngày của Excel, số serial, hoặc chữ dd/mm/yyyy (năm 2000–2100). Trống = hôm nay. */
 export function chuanNgay(v: unknown, homNay: string): { ngay: string | null; loi?: string } {
-  if (v instanceof Date) return { ngay: v.toISOString().slice(0, 10) }
-  if (typeof v === 'number') return { ngay: new Date(Date.UTC(1899, 11, 30) + v * 86400000).toISOString().slice(0, 10) }
+  if (v instanceof Date) {
+    if (Number.isNaN(v.getTime())) return { ngay: null, loi: 'Ngày vào học không hợp lệ' }
+    const y = v.getUTCFullYear()
+    if (y < 2000 || y > 2100) return { ngay: null, loi: `Ngày vào học năm ${y} phải trong khoảng 2000–2100` }
+    return { ngay: v.toISOString().slice(0, 10) }
+  }
+  if (typeof v === 'number') {
+    if (!Number.isFinite(v)) return { ngay: null, loi: 'Ngày vào học không hợp lệ' }
+    const dt = new Date(Date.UTC(1899, 11, 30) + v * 86400000)
+    if (Number.isNaN(dt.getTime())) return { ngay: null, loi: 'Ngày vào học không hợp lệ' }
+    const y = dt.getUTCFullYear()
+    if (y < 2000 || y > 2100) return { ngay: null, loi: `Ngày vào học năm ${y} phải trong khoảng 2000–2100` }
+    return { ngay: dt.toISOString().slice(0, 10) }
+  }
   const tho = chu(v)
   if (!tho) return { ngay: homNay }
   const m = tho.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})$/)
   if (!m) return { ngay: null, loi: `Ngày vào học "${tho}" phải dạng ngày/tháng/năm` }
   const [d, th, y] = [Number(m[1]), Number(m[2]), Number(m[3])]
+  if (y < 2000 || y > 2100) return { ngay: null, loi: `Ngày vào học "${tho}" phải có năm trong khoảng 2000–2100` }
   const dt = new Date(Date.UTC(y, th - 1, d))
-  if (dt.getUTCDate() !== d || dt.getUTCMonth() !== th - 1) return { ngay: null, loi: `Ngày vào học "${tho}" không có thật` }
+  if (dt.getUTCFullYear() !== y || dt.getUTCDate() !== d || dt.getUTCMonth() !== th - 1) {
+    return { ngay: null, loi: `Ngày vào học "${tho}" không có thật` }
+  }
   return { ngay: dt.toISOString().slice(0, 10) }
 }
 
@@ -138,21 +176,24 @@ export function kiemTra(
     if (!tenSdtCo.has(k)) tenSdtCo.set(k, h)
   }
   const tenCo = new Set(hsCo.map((h) => khoa(h.ho_ten)))
-  const lopCuaHsCo = new Map<string, Set<string>>()
+  const lopDangHocCo = new Map<string, Set<string>>()
+  const lopNgungCo = new Map<string, Set<string>>()
   for (const g of gdCo) {
     const t = idToTenKhoa.get(g.lop_id)
     if (!t) continue
-    if (!lopCuaHsCo.has(g.hoc_sinh_id)) lopCuaHsCo.set(g.hoc_sinh_id, new Set())
-    lopCuaHsCo.get(g.hoc_sinh_id)!.add(t)
+    const dich = g.trang_thai === 'ngung' ? lopNgungCo : lopDangHocCo
+    if (!dich.has(g.hoc_sinh_id)) dich.set(g.hoc_sinh_id, new Set())
+    dich.get(g.hoc_sinh_id)!.add(t)
   }
 
   const lopThemTrongFile = new Map<string, Set<string>>()
+  const moiTheoTen = new Map<string, number>()
   const moiTheoTenSdt = new Map<string, { so: number; lops: Set<string> }>()
   const moiKhongSdt = new Map<string, { so: number; lops: Set<string> }>()
 
   const hss: KqHs[] = hsTho.map((r) => {
     const maRaw = chu(r.maHs)
-    const hoTen = chu(r.hoTen), tenLop = chu(r.lop), kLop = khoa(tenLop)
+    const hoTen = chu(r.hoTen), tenLop = chu(r.lop), kLop = khoa(tenLop), tenK = khoa(hoTen)
     const sdt = chuanSdt(r.sdt), ngay = chuanNgay(r.ngayVao, homNay), link = chuanLinkZalo(r.linkZalo)
     const gia = chuanTien(r.donGia ?? r.donGiaRieng, 'Đơn giá/buổi', false), st = chuanTien(r.sticker, 'Sticker đã có', false)
     const kq: KqHs = {
@@ -169,10 +210,13 @@ export function kiemTra(
     if (maRaw && !maCo.has(khoa(maRaw))) {
       return { ...kq, trangThai: 'loi', loi: `Không tìm thấy Mã HS "${maRaw}" (để trống nếu là học sinh mới)` }
     }
-    const co = maRaw ? maCo.get(khoa(maRaw)) : (sdt.sdt ? tenSdtCo.get(`${khoa(hoTen)}|${sdt.sdt}`) : undefined)
+    const co = maRaw ? maCo.get(khoa(maRaw)) : (sdt.sdt ? tenSdtCo.get(`${tenK}|${sdt.sdt}`) : undefined)
+    if (maRaw && co && khoa(co.ho_ten) !== tenK) {
+      return { ...kq, trangThai: 'loi', loi: `Mã HS "${kq.ma_hs}" là của "${co.ho_ten}", không khớp với "${hoTen}"` }
+    }
     if (co) {
       const capNhat = link.link && link.link !== co.link_zalo ? { capNhatLink: co.id } : {}
-      if (lopCuaHsCo.get(co.id)?.has(kLop)) {
+      if (lopDangHocCo.get(co.id)?.has(kLop)) {
         return capNhat.capNhatLink
           ? { ...kq, trangThai: 'da_co', ...capNhat, loi: 'Sẽ cập nhật link nhóm Zalo' }
           : { ...kq, trangThai: 'da_co' }
@@ -181,17 +225,18 @@ export function kiemTra(
       const daThem = lopThemTrongFile.get(co.id)!
       if (daThem.has(kLop)) return { ...kq, trangThai: 'da_co', loi: 'Trùng với dòng trên trong file' }
       daThem.add(kLop)
+      const batLai = !!lopNgungCo.get(co.id)?.has(kLop)
       return {
-        ...kq, trangThai: 'them_lop', hocSinhId: co.id, ...capNhat,
-        loi: `Thêm vào lớp ${tenLop} cho ${co.ho_ten} (${co.ma_hs})${capNhat.capNhatLink ? ' · cập nhật link Zalo' : ''}`,
+        ...kq, trangThai: 'them_lop', hocSinhId: co.id, ...capNhat, ...(batLai ? { batLai: true } : {}),
+        loi: `${batLai ? 'Cho học lại' : 'Thêm vào'} lớp ${tenLop} cho ${co.ho_ten} (${co.ma_hs})${capNhat.capNhatLink ? ' · cập nhật link Zalo' : ''}`,
       }
     }
 
-    if (!sdt.sdt && tenCo.has(khoa(hoTen))) {
+    if (!sdt.sdt && tenCo.has(tenK)) {
       return { ...kq, trangThai: 'loi', loi: `Đã có em "${hoTen}" trong trung tâm. Ghi Mã HS nếu học thêm lớp, hoặc nhập SĐT phụ huynh nếu là em khác` }
     }
     if (sdt.sdt) {
-      const k = `${khoa(hoTen)}|${sdt.sdt}`
+      const k = `${tenK}|${sdt.sdt}`
       const truoc = moiTheoTenSdt.get(k)
       if (truoc) {
         if (truoc.lops.has(kLop)) return { ...kq, trangThai: 'da_co', loi: 'Trùng với dòng trên trong file' }
@@ -199,14 +244,19 @@ export function kiemTra(
         return { ...kq, trangThai: 'them_lop', gopVoiDong: truoc.so, loi: `Gộp chung học sinh với dòng ${truoc.so}` }
       }
       moiTheoTenSdt.set(k, { so: r.so, lops: new Set([kLop]) })
+      if (!moiTheoTen.has(tenK)) moiTheoTen.set(tenK, r.so)
       return kq
     }
-    const truoc = moiKhongSdt.get(khoa(hoTen))
-    if (truoc) {
-      if (truoc.lops.has(kLop)) return { ...kq, trangThai: 'da_co', loi: 'Trùng với dòng trên trong file' }
-      return { ...kq, trangThai: 'loi', loi: `Trùng tên dòng ${truoc.so} (chưa có SĐT): nhập SĐT phụ huynh nếu là cùng em học nhiều lớp` }
+    const truoc = moiKhongSdt.get(tenK)
+    if (truoc && truoc.lops.has(kLop)) {
+      return { ...kq, trangThai: 'da_co', loi: 'Trùng với dòng trên trong file' }
     }
-    moiKhongSdt.set(khoa(hoTen), { so: r.so, lops: new Set([kLop]) })
+    const dongTrungTen = moiTheoTen.get(tenK)
+    if (dongTrungTen != null) {
+      return { ...kq, trangThai: 'loi', loi: `Trùng tên dòng ${dongTrungTen} (chưa có SĐT): nhập SĐT phụ huynh nếu là cùng em học nhiều lớp hoặc để phân biệt` }
+    }
+    moiKhongSdt.set(tenK, { so: r.so, lops: new Set([kLop]) })
+    moiTheoTen.set(tenK, r.so)
     return kq
   })
   return { lops, hss }
@@ -255,7 +305,7 @@ function tieuDe(ws: ExcelJS.Worksheet, cot: { ten: string; rong: number; batBuoc
 
 const SO_DONG = 500
 
-export async function taiFileMau(lops: Lop[], hss: HocSinh[], gds: GhiDanh[]) {
+export async function taoBufferFileMau(lops: Lop[], hss: HocSinh[], gds: GhiDanh[]): Promise<ArrayBuffer> {
   const { default: Excel } = await import('exceljs')
   const wb = new Excel.Workbook()
 
@@ -311,8 +361,11 @@ export async function taiFileMau(lops: Lop[], hss: HocSinh[], gds: GhiDanh[]) {
     wsHs.getCell(r, 5).numFmt = '@'
   }
 
-  const buf = await wb.xlsx.writeBuffer()
-  taiVe(buf, 'mau-import-lop-hoc-sinh.xlsx')
+  return await wb.xlsx.writeBuffer() as ArrayBuffer
+}
+
+export async function taiFileMau(lops: Lop[], hss: HocSinh[], gds: GhiDanh[]) {
+  taiVe(await taoBufferFileMau(lops, hss, gds), 'mau-import-lop-hoc-sinh.xlsx')
 }
 
 export async function taiDanhSachLoi(lops: KqLop[], hss: KqHs[]) {
