@@ -52,7 +52,7 @@ Tham chiếu nguồn sự thật gốc: `docs/YEU-CAU.md`, `docs/KE-HOACH.md`, `
    - `ALTER TABLE hoc_sinh DROP COLUMN lop_id;` (giữ nguyên `ten_phu_huynh`, `sdt_phu_huynh`, `phu_huynh_id`, `don_gia_rieng` để bảo toàn dữ liệu lịch sử).
 4. **Cập nhật / Thêm RPC:**
    - `phieu_danh_gia(p_ma)` & `gui_danh_gia(...)`: đọc/kiểm học sinh theo lớp qua `ghi_danh` (`gd.trang_thai = 'dang_hoc'`).
-   - `xoa_lop(p_lop, p_ten)`: chỉ xoá `ghi_danh` và dữ liệu buổi của `p_lop`; chỉ xoá `hoc_sinh` (+ gói/phiếu thu/sticker/avatar) với các em **không còn `ghi_danh` ở lớp nào khác**.
+   - `xoa_lop(p_lop, p_ten)`: chỉ xoá `ghi_danh` và dữ liệu buổi của `p_lop`; chỉ xoá `hoc_sinh` (+ gói/phiếu thu/sticker/avatar) với các em **không còn `ghi_danh` ở lớp nào khác**, và đồng bộ `hoc_sinh.trang_thai` cho các em được giữ lại theo các `ghi_danh` còn lại (`dang_hoc` / `ngung`).
    - Thêm `gop_hoc_sinh(p_giu uuid, p_bo uuid) returns text`: `security definer`, chỉ `la_quan_ly()`, chạy trong 1 transaction, gộp `ghi_danh`, `diem_danh`, `sticker_cong_tru`, `goi_hoc`, `chi_phi`, `danh_gia`, cộng `sticker_dau_ky`, điền bù thông tin trống, xoá `p_bo`, trả về `avatar` thừa để client xoá Storage.
 
 ### C. Tác động tới API / Edge Function / Logic thuần
@@ -78,9 +78,9 @@ Tham chiếu nguồn sự thật gốc: `docs/YEU-CAU.md`, `docs/KE-HOACH.md`, `
 1. **Học 2 lớp cùng 1 thứ (khác giờ, VD sáng T7 + chiều T7):** `demBuoiDuKienNhieuLop` cộng tổng theo từng lớp (ra 2 buổi, không gộp theo `Set` ngày); `gopTheoNgay` trên Excel ghi `C+C` và công thức đếm đúng 2 buổi; `LuoiThang` hiện đủ cả 2 buổi khi chạm ô.
 2. **Vào lớp 2 giữa tháng (lệch `ngay_vao`):** Gói tháng tính đủ buổi lớp cũ + các buổi từ `ngay_vao` của lớp mới; `LuoiThang` không báo "chưa điểm danh" cho buổi lớp mới trước `ngay_vao`.
 3. **Ngừng 1 lớp, giữ lớp kia:** Đổi `ghi_danh` của lớp bị ngừng sang `ngung` → ẩn khỏi điểm danh lớp đó, không tính buổi vào gói mới, không báo "chưa điểm danh" sau đó; giữ lịch sử điểm danh cũ & tiền dư lớp nghỉ đã phát sinh.
-4. **Gộp hồ sơ cũ bị chồng gói tháng hoặc dính tháng đã chốt sổ:** Nếu 2 hồ sơ cùng có gói phủ chung tháng hoặc có dữ liệu ở tháng đã chốt sổ → `gop_hoc_sinh` từ chối trong transaction và báo lỗi rõ ràng để giáo viên xử lý gói/mở khoá trước. Nếu cùng `buoi_id` có 2 dòng điểm danh → cộng sticker và ưu tiên `co_mat`/`hoc_bu` hơn `vang`.
+4. **Gộp hồ sơ cũ bị chồng gói tháng hoặc dính tháng đã chốt sổ:** Nếu 2 hồ sơ cùng có gói phủ chung tháng hoặc có điểm danh **trùng cùng buổi không nghỉ** ở tháng đã chốt sổ → `gop_hoc_sinh` từ chối trong transaction và báo lỗi rõ ràng để giáo viên xử lý gói/mở khoá trước. Nếu các buổi ở tháng đã chốt không trùng nhau → vẫn cho phép gộp an toàn (giữ nguyên điểm danh tháng đã chốt, dọn điểm danh rác ở buổi lớp nghỉ, reset `msnhung.dang_gop_hs` về `'0'` trước khi thoát); nếu trùng `buoi_id` ở tháng chưa chốt → cộng sticker và ưu tiên `co_mat`/`hoc_bu` hơn `vang`; giữ đơn giá đang áp dụng của hồ sơ bỏ vào `ghi_danh.don_gia_rieng` khi khác `giu.don_gia` và đồng bộ `hoc_sinh.trang_thai`.
 5. **Hai học sinh khác nhau tình cờ trùng họ tên:** Khác SĐT PH → tách thành 2 `hoc_sinh` riêng (`ma_hs` khác nhau); cùng trống SĐT → nhập tay hỏi xác nhận gộp hay tạo mới, Import Excel báo yêu cầu điền `Mã HS` hoặc `SĐT PH`.
-6. **Xoá lớp (`xoa_lop`) chứa em học nhiều lớp:** Chỉ xoá buổi & `ghi_danh` của lớp bị xoá; giữ nguyên hồ sơ `hoc_sinh`, sticker, gói học ở các lớp còn lại (`khoa_so` vẫn chặn nếu lớp bị xoá có buổi ở tháng đã chốt).
+6. **Xoá lớp (`xoa_lop`) chứa em học nhiều lớp:** Chỉ xoá buổi & `ghi_danh` của lớp bị xoá; giữ nguyên hồ sơ `hoc_sinh`, sticker, gói học ở các lớp còn lại và đồng bộ `hoc_sinh.trang_thai` theo các `ghi_danh` còn lại (`khoa_so` vẫn chặn nếu lớp bị xoá có buổi ở tháng đã chốt).
 7. **Đơn giá `0` (miễn phí) vs để trống:** Giữ nguyên quy tắc 2026-11-21 — ô tiền xoá trắng ra trống, nhập `0` hiện cảnh báo màu đỏ *"0 = em học miễn phí"*, vẫn cho lưu `don_gia = 0`.
 8. **Gỡ hết lớp trong form Sửa học sinh:** Không cho lưu nếu không chọn ít nhất 1 lớp; muốn ngừng hẳn thì đổi trạng thái lớp cuối sang `Ngừng`.
 
@@ -106,8 +106,9 @@ Tham chiếu nguồn sự thật gốc: `docs/YEU-CAU.md`, `docs/KE-HOACH.md`, `
 
 ## 7. Out of Scope (Deferred) & Open Questions
 
-- **Đơn giá cố định & giá riêng ca đặc biệt (bổ sung 2026-11-22, migration `20261124000000_gop_hs_don_gia_rieng.sql`):**
-   - Bổ sung `ghi_danh.don_gia_rieng int check (don_gia_rieng >= 0)` (nullable, mặc định lấy `hoc_sinh.don_gia`) và `goi_hoc.tien_thang jsonb` (lưu tổng học phí từng tháng khi học sinh có lớp áp đơn giá riêng).
-   - Gộp tự động 128 hồ sơ cũ trùng tên thành **65 học sinh** (`127` lượt ghi danh) và áp bảng đơn giá chuẩn trung tâm; riêng các ca 1-1 đặc biệt khác thời lượng (vd `Minh Trang`: `500.000đ` / `1.000.000đ`, `Ngọc Minh`: `400.000đ` / `1.000.000đ`) gắn `ghi_danh.don_gia_rieng = 1.000.000`.
+- **Đơn giá cố định, giá riêng, snapshot gói & các bản vá bảo vệ (bổ sung 2026-11-22..2026-11-23):**
+   - Bổ sung `ghi_danh.don_gia_rieng int check (don_gia_rieng >= 0)` (nullable, mặc định lấy `hoc_sinh.don_gia`), `goi_hoc.tien_thang jsonb` (tổng học phí từng tháng khi học sinh có lớp áp đơn giá riêng), và `goi_hoc.lop_gia jsonb` (snapshot lớp, ngày vào, đơn giá lịch sử của gói).
+   - Bổ sung các ràng buộc/vá an toàn: `ma_hs_tu_stt` không cắt chuỗi khi vượt `999` (`20261125000100`), chặn lưu `goi_hoc` âm (`20261125000400`), `gop_hoc_sinh` giữ đơn giá theo lớp & an toàn với tháng đã chốt (`20261125000300`, `20261125000500`), và `xoa_lop` đồng bộ lại `hoc_sinh.trang_thai` cho học sinh được giữ lại (`20261125000600`).
+   - Gộp tự động 128 hồ sơ cũ trùng tên thành **65 học sinh** (`127` lượt ghi danh) và áp bảng đơn giá chuẩn trung tâm; riêng các ca 1-1 đặc biệt khác thời lượng (vd `Minh Trang` `HS083`: `hoc_sinh.don_gia = 500.000đ` và lớp `1-1 Minh Trang (1)` gắn `ghi_danh.don_gia_rieng = 1.000.000đ`) dùng `don_gia_rieng`, còn `Ngọc Minh` (`HS008`) học miễn phí `hoc_sinh.don_gia = 0đ` (`don_gia_rieng = null` ở cả 2 lớp).
 - **Out of Scope:** Không tách nhiều gói học phí theo từng lớp cho 1 học sinh; không sửa workflow `sao-luu` / `don-anh` hay giao diện theme hồng kim; không quay lại video hướng dẫn.
 - **Open Questions:** Không còn.
