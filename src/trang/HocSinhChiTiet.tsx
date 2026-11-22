@@ -194,7 +194,8 @@ export default function HocSinhChiTiet({ hs, lops, ghiDanh, quayLai }: { hs: Hoc
           }}><a style={{ color: 'red' }}>Xoá</a></Popconfirm> },
         ]} />
         {goi.length > 0 && <div style={{ marginTop: 6, fontSize: 13 }}>
-          Tiền dư còn lại chưa trừ / chưa hoàn: <b>{vnd(duConLaiNhieuLop(goi, buoiDb as BuoiDacBietLop[], dsLopDu, daHoan, thangHetGoi(goi[goi.length - 1])))}</b>
+          {/* chỉ tính tiền dư khả dụng từ các gói đã kết thúc tính tới tháng hiện tại, tránh cộng gói đang học */}
+          Tiền dư còn lại chưa trừ / chưa hoàn: <b>{vnd(duConLaiNhieuLop(goi, buoiDb as BuoiDacBietLop[], dsLopDu, daHoan, dayjs().format('YYYY-MM')))}</b>
         </div>}
 
         <Table size="small" style={{ marginTop: 12 }} rowKey="id" pagination={false} dataSource={phieu} scroll={{ x: true }}
@@ -377,7 +378,17 @@ function ThuTien({ hs, dsLopDangHoc, dsLopDu, ngayVaoMin, goi, phieu, buoiDb, da
             extra={!duCon && 'Chưa có tiền dư: tiền dư chỉ sinh từ buổi lớp nghỉ của gói đã kết thúc. Tiền dư ngoài app (sổ cũ) nhập ở ô Điều chỉnh bằng số âm.'}>
             <InputNumber {...tien} max={truToiDa} disabled={!duCon} />
           </Form.Item>
-          <Form.Item name="dieu_chinh" label="Điều chỉnh (giảm thì nhập số âm)"><InputNumber {...tien} min={undefined} /></Form.Item>
+          <Form.Item name="dieu_chinh" label="Điều chỉnh (giảm thì nhập số âm)"
+            dependencies={['don_gia', 'so_thang', 'thang', 'tien_du_tru']}
+            rules={[{
+              validator: (_, dc) => {
+                const tongThu = tongGoi({
+                  id: '', hoc_sinh_id: hs.id, thang_bat_dau: `${thangBd}-01`, so_thang: soThang, don_gia: donGia,
+                  buoi_du_kien: buoi, tien_thang: tienThang, tien_du_tru: form.getFieldValue('tien_du_tru') ?? 0, dieu_chinh: dc ?? 0,
+                })
+                return tongThu >= 0 ? Promise.resolve() : Promise.reject(new Error('Tổng tiền gói học không được âm'))
+              },
+            }]}><InputNumber {...tien} min={undefined} /></Form.Item>
           {!!v.dieu_chinh && <Form.Item name="ly_do" label="Lý do điều chỉnh" rules={[{ required: true }]}><Input /></Form.Item>}
           <p>
             Buổi dự kiến: {Object.entries(buoi).map(([t, n]) => `T${t.slice(5)}: ${n}`).join(', ')}

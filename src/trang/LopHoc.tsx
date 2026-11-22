@@ -105,9 +105,16 @@ export default function LopHoc() {
       ngay_vao: ngayVao, ghi_chu: v.ghi_chu || null, sticker_dau_ky: v.sticker_dau_ky ?? 0,
     }
     const luu = await q(sb.from('hoc_sinh').insert(ban).select().single()) as HocSinh
-    await q(sb.from('ghi_danh').insert(v.lop_ids.map((lop_id) => ({
-      hoc_sinh_id: luu.id, lop_id, ngay_vao: ngayVao, don_gia_rieng: giaSo(v.gia_rieng?.[lop_id]),
-    }))))
+    // Nếu ghi_danh lỗi sau khi đã insert hoc_sinh, dọn ngay bản ghi hoc_sinh vừa tạo để tránh mồ côi không lớp
+    try {
+      await q(sb.from('ghi_danh').insert(v.lop_ids.map((lop_id) => ({
+        hoc_sinh_id: luu.id, lop_id, ngay_vao: ngayVao, don_gia_rieng: giaSo(v.gia_rieng?.[lop_id]),
+      }))))
+    } catch (loiGd) {
+      const { error: loiXoa } = await sb.from('hoc_sinh').delete().eq('id', luu.id)
+      if (loiXoa) throw new Error(`${(loiGd as Error).message} (chưa dọn được hồ sơ: ${loiXoa.message})`)
+      throw loiGd
+    }
     setSuaHs(null); setTrungHoi(null); tai()
     if (v.anh) {
       try {
@@ -118,6 +125,7 @@ export default function LopHoc() {
   }
 
   const [luuHs, dangLuuHs] = useMotLan(async (v: FormHsGiaTri) => {
+    let daGhi = false
     try {
       const sdt = v.sdt_phu_huynh?.replace(/\D/g, '') || null
       const ngayVao = v.ngay_vao_d.format('YYYY-MM-DD')
@@ -147,6 +155,7 @@ export default function LopHoc() {
           ngay_vao: ngayVao, ghi_chu: v.ghi_chu || null, sticker_dau_ky: v.sticker_dau_ky ?? 0,
         }
         await q(sb.from('hoc_sinh').update(ban).eq('id', suaHs.id))
+        daGhi = true
         for (const g of ghiDanhCanDongBoNgay(cuGds, v.lop_ids, suaHs.ngay_vao, ngayVao)) {
           await q(sb.from('ghi_danh').update({ ngay_vao: ngayVao }).eq('id', g.id))
         }
@@ -192,7 +201,11 @@ export default function LopHoc() {
         return
       }
       await taoHocSinhMoi(v)
-    } catch (e) { message.error((e as Error).message) }
+    } catch (e) {
+      // đồng bộ lại state nếu một phần truy vấn sửa đã ghi xuống DB trước khi gặp lỗi mạng
+      if (daGhi) tai().catch(() => {})
+      message.error((e as Error).message)
+    }
   })
 
   const xoaLop = (l: Partial<Lop>) => {
