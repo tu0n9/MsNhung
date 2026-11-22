@@ -1,5 +1,5 @@
 """Kiểm RLS, khoá sổ và nghiệp vụ học sinh nhiều lớp ở tầng database. Chạy độc lập hoặc sau all.py (tự tạo dữ liệu TEST nếu thiếu)."""
-import http.client, json, os, re, sys, time, urllib.request, urllib.error
+import http.client, json, os, re, sys, time, urllib.request, urllib.error, uuid
 from datetime import date, timedelta
 
 D = os.path.dirname(os.path.abspath(__file__))
@@ -131,6 +131,48 @@ ok("chưa đăng nhập: không đọc được ghi_danh", goi("GET", "/rest/v1/
 ok("phụ huynh: không còn tài khoản phu_huynh đang hoạt động", SV("GET", "/rest/v1/tai_khoan?select=id&vai_tro=eq.phu_huynh&hoat_dong=eq.true") == (200, []))
 ok("tài khoản: admin không tạo được vai trò phu_huynh (403)",
    goi("POST", "/functions/v1/tai-khoan", A, {"hanh_dong": "tao", "vai_tro": "phu_huynh", "ho_ten": "TEST PH", "so_dien_thoai": "0933000003"})[0] == 403)
+
+# --- Guard RBAC: tài khoản phụ huynh & tài khoản bị khoá (hoat_dong = false) ---
+_rbac_uids = []
+try:
+    def _tao_tam(ho_ten, vai_tro, sdt):
+        email = f"test-{uuid.uuid4().hex[:10]}@msnhung.local"
+        mk = "TestRbac123!"
+        c_u, u_res = goi("POST", "/auth/v1/admin/users", S, {"email": email, "password": mk, "email_confirm": True}, key=S)
+        assert c_u in (200, 201), f"tạo auth user tạm lỗi ({c_u}): {u_res}"
+        uid = u_res["id"]
+        _rbac_uids.append(uid)
+        c_tk, tk_res = SV("POST", "/rest/v1/tai_khoan", {
+            "id": uid, "email": email, "ten_dang_nhap": f"test_{uuid.uuid4().hex[:8]}",
+            "so_dien_thoai": sdt, "ho_ten": ho_ten, "vai_tro": vai_tro,
+            "hoat_dong": False, "phai_doi_mat_khau": True, "don_gia_buoi": 0,
+        })
+        assert c_tk == 201, f"tạo tai_khoan tạm lỗi ({c_tk}): {tk_res}"
+        _, tok_res = goi("POST", "/auth/v1/token?grant_type=password", body={"email": email, "password": mk})
+        return uid, tok_res["access_token"]
+
+    ph_sdt_tam = f"0998{uuid.uuid4().int % 1000000:06d}"
+    ph_uid, ph_tok = _tao_tam("TEST Phụ huynh khoá", "phu_huynh", ph_sdt_tam)
+    tg_khoa_sdt = f"0997{uuid.uuid4().int % 1000000:06d}"
+    tg_khoa_uid, tg_khoa_tok = _tao_tam("TEST Trợ giảng khoá", "tro_giang", tg_khoa_sdt)
+
+    ok("phụ huynh: admin gọi dat_lai mật khẩu bị từ chối (403)",
+       goi("POST", "/functions/v1/tai-khoan", A, {"hanh_dong": "dat_lai", "id": ph_uid})[0] == 403)
+    ok("phụ huynh: email_dang_nhap trả None",
+       goi("POST", "/rest/v1/rpc/email_dang_nhap", body={"dinh_danh": ph_sdt_tam}) == (200, None))
+    ok("phụ huynh: tự PATCH tai_khoan hoat_dong=true bị RLS chặn (0 dòng)",
+       goi("PATCH", f"/rest/v1/tai_khoan?id=eq.{ph_uid}", ph_tok, {"hoat_dong": True}, prefer="return=representation") == (200, []))
+    ok("phụ huynh: đọc học sinh ra rỗng",
+       goi("GET", "/rest/v1/hoc_sinh?select=id", ph_tok) == (200, []))
+    ok("tài khoản khoá (hoat_dong=false): email_dang_nhap trả None",
+       goi("POST", "/rest/v1/rpc/email_dang_nhap", body={"dinh_danh": tg_khoa_sdt}) == (200, None))
+    ok("tài khoản khoá: tự PATCH tai_khoan hoat_dong=true bị RLS chặn (0 dòng)",
+       goi("PATCH", f"/rest/v1/tai_khoan?id=eq.{tg_khoa_uid}", tg_khoa_tok, {"hoat_dong": True}, prefer="return=representation") == (200, []))
+    ok("tài khoản khoá: đọc học sinh ra rỗng",
+       goi("GET", "/rest/v1/hoc_sinh?select=id", tg_khoa_tok) == (200, []))
+finally:
+    for _uid in _rbac_uids:
+        goi("DELETE", f"/auth/v1/admin/users/{_uid}", S, key=S)
 ok("trợ giảng: không gọi được hàm tạo tài khoản (403)",
    goi("POST", "/functions/v1/tai-khoan", T, {"hanh_dong": "tao", "vai_tro": "phu_huynh", "ho_ten": "TEST PH", "so_dien_thoai": "0933000003"})[0] == 403)
 ok("trợ giảng: chi_phi ra rỗng", goi("GET", "/rest/v1/chi_phi?select=id", T) == (200, []))
@@ -144,6 +186,12 @@ ok("trợ giảng: không sửa được học sinh (0 dòng)", goi("PATCH", "/r
 _, ds_hs = SV("GET", "/rest/v1/hoc_sinh?select=id,ma_hs,don_gia&ho_ten=like.TEST%20Nguy*B*An")
 hs_id = ds_hs[0]["id"]
 ok("học sinh mới: tự sinh ma_hs (HSxxx) và có don_gia cố định", bool(re.match(r"^HS\d{3,}$", ds_hs[0]["ma_hs"])) and ds_hs[0]["don_gia"] == 100000)
+ok("ma_hs_tu_stt: 1 -> HS001", goi("POST", "/rest/v1/rpc/ma_hs_tu_stt", A, {"n": 1}) == (200, "HS001"))
+ok("ma_hs_tu_stt: 999 -> HS999", goi("POST", "/rest/v1/rpc/ma_hs_tu_stt", A, {"n": 999}) == (200, "HS999"))
+ok("ma_hs_tu_stt: 1000 -> HS1000", goi("POST", "/rest/v1/rpc/ma_hs_tu_stt", A, {"n": 1000}) == (200, "HS1000"))
+ok("ma_hs_tu_stt: 12345 -> HS12345", goi("POST", "/rest/v1/rpc/ma_hs_tu_stt", A, {"n": 12345}) == (200, "HS12345"))
+ok("ma_hs_tu_stt: chưa đăng nhập (anon) bị từ chối", goi("POST", "/rest/v1/rpc/ma_hs_tu_stt", body={"n": 1})[0] >= 400)
+ok("sinh_ma_hs: chưa đăng nhập (anon) bị từ chối", goi("POST", "/rest/v1/rpc/sinh_ma_hs")[0] >= 400)
 _, gd_tg = goi("GET", f"/rest/v1/ghi_danh?select=id,lop_id&hoc_sinh_id=eq.{hs_id}", T)
 ok("ghi_danh: trợ giảng đọc được", bool(gd_tg))
 ok("ghi_danh: trợ giảng không thêm được", goi("POST", "/rest/v1/ghi_danh", T, {"hoc_sinh_id": hs_id, "lop_id": gd_tg[0]["lop_id"]})[0] >= 400)
@@ -155,6 +203,40 @@ _, ds_goi = SV("GET", f"/rest/v1/goi_hoc?select=id,thang_bat_dau,so_thang&hoc_si
 g0 = ds_goi[0]
 c, r = goi("POST", "/rest/v1/goi_hoc", A, {"hoc_sinh_id": hs_id, "thang_bat_dau": thang_sau, "so_thang": 1, "don_gia": 100000, "buoi_du_kien": {thang_sau[:7]: 1}})
 ok(f"gói chồng tháng bị database từ chối (gói có sẵn {g0['thang_bat_dau']} x{g0['so_thang']})", c == 400 and "gói" in json.dumps(r, ensure_ascii=False))
+
+# kiểm tra goi_hoc.lop_gia lưu & đọc được đúng snapshot lớp + giá
+lop_gia_mau = [{"lop_id": gd_tg[0]["lop_id"], "ngay_vao": thang_nay, "don_gia": 150000}]
+c_lg, r_lg = goi("POST", "/rest/v1/goi_hoc", A, {
+    "hoc_sinh_id": hs_id, "thang_bat_dau": "2030-01-01", "so_thang": 1, "don_gia": 150000,
+    "buoi_du_kien": {"2030-01": 4}, "lop_gia": lop_gia_mau,
+}, prefer="return=representation")
+lg_id = r_lg[0]["id"] if c_lg == 201 and r_lg else None
+try:
+    _, doc_lg = goi("GET", f"/rest/v1/goi_hoc?select=lop_gia&id=eq.{lg_id}", A) if lg_id else (0, None)
+    ok("goi_hoc: giáo viên lưu và đọc được cột lop_gia", c_lg == 201 and doc_lg == [{"lop_gia": lop_gia_mau}])
+finally:
+    if lg_id:
+        SV("DELETE", f"/rest/v1/goi_hoc?id=eq.{lg_id}")
+
+# kiểm tra database chặn gói học có tổng tiền âm (tien_du_tru hoặc dieu_chinh âm vượt tổng học phí gốc), vẫn cho phép gói 0đ
+c_am1, r_am1 = goi("POST", "/rest/v1/goi_hoc", A, {
+    "hoc_sinh_id": hs_id, "thang_bat_dau": "2030-02-01", "so_thang": 1, "don_gia": 100000,
+    "buoi_du_kien": {"2030-02": 4}, "tien_du_tru": 1500000,
+}, prefer="return=representation")
+c_am2, r_am2 = goi("POST", "/rest/v1/goi_hoc", A, {
+    "hoc_sinh_id": hs_id, "thang_bat_dau": "2030-03-01", "so_thang": 1, "don_gia": 100000,
+    "buoi_du_kien": {"2030-03": 4}, "dieu_chinh": -500000, "ly_do_dieu_chinh": "TEST giảm quá mức",
+}, prefer="return=representation")
+c_0d, r_0d = goi("POST", "/rest/v1/goi_hoc", A, {
+    "hoc_sinh_id": hs_id, "thang_bat_dau": "2030-04-01", "so_thang": 1, "don_gia": 0,
+    "buoi_du_kien": {"2030-04": 4},
+}, prefer="return=representation")
+try:
+    ok("goi_hoc: chặn gói âm do tien_du_tru vượt học phí gốc (400)", c_am1 == 400)
+    ok("goi_hoc: chặn gói âm do dieu_chinh âm vượt học phí gốc (400)", c_am2 == 400)
+    ok("goi_hoc: cho phép gói 0đ có tổng bằng 0 (201)", c_0d == 201)
+finally:
+    SV("DELETE", f"/rest/v1/goi_hoc?hoc_sinh_id=eq.{hs_id}&thang_bat_dau=gte.2030-02-01")
 
 _, lop_t = SV("GET", "/rest/v1/lop?select=id&ten=eq.TEST%20L%E1%BB%9Bp%20Starters")
 _, buoi11 = SV("GET", f"/rest/v1/buoi_hoc?select=id,lop_nghi&lop_id=eq.{lop_t[0]['id']}&ngay=eq.{HN}&loai=eq.lich")
@@ -298,6 +380,10 @@ ok(f"sticker: tong_sticker đúng ({mong})", tg_a == [{"hoc_sinh_id": hs_id, "to
 _, hs_giu_res = SV("POST", "/rest/v1/hoc_sinh", {"ho_ten": "TEST Gộp Giữ", "don_gia": 100000, "sticker_dau_ky": 2, "ngay_vao": thang_nay, "avatar": "avatar/test-gop-giu.jpg"}, prefer=R)
 _, hs_bo_res = SV("POST", "/rest/v1/hoc_sinh", {"ho_ten": "TEST Gộp Bỏ", "don_gia": 120000, "sticker_dau_ky": 4, "ngay_vao": thang_nay, "avatar": "avatar/test-gop-bo.jpg"}, prefer=R)
 hs_giu, hs_bo = hs_giu_res[0]["id"], hs_bo_res[0]["id"]
+khoa_truoc_gop = SV("GET", "/rest/v1/khoa_so?select=khoa_den")[1][0]["khoa_den"]
+b_chot_1 = SV("POST", "/rest/v1/buoi_hoc", {"lop_id": lop_t[0]["id"], "ngay": "2025-05-10", "loai": "phu", "bat_dau": "07:00", "ket_thuc": "08:30"}, prefer=R)[1][0]["id"]
+b_chot_2 = SV("POST", "/rest/v1/buoi_hoc", {"lop_id": lop_t[0]["id"], "ngay": "2025-05-12", "loai": "phu", "bat_dau": "07:00", "ket_thuc": "08:30"}, prefer=R)[1][0]["id"]
+b_mo = SV("POST", "/rest/v1/buoi_hoc", {"lop_id": lop_t[0]["id"], "ngay": HN, "loai": "phu", "bat_dau": "07:00", "ket_thuc": "08:30"}, prefer=R)[1][0]["id"]
 try:
     SV("POST", "/rest/v1/ghi_danh", {"hoc_sinh_id": hs_giu, "lop_id": lop_t[0]["id"], "ngay_vao": thang_nay, "trang_thai": "dang_hoc"})
     SV("POST", "/rest/v1/ghi_danh", {"hoc_sinh_id": hs_bo, "lop_id": lop_b_id, "ngay_vao": thang_nay, "trang_thai": "dang_hoc"})
@@ -306,18 +392,63 @@ try:
     _, g_giu = SV("POST", "/rest/v1/goi_hoc", {"hoc_sinh_id": hs_giu, "thang_bat_dau": thang_nay, "so_thang": 1, "don_gia": 100000, "buoi_du_kien": {THANG_MA: 4}}, prefer=R)
     _, g_bo = SV("POST", "/rest/v1/goi_hoc", {"hoc_sinh_id": hs_bo, "thang_bat_dau": thang_nay, "so_thang": 1, "don_gia": 120000, "buoi_du_kien": {THANG_MA: 4}}, prefer=R)
     ok("gop_hoc_sinh: trợ giảng bị từ chối", goi("POST", "/rest/v1/rpc/gop_hoc_sinh", T, {"p_giu": hs_giu, "p_bo": hs_bo})[0] == 400)
+    ok("gop_hoc_sinh: từ chối khi p_giu trùng p_bo hoặc thiếu tham số",
+       goi("POST", "/rest/v1/rpc/gop_hoc_sinh", A, {"p_giu": hs_giu, "p_bo": hs_giu})[0] == 400
+       and goi("POST", "/rest/v1/rpc/gop_hoc_sinh", A, {"p_giu": hs_giu, "p_bo": None})[0] == 400)
+    ok("gop_hoc_sinh: từ chối khi UUID không tồn tại",
+       goi("POST", "/rest/v1/rpc/gop_hoc_sinh", A, {"p_giu": hs_giu, "p_bo": "00000000-0000-0000-0000-000000000000"})[0] == 400)
     c_trung, _ = goi("POST", "/rest/v1/rpc/gop_hoc_sinh", A, {"p_giu": hs_giu, "p_bo": hs_bo})
     ok("gop_hoc_sinh: từ chối khi 2 hồ sơ đều có gói chồng tháng", c_trung == 400 and bool(SV("GET", f"/rest/v1/hoc_sinh?select=id&id=eq.{hs_bo}")[1]))
     SV("DELETE", f"/rest/v1/goi_hoc?id=eq.{g_bo[0]['id']}")
+
+    SV("POST", "/rest/v1/diem_danh", [
+        {"buoi_id": b_chot_1, "hoc_sinh_id": hs_giu, "trang_thai": "vang", "sticker": 1},
+        {"buoi_id": b_chot_1, "hoc_sinh_id": hs_bo, "trang_thai": "co_mat", "sticker": 2},
+        {"buoi_id": b_chot_2, "hoc_sinh_id": hs_bo, "trang_thai": "co_mat", "sticker": 1},
+        {"buoi_id": b_mo, "hoc_sinh_id": hs_giu, "trang_thai": "vang", "sticker": 1},
+        {"buoi_id": b_mo, "hoc_sinh_id": hs_bo, "trang_thai": "co_mat", "sticker": 2},
+    ])
+    SV("PATCH", "/rest/v1/khoa_so?id=eq.true", {"khoa_den": "2025-05-01"})
+    c_chot_trung, _ = goi("POST", "/rest/v1/rpc/gop_hoc_sinh", A, {"p_giu": hs_giu, "p_bo": hs_bo})
+    ok("gop_hoc_sinh: từ chối khi 2 hồ sơ có điểm danh trùng buổi ở tháng đã chốt sổ",
+       c_chot_trung == 400 and len(SV("GET", f"/rest/v1/diem_danh?select=hoc_sinh_id&buoi_id=eq.{b_chot_1}")[1]) == 2)
+    if c_chot_trung == 400:
+        SV("PATCH", "/rest/v1/khoa_so?id=eq.true", {"khoa_den": khoa_truoc_gop})
+        SV("DELETE", f"/rest/v1/diem_danh?buoi_id=eq.{b_chot_1}&hoc_sinh_id=eq.{hs_bo}")
+        SV("PATCH", "/rest/v1/khoa_so?id=eq.true", {"khoa_den": "2025-05-01"})
     c_gop, anh_gop = goi("POST", "/rest/v1/rpc/gop_hoc_sinh", A, {"p_giu": hs_giu, "p_bo": hs_bo})
-    _, gds_sau = SV("GET", f"/rest/v1/ghi_danh?select=lop_id&hoc_sinh_id=eq.{hs_giu}")
+    _, gds_sau = SV("GET", f"/rest/v1/ghi_danh?select=lop_id,don_gia_rieng&hoc_sinh_id=eq.{hs_giu}")
+    _, dd_mo = SV("GET", f"/rest/v1/diem_danh?select=trang_thai,sticker&buoi_id=eq.{b_mo}&hoc_sinh_id=eq.{hs_giu}")
+    _, dd_chot = SV("GET", f"/rest/v1/diem_danh?select=buoi_id,sticker&buoi_id=in.({b_chot_1},{b_chot_2})&hoc_sinh_id=eq.{hs_giu}")
     _, tong_gop = SV("GET", f"/rest/v1/tong_sticker?select=tong&hoc_sinh_id=eq.{hs_giu}")
-    ok("gop_hoc_sinh: gộp ghi_danh, sticker (2+4+3+1=10), xoá hồ sơ bỏ & trả avatar thừa",
+    ok("gop_hoc_sinh: gộp qua tháng đã chốt khi không trùng buổi và gộp điểm danh trùng ở tháng mở (co_mat, sticker 1+2=3)",
+       c_gop == 200 and dd_mo == [{"trang_thai": "co_mat", "sticker": 3}] and len(dd_chot) == 2)
+    gd_map_sau = {x["lop_id"]: x["don_gia_rieng"] for x in gds_sau}
+    ok("gop_hoc_sinh: gộp ghi_danh (giữ bo.don_gia=120000 vào don_gia_rieng), sticker (15), xoá hồ sơ bỏ & trả avatar thừa",
        c_gop == 200 and anh_gop == "avatar/test-gop-bo.jpg"
        and not SV("GET", f"/rest/v1/hoc_sinh?select=id&id=eq.{hs_bo}")[1]
-       and {x["lop_id"] for x in gds_sau} == {lop_t[0]["id"], lop_b_id}
-       and tong_gop == [{"tong": 10}])
+       and set(gd_map_sau) == {lop_t[0]["id"], lop_b_id}
+       and gd_map_sau.get(lop_b_id) == 120000 and gd_map_sau.get(lop_t[0]["id"]) is None
+       and tong_gop == [{"tong": 15}])
+    # Kiểm tra đồng bộ hoc_sinh.trang_thai khi các ghi_danh sau gộp đều ngưng học
+    hs_ng_1 = SV("POST", "/rest/v1/hoc_sinh", {"ho_ten": "TEST Gộp Ngưng 1", "don_gia": 100000, "ngay_vao": thang_nay, "trang_thai": "dang_hoc"}, prefer=R)[1][0]["id"]
+    hs_ng_2 = SV("POST", "/rest/v1/hoc_sinh", {"ho_ten": "TEST Gộp Ngưng 2", "don_gia": 120000, "ngay_vao": thang_nay, "trang_thai": "ngung"}, prefer=R)[1][0]["id"]
+    try:
+        SV("POST", "/rest/v1/ghi_danh", [
+            {"hoc_sinh_id": hs_ng_1, "lop_id": lop_t[0]["id"], "ngay_vao": thang_nay, "trang_thai": "ngung"},
+            {"hoc_sinh_id": hs_ng_2, "lop_id": lop_b_id, "ngay_vao": thang_nay, "trang_thai": "ngung"},
+        ])
+        c_ng, _ = goi("POST", "/rest/v1/rpc/gop_hoc_sinh", A, {"p_giu": hs_ng_1, "p_bo": hs_ng_2})
+        _, hs_ng_sau = SV("GET", f"/rest/v1/hoc_sinh?select=trang_thai&id=eq.{hs_ng_1}")
+        ok("gop_hoc_sinh: đồng bộ hoc_sinh.trang_thai='ngung' khi toàn bộ ghi_danh sau gộp đều ngưng",
+           c_ng == 200 and hs_ng_sau == [{"trang_thai": "ngung"}])
+    finally:
+        SV("DELETE", f"/rest/v1/ghi_danh?hoc_sinh_id=in.({hs_ng_1},{hs_ng_2})")
+        SV("DELETE", f"/rest/v1/hoc_sinh?id=in.({hs_ng_1},{hs_ng_2})")
 finally:
+    SV("PATCH", "/rest/v1/khoa_so?id=eq.true", {"khoa_den": khoa_truoc_gop})
+    SV("DELETE", f"/rest/v1/diem_danh?buoi_id=in.({b_chot_1},{b_chot_2},{b_mo})")
+    SV("DELETE", f"/rest/v1/buoi_hoc?id=in.({b_chot_1},{b_chot_2},{b_mo})")
     SV("DELETE", f"/rest/v1/goi_hoc?hoc_sinh_id=in.({hs_giu},{hs_bo})")
     SV("DELETE", f"/rest/v1/sticker_cong_tru?hoc_sinh_id=in.({hs_giu},{hs_bo})")
     SV("DELETE", f"/rest/v1/ghi_danh?hoc_sinh_id=in.({hs_giu},{hs_bo})")
@@ -383,14 +514,18 @@ finally:
     SV("DELETE", f"/rest/v1/nhat_ky_chot_so?id=gt.{nk_cuoi}")
     ok("khoá sổ đã trả về như trước", SV("GET", "/rest/v1/khoa_so?select=khoa_den")[1] == khoa_truoc)
 
-# --- xoa_lop: em học 1 lớp bị xoá sạch mọi bảng; em học 2 lớp được giữ lại ---
+# --- xoa_lop: em học 1 lớp bị xoá sạch mọi bảng; em học 2 lớp được giữ lại và đồng bộ trang_thai ---
 lop_id = lop_st[0]["id"]
 _, hs2_res = SV("POST", "/rest/v1/hoc_sinh", {"ho_ten": "TEST Em Hai Lớp", "don_gia": 100000, "ngay_vao": thang_nay}, prefer=R)
 hs_da_lop = hs2_res[0]["id"]
+_, hs_ng_res = SV("POST", "/rest/v1/hoc_sinh", {"ho_ten": "TEST HS Ngưng Giữ", "don_gia": 100000, "ngay_vao": thang_nay, "trang_thai": "dang_hoc"}, prefer=R)
+hs_ngung_giu = hs_ng_res[0]["id"]
 try:
     SV("POST", "/rest/v1/ghi_danh", [
         {"hoc_sinh_id": hs_da_lop, "lop_id": lop_id, "ngay_vao": thang_nay, "trang_thai": "dang_hoc"},
         {"hoc_sinh_id": hs_da_lop, "lop_id": lop_b_id, "ngay_vao": thang_nay, "trang_thai": "dang_hoc"},
+        {"hoc_sinh_id": hs_ngung_giu, "lop_id": lop_id, "ngay_vao": thang_nay, "trang_thai": "dang_hoc"},
+        {"hoc_sinh_id": hs_ngung_giu, "lop_id": lop_b_id, "ngay_vao": thang_nay, "trang_thai": "ngung"},
     ])
     ok("trợ giảng không xoá được lớp", goi("POST", "/rest/v1/rpc/xoa_lop", T, {"p_lop": lop_id, "p_ten": "TEST Lớp Starters"})[0] == 400)
     _, buoi_st = SV("GET", f"/rest/v1/buoi_hoc?select=id&lop_id=eq.{lop_id}")
@@ -408,9 +543,12 @@ try:
     }
     ok(f"xoá lớp có dữ liệu: sạch mọi bảng với em 1 lớp, trả {len(anh_xoa) if c == 200 else '?'} đường dẫn ảnh",
        c == 200 and not any(con_lai.values()) and len(anh_xoa) >= 2)
-    ok("xoá lớp: em học 2 lớp vẫn giữ nguyên hồ sơ và ghi_danh ở lớp còn lại",
-       bool(SV("GET", f"/rest/v1/hoc_sinh?select=id&id=eq.{hs_da_lop}")[1])
+    ok("xoá lớp: em học 2 lớp vẫn giữ nguyên hồ sơ và ghi_danh ở lớp còn lại (trang_thai='dang_hoc')",
+       SV("GET", f"/rest/v1/hoc_sinh?select=trang_thai&id=eq.{hs_da_lop}")[1] == [{"trang_thai": "dang_hoc"}]
        and SV("GET", f"/rest/v1/ghi_danh?select=lop_id&hoc_sinh_id=eq.{hs_da_lop}")[1] == [{"lop_id": lop_b_id}])
+    ok("xoá lớp: em chỉ còn lớp ngưng giữ lại được đồng bộ hoc_sinh.trang_thai='ngung'",
+       SV("GET", f"/rest/v1/hoc_sinh?select=trang_thai&id=eq.{hs_ngung_giu}")[1] == [{"trang_thai": "ngung"}]
+       and SV("GET", f"/rest/v1/ghi_danh?select=lop_id,trang_thai&hoc_sinh_id=eq.{hs_ngung_giu}")[1] == [{"lop_id": lop_b_id, "trang_thai": "ngung"}])
     _, dg = SV("GET", "/rest/v1/danh_gia?select=lop_id,hoc_sinh_id&ten_lop=eq.TEST%20L%E1%BB%9Bp%20Starters")
     ok("xoá lớp: phiếu đánh giá của lớp vẫn giữ, chỉ bỏ liên kết", len(dg) == 1 and dg[0] == {"lop_id": None, "hoc_sinh_id": None})
     if c == 200 and anh_xoa:
@@ -419,8 +557,8 @@ try:
         except OSError as e:
             print("cảnh báo | chưa xoá được ảnh TEST trên Storage:", e, anh_xoa)
 finally:
-    SV("DELETE", f"/rest/v1/ghi_danh?hoc_sinh_id=eq.{hs_da_lop}")
-    SV("DELETE", f"/rest/v1/hoc_sinh?id=eq.{hs_da_lop}")
+    SV("DELETE", f"/rest/v1/ghi_danh?hoc_sinh_id=in.({hs_da_lop},{hs_ngung_giu})")
+    SV("DELETE", f"/rest/v1/hoc_sinh?id=in.({hs_da_lop},{hs_ngung_giu})")
     SV("DELETE", f"/rest/v1/lop?id=eq.{lop_b_id}")
 
 for k, t in KQ:
