@@ -108,7 +108,7 @@ describe('nhapDuLieu (8c, 8e)', () => {
   })
 
   it('8c & 8e: them_lop bật lại hoc_sinh.trang_thai = dang_hoc và cập nhật ghi_danh khi batLai = true', async () => {
-    const dongBatLai: KqHs & { batLai?: boolean } = {
+    const dongBatLai: KqHs = {
       loai: 'hs', so: 2, trangThai: 'them_lop', ma_hs: 'HS001', ho_ten: 'Trần Khánh Linh', tenLop: 'Starters 1',
       ten_phu_huynh: null, sdt_phu_huynh: null, ngay_vao: '2026-11-15', don_gia: 100000,
       sticker_dau_ky: 0, ghi_chu: null, link_zalo: null, hocSinhId: 'h1', batLai: true,
@@ -133,5 +133,41 @@ describe('nhapDuLieu (8c, 8e)', () => {
     expect(kq.linkMoi).toBe(1)
     expect(state.ghiDanhInserts).toEqual([{ hoc_sinh_id: 'h1', lop_id: 'l1', ngay_vao: '2026-11-15' }])
     expect(state.hocSinhUpdates).toContainEqual({ id: 'h1', body: { trang_thai: 'dang_hoc', link_zalo: 'https://zalo.me/g/moi' } })
+  })
+
+  it('điền bù SĐT & link từ dòng gộp gopVoiDong, không lưu don_gia_rieng và không đếm trùng linkMoi', async () => {
+    const lop2: Lop[] = [
+      ...lopCo,
+      { id: 'l2', ten: 'Movers 2', don_gia: 150000, lich: [2], gio_thu: {}, hoat_dong: true },
+    ]
+    const base: KqHs = {
+      loai: 'hs', so: 2, trangThai: 'moi', ma_hs: null, ho_ten: 'Minh Trang', tenLop: 'Starters 1',
+      ten_phu_huynh: null, sdt_phu_huynh: null, ngay_vao: '2026-11-15', don_gia: 500000,
+      sticker_dau_ky: 0, ghi_chu: null, link_zalo: null,
+    }
+    const gopDong: KqHs = {
+      ...base, so: 3, trangThai: 'them_lop', tenLop: 'Movers 2', sdt_phu_huynh: '0912345678',
+      gopVoiDong: 2, link_zalo: 'https://zalo.me/g/gop',
+    }
+    const cu1: KqHs = {
+      ...base, so: 4, trangThai: 'them_lop', ma_hs: 'HS001', ho_ten: 'Linh', tenLop: 'Movers 2',
+      don_gia: 200000, hocSinhId: 'h1', capNhatLink: 'h1', link_zalo: 'https://zalo.me/g/chung',
+    }
+    const cu2: KqHs = {
+      ...base, so: 5, trangThai: 'da_co', ma_hs: 'HS001', ho_ten: 'Linh', tenLop: 'Starters 1',
+      don_gia: 200000, capNhatLink: 'h1', link_zalo: 'https://zalo.me/g/chung',
+    }
+    const kq = await nhapDuLieu([], [base, gopDong, cu1, cu2], lop2, () => {})
+    expect(kq).toMatchObject({ hsMoi: 1, lopThem: 2, linkMoi: 1, loi: [] })
+    expect(state.ghiDanhInserts).toEqual([
+      { hoc_sinh_id: 'hs-moi-1', lop_id: 'l1', ngay_vao: '2026-11-15' },
+      { hoc_sinh_id: 'hs-moi-1', lop_id: 'l2', ngay_vao: '2026-11-15' },
+      { hoc_sinh_id: 'h1', lop_id: 'l2', ngay_vao: '2026-11-15' },
+    ])
+    expect(state.hocSinhUpdates).toContainEqual({
+      id: 'hs-moi-1',
+      body: { link_zalo: 'https://zalo.me/g/gop', sdt_phu_huynh: '0912345678' },
+    })
+    expect(state.hocSinhUpdates.filter((u) => u.id === 'h1')).toHaveLength(1)
   })
 })

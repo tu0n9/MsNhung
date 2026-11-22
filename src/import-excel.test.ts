@@ -83,23 +83,36 @@ describe('kiemTra', () => {
     expect(hss[4].don_gia).toBe(100000)
   })
 
-  it('học sinh đã có trong DB (khớp Mã HS hoặc Họ tên + SĐT) nhập lớp mới -> them_lop với hocSinhId', () => {
+  it('học sinh đã có trong DB (khớp Họ tên + SĐT hoặc trùng tên duy nhất) nhập lớp mới -> them_lop với hocSinhId và ma_hs từ DB', () => {
     const { hss } = kiemTra([], [
-      hs(2, { maHs: 'hs001', hoTen: 'Trần Khánh Linh', lop: 'Starters 2' }),
+      hs(2, { hoTen: 'Trần Khánh Linh', lop: 'Starters 2', sdt: '0903615240' }),
       hs(3, { hoTen: 'Trần Khánh Linh', lop: 'Starters 2', sdt: '0903615240' }), // lặp lại lớp đã thêm ở dòng 2 -> da_co
-      hs(4, { maHs: 'HS999', hoTen: 'Không tồn tại', lop: 'Starters 1' }),
+      hs(4, { hoTen: 'Lê Văn Mới', lop: 'Starters 1' }),
     ], lopCo, hsCo, gdCo, HOM_NAY)
-    expect(hss.map((h) => h.trangThai)).toEqual(['them_lop', 'da_co', 'loi'])
-    expect(hss[0].hocSinhId).toBe('h1')
-    expect(hss[2].loi).toMatch(/HS999/)
+    expect(hss.map((h) => h.trangThai)).toEqual(['them_lop', 'da_co', 'moi'])
+    expect(hss[0]).toMatchObject({ hocSinhId: 'h1', ma_hs: 'HS001' })
+    expect(hss[1].ma_hs).toBe('HS001')
+    expect(hss[2].ma_hs).toBeNull()
   })
 
-  it('trùng tên nhưng thiếu cả Mã HS lẫn SĐT -> báo lỗi để tránh gộp nhầm 2 người khác nhau', () => {
-    const { hss } = kiemTra([], [
+  it('trùng tên với duy nhất 1 em trong DB dù thiếu SĐT -> tự động gộp lớp; DB có >= 2 em trùng tên khác SĐT thì yêu cầu nhập SĐT', () => {
+    const kqGop = kiemTra([], [
       hs(2, { hoTen: 'Trần Khánh Linh', lop: 'Starters 2', sdt: '' }),
     ], lopCo, hsCo, gdCo, HOM_NAY)
-    expect(hss[0].trangThai).toBe('loi')
-    expect(hss[0].loi).toMatch(/Mã HS/)
+    expect(kqGop.hss[0].trangThai).toBe('them_lop')
+    expect(kqGop.hss[0].hocSinhId).toBe('h1')
+    expect(kqGop.hss[0].ma_hs).toBe('HS001')
+    expect(kqGop.hss[0].don_gia).toBe(120000)
+
+    const haiEmTrungTen = [
+      ...hsCo,
+      { id: 'h2', ma_hs: 'HS002', ho_ten: 'Trần Khánh Linh', don_gia: 150000, sdt_phu_huynh: '0988777666' },
+    ] as HocSinh[]
+    const kqLoi = kiemTra([], [
+      hs(2, { hoTen: 'Trần Khánh Linh', lop: 'Starters 2', sdt: '' }),
+    ], lopCo, haiEmTrungTen, gdCo, HOM_NAY)
+    expect(kqLoi.hss[0].trangThai).toBe('loi')
+    expect(kqLoi.hss[0].loi).toMatch(/SĐT phụ huynh/)
   })
 
   it('học sinh đã có: link khác thì cập nhật, trống hoặc trùng thì giữ; học sinh mới mang link theo; link sai là lỗi', () => {
@@ -130,35 +143,42 @@ describe('kiemTra', () => {
 })
 
 describe('docFile', () => {
-  it('đọc đúng trang Lớp và file Học sinh mẫu mới 10 cột (có Mã HS)', async () => {
+  it('đọc đúng trang Lớp và file Học sinh mẫu mới 9 cột (không có Mã HS)', async () => {
     const wb = new ExcelJS.Workbook()
     const l = wb.addWorksheet('Lớp')
     l.addRow(['Tên lớp *', 'Đơn giá/buổi *', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'])
     l.addRow(['Ví dụ: Movers 2', 120000, '', 'x'])
     l.addRow(['Flyers A', 150000, '8:00-9:30', '', '17:30 – 19:00'])
     const h = wb.addWorksheet('Học sinh')
-    h.addRow(['Mã HS', 'Họ tên *', 'Lớp *', 'Tên phụ huynh', 'SĐT phụ huynh', 'Ngày vào học', 'Đơn giá/buổi', 'Sticker đã có', 'Ghi chú', 'Link nhóm Zalo'])
-    h.addRow(['', 'Ví dụ: Nguyễn Gia Bảo', 'Movers 2'])
+    h.addRow(['Họ tên *', 'Lớp *', 'Tên phụ huynh', 'SĐT phụ huynh', 'Ngày vào học', 'Đơn giá/buổi', 'Sticker đã có', 'Ghi chú', 'Link nhóm Zalo'])
+    h.addRow(['Ví dụ: Nguyễn Gia Bảo', 'Movers 2'])
     h.addRow([])
-    h.addRow(['', 'Đỗ Hải Yến', 'Flyers A', 'Chị Mai', '0911222333', new Date(Date.UTC(2026, 9, 5)), 160000, 4, '', ''])
+    h.addRow(['Đỗ Hải Yến', 'Flyers A', 'Chị Mai', '0911222333', new Date(Date.UTC(2026, 9, 5)), 160000, 4, '', ''])
     const buf = await wb.xlsx.writeBuffer()
     const { lopTho, hsTho } = await docFile(buf as ArrayBuffer)
     expect(lopTho.map((x) => x.so)).toEqual([3])
     expect(hsTho.map((x) => x.so)).toEqual([4])
     const { lops, hss } = kiemTra(lopTho, hsTho, [], [], [], HOM_NAY)
     expect(lops[0]).toMatchObject({ trangThai: 'moi', ten: 'Flyers A', lich: [1, 3], gio_thu: { 1: { bd: '08:00', kt: '09:30' }, 3: { bd: '17:30', kt: '19:00' } } })
-    expect(hss[0]).toMatchObject({ trangThai: 'moi', ngay_vao: '2026-10-05', sdt_phu_huynh: '0911222333', don_gia: 160000, sticker_dau_ky: 4 })
+    expect(hss[0]).toMatchObject({ trangThai: 'moi', ma_hs: null, ngay_vao: '2026-10-05', sdt_phu_huynh: '0911222333', don_gia: 160000, sticker_dau_ky: 4 })
   })
 
-  it('vẫn đọc được file mẫu cũ 9 cột không có Mã HS', async () => {
+  it('vẫn đọc được file mẫu cũ 10 cột có cột Mã HS (bỏ qua Mã HS để DB tự cấp mới hoặc gộp theo tên + SĐT)', async () => {
     const wb = new ExcelJS.Workbook()
     wb.addWorksheet('Lớp').addRow(['Tên lớp *'])
     const h = wb.addWorksheet('Học sinh')
-    h.addRow(['Họ tên *', 'Lớp *', 'Tên phụ huynh', 'SĐT phụ huynh', 'Ngày vào học', 'Đơn giá riêng', 'Sticker đã có', 'Ghi chú', 'Link nhóm Zalo'])
-    h.addRow(['Đỗ Hải Yến', 'Starters 1', 'Chị Mai', '0911222333', new Date(Date.UTC(2026, 9, 5)), '', 4, '', ''])
+    h.addRow(['Mã HS', 'Họ tên *', 'Lớp *', 'Tên phụ huynh', 'SĐT phụ huynh', 'Ngày vào học', 'Đơn giá/buổi', 'Sticker đã có', 'Ghi chú', 'Link nhóm Zalo'])
+    h.addRow(['HS999', '', '', '', '', '', '', '', '', '']) // dòng chỉ có Mã HS rỗng nội dung -> bỏ qua
+    h.addRow(['HS001', 'Đỗ Hải Yến', 'Starters 1', 'Chị Mai', '0911222333', new Date(Date.UTC(2026, 9, 5)), '', 4, '', ''])
+    h.addRow(['HS001', 'Đỗ Hải Yến', 'Starters 2', 'Chị Mai', '', '', '', '', '', ''])
     const { hsTho } = await docFile((await wb.xlsx.writeBuffer()) as ArrayBuffer)
+    expect(hsTho).toHaveLength(2)
     const { hss } = kiemTra([], hsTho, lopCo, [], [], HOM_NAY)
-    expect(hss[0]).toMatchObject({ trangThai: 'moi', ho_ten: 'Đỗ Hải Yến', don_gia: 100000, sdt_phu_huynh: '0911222333' })
+    expect(hss.map((x) => [x.trangThai, x.ma_hs, x.gopVoiDong])).toEqual([
+      ['moi', null, undefined],
+      ['them_lop', null, 3],
+    ])
+    expect(hss[0]).toMatchObject({ ho_ten: 'Đỗ Hải Yến', don_gia: 100000, sdt_phu_huynh: '0911222333' })
   })
 
   it('file thiếu trang thì báo rõ', async () => {
@@ -168,22 +188,37 @@ describe('docFile', () => {
   })
 })
 
-describe('sửa lỗi Bug 8 (8a, 8b, 8c, 8d, 8f, round-trip taiFileMau)', () => {
-  it('8a: dòng 1 có SĐT + dòng 2 cùng tên không SĐT trong cùng file phải báo loi', () => {
-    const { hss } = kiemTra([], [
-      hs(2, { hoTen: 'Phạm Minh An', lop: 'Starters 1', sdt: '0911223344' }),
+describe('sửa lỗi Bug 8 (gộp theo tên, mã HS, bật lại ngung, validate, round-trip taiFileMau)', () => {
+  it('cùng tên không SĐT (kể cả khi dòng 1 có SĐT) tự động gộp thành 1 em; chỉ báo lỗi khi đã tách 2 em khác SĐT', () => {
+    const { hss: gop1 } = kiemTra([], [
+      hs(2, { hoTen: 'Phạm Minh An', lop: 'Starters 1', sdt: '0911223344', donGia: 150000 }),
       hs(3, { hoTen: 'Phạm Minh An', lop: 'Starters 2', sdt: '' }),
     ], lopCo, [], [], HOM_NAY)
-    expect(hss[0].trangThai).toBe('moi')
-    expect(hss[1].trangThai).toBe('loi')
+    expect(gop1[0].trangThai).toBe('moi')
+    expect(gop1[1]).toMatchObject({ trangThai: 'them_lop', gopVoiDong: 2, don_gia: 150000 })
+
+    const { hss: loi2 } = kiemTra([], [
+      hs(2, { hoTen: 'Phạm Minh An', lop: 'Starters 1', sdt: '0911223344', donGia: 150000 }),
+      hs(3, { hoTen: 'Phạm Minh An', lop: 'Starters 1', sdt: '0988777666', donGia: 150000 }),
+      hs(4, { hoTen: 'Phạm Minh An', lop: 'Starters 2', sdt: '' }),
+    ], lopCo, [], [], HOM_NAY)
+    expect(loi2[0].trangThai).toBe('moi')
+    expect(loi2[1].trangThai).toBe('moi')
+    expect(loi2[2].trangThai).toBe('loi')
   })
 
-  it('8b: maHs khớp DB nhưng hoTen khác học sinh của mã đó phải báo loi', () => {
+  it('8b: DB có >= 2 em trùng tên khác SĐT -> nhập đúng SĐT khớp đúng em, không nhập SĐT phải báo lỗi', () => {
+    const haiEm = [
+      ...hsCo,
+      { id: 'h2', ma_hs: 'HS002', ho_ten: 'Trần Khánh Linh', don_gia: 150000, sdt_phu_huynh: '0988777666' },
+    ] as HocSinh[]
     const { hss } = kiemTra([], [
-      hs(2, { maHs: 'HS001', hoTen: 'Nguyễn Văn Sai', lop: 'Starters 2' }),
-    ], lopCo, hsCo, gdCo, HOM_NAY)
-    expect(hss[0].trangThai).toBe('loi')
-    expect(hss[0].loi).toMatch(/HS001/)
+      hs(2, { hoTen: 'Trần Khánh Linh', lop: 'Starters 2', sdt: '0988777666' }),
+      hs(3, { hoTen: 'Trần Khánh Linh', lop: 'Starters 2' }),
+    ], lopCo, haiEm, gdCo, HOM_NAY)
+    expect(hss[0]).toMatchObject({ trangThai: 'them_lop', hocSinhId: 'h2', ma_hs: 'HS002', don_gia: 150000 })
+    expect(hss[1].trangThai).toBe('loi')
+    expect(hss[1].loi).toMatch(/SĐT phụ huynh/)
   })
 
   it('8c: học sinh từng ngung ở lớp cũ khi import lại phải thành them_lop (bật lại)', () => {
@@ -191,10 +226,11 @@ describe('sửa lỗi Bug 8 (8a, 8b, 8c, 8d, 8f, round-trip taiFileMau)', () => 
       { id: 'gd1', hoc_sinh_id: 'h1', lop_id: 'l1', ngay_vao: '2026-10-01', trang_thai: 'ngung' },
     ]
     const { hss } = kiemTra([], [
-      hs(2, { maHs: 'HS001', hoTen: 'Trần Khánh Linh', lop: 'Starters 1', ngayVao: '15/11/2026' }),
+      hs(2, { hoTen: 'Trần Khánh Linh', lop: 'Starters 1', ngayVao: '15/11/2026' }),
     ], lopCo, hsCo, gdNgung, HOM_NAY)
     expect(hss[0].trangThai).toBe('them_lop')
     expect(hss[0].hocSinhId).toBe('h1')
+    expect(hss[0].ma_hs).toBe('HS001')
     expect((hss[0] as { batLai?: boolean }).batLai).toBe(true)
   })
 
@@ -221,7 +257,7 @@ describe('sửa lỗi Bug 8 (8a, 8b, 8c, 8d, 8f, round-trip taiFileMau)', () => 
 
   it('8f: demCongViecImport không đếm trùng dòng them_lop kiêm capNhatLink', () => {
     const { lops, hss } = kiemTra([], [
-      hs(2, { maHs: 'HS001', hoTen: 'Trần Khánh Linh', lop: 'Starters 2', linkZalo: 'https://zalo.me/g/moi' }),
+      hs(2, { hoTen: 'Trần Khánh Linh', lop: 'Starters 2', linkZalo: 'https://zalo.me/g/moi' }),
     ], lopCo, hsCo, gdCo, HOM_NAY)
     expect(hss[0].trangThai).toBe('them_lop')
     expect(hss[0].capNhatLink).toBe('h1')
@@ -243,5 +279,86 @@ describe('sửa lỗi Bug 8 (8a, 8b, 8c, 8d, 8f, round-trip taiFileMau)', () => 
     const { lops, hss } = kiemTra(lopTho, hsTho, lopCo, hsMau, gdCo, HOM_NAY)
     expect(lops.every((l) => l.trangThai === 'da_co' && !l.loi)).toBe(true)
     expect(hss.every((h) => h.trangThai === 'da_co' && !h.loi)).toBe(true)
+  })
+})
+
+describe('đồng bộ logic chuẩn: 1 học phí cố định/HS cho mọi lớp & tự gộp theo Họ tên khi chưa có SĐT', () => {
+  it('taoBufferFileMau tạo đúng 9 cột chuẩn (không có Mã HS), giữ dropdown Lớp ở cột B và 0đ khi round-trip', async () => {
+    const hsDaGia = [
+      { id: 'h1', ma_hs: 'HS001', ho_ten: 'Ngọc Minh', don_gia: 0, sdt_phu_huynh: null, sticker_dau_ky: 0, trang_thai: 'dang_hoc' },
+      { id: 'h2', ma_hs: 'HS002', ho_ten: 'Minh Trang', don_gia: 500000, sdt_phu_huynh: null, sticker_dau_ky: 0, trang_thai: 'dang_hoc' },
+    ] as HocSinh[]
+    const gdsDaGia: GhiDanh[] = [
+      { id: 'g1', hoc_sinh_id: 'h1', lop_id: 'l1', ngay_vao: '2026-10-01', trang_thai: 'dang_hoc' },
+      { id: 'g2', hoc_sinh_id: 'h2', lop_id: 'l1', ngay_vao: '2026-10-01', trang_thai: 'dang_hoc' },
+      { id: 'g3', hoc_sinh_id: 'h2', lop_id: 'l2', ngay_vao: '2026-10-01', trang_thai: 'dang_hoc' },
+    ]
+    const buf = await taoBufferFileMau(lopCo, hsDaGia, gdsDaGia)
+    const wb = new ExcelJS.Workbook()
+    await wb.xlsx.load(buf)
+    const wsHs = wb.getWorksheet('Học sinh')!
+    expect(wsHs.getRow(1).values).toEqual([
+      undefined, 'Họ tên *', 'Lớp *', 'Tên phụ huynh', 'SĐT phụ huynh', 'Ngày vào học', 'Đơn giá/buổi', 'Sticker đã có', 'Ghi chú', 'Link nhóm Zalo',
+    ])
+    expect(wsHs.getCell('B3').dataValidation?.formulae).toEqual(["'Lớp'!$A$2:$A$500"])
+    const { hsTho } = await docFile(buf)
+    expect(hsTho.find((x) => x.hoTen === 'Ngọc Minh')?.donGia).toBe(0)
+    expect(hsTho.filter((x) => x.hoTen === 'Minh Trang').every((x) => x.donGia === 500000)).toBe(true)
+    const { hss } = kiemTra([], hsTho, lopCo, hsDaGia, gdsDaGia, HOM_NAY)
+    expect(hss.every((x) => x.trangThai === 'da_co' && !x.loi && (x.ho_ten !== 'Ngọc Minh' || x.don_gia === 0))).toBe(true)
+  })
+
+  it('cùng tên không SĐT ở nhiều ca/lớp gộp thành 1 HS cố định 1 mức học phí (dữ liệu mẫu Minh Trang 500k, Nhật Duy 150k, Ngọc Minh 0đ)', () => {
+    const { hss } = kiemTra([], [
+      hs(2, { hoTen: 'Minh Trang', lop: 'Starters 1', donGia: 500000 }),
+      hs(3, { hoTen: 'Minh Trang', lop: 'Starters 2', linkZalo: 'https://zalo.me/g/trang' }),
+      hs(4, { hoTen: 'Nhật Duy', lop: 'Starters 1', donGia: 150000 }),
+      hs(5, { hoTen: 'Nhật Duy', lop: 'Starters 2', donGia: 150000 }),
+      hs(6, { hoTen: 'Ngọc Minh', lop: 'Starters 1', donGia: 0 }),
+      hs(7, { hoTen: 'Ngọc Minh', lop: 'Starters 2', donGia: 0 }),
+    ], lopCo, [], [], HOM_NAY)
+    expect(hss.map((x) => [x.trangThai, x.don_gia, x.gopVoiDong])).toEqual([
+      ['moi', 500000, undefined],
+      ['them_lop', 500000, 2],
+      ['moi', 150000, undefined],
+      ['them_lop', 150000, 4],
+      ['moi', 0, undefined],
+      ['them_lop', 0, 6],
+    ])
+    expect(hss[1].link_zalo).toBe('https://zalo.me/g/trang')
+  })
+
+  it('tách thành 2 học sinh khác nhau khi trùng tên nhưng có 2 SĐT khác nhau', () => {
+    const { hss } = kiemTra([], [
+      hs(2, { hoTen: 'Bảo An', lop: 'Starters 1', sdt: '0911111111', donGia: 150000 }),
+      hs(3, { hoTen: 'Bảo An', lop: 'Starters 2', sdt: '0922222222', donGia: 200000 }),
+    ], lopCo, [], [], HOM_NAY)
+    expect(hss.map((x) => [x.trangThai, x.don_gia])).toEqual([
+      ['moi', 150000],
+      ['moi', 200000],
+    ])
+  })
+
+  it('báo lỗi khi dòng thêm lớp ghi đơn giá khác học phí cố định của học sinh (DB hoặc dòng trên)', () => {
+    const hsDb = [
+      { id: 'h10', ma_hs: 'HS010', ho_ten: 'Đỗ Hoàng Thuỳ'.normalize('NFD'), don_gia: 150000, sdt_phu_huynh: '0903 615.240' },
+    ] as HocSinh[]
+    const gdDb: GhiDanh[] = [
+      { id: 'g10', hoc_sinh_id: 'h10', lop_id: 'l1', ngay_vao: '2026-10-01', trang_thai: 'ngung' },
+    ]
+    const { hss } = kiemTra([], [
+      // Khớp DB bằng dấu kiểu mới "Thùy" vs "Thuỳ" + SĐT có dấu cách, bật lại lớp ngừng giữ cố định 150k
+      hs(2, { hoTen: 'Đỗ Hoàng Thùy'.normalize('NFC'), lop: 'Starters 1', sdt: '0903615240' }),
+      // Lớp thứ 2 ghi sai đơn giá -> báo lỗi rõ ràng
+      hs(3, { hoTen: 'Đỗ Hoàng Thuỳ', lop: 'Starters 2', donGia: 200000 }),
+      // Học sinh mới dòng trên 500k nhưng dòng dưới ghi 1.000.000 -> báo lỗi lệch học phí cố định
+      hs(4, { hoTen: 'Minh Trang', lop: 'Starters 1', donGia: 500000 }),
+      hs(5, { hoTen: 'Minh Trang', lop: 'Starters 2', donGia: 1000000 }),
+    ], lopCo, hsDb, gdDb, HOM_NAY)
+    expect(hss[0]).toMatchObject({ trangThai: 'them_lop', batLai: true, hocSinhId: 'h10', don_gia: 150000 })
+    expect(hss[1].trangThai).toBe('loi')
+    expect(hss[1].loi).toMatch(/cố định/)
+    expect(hss[3].trangThai).toBe('loi')
+    expect(hss[3].loi).toMatch(/cố định/)
   })
 })

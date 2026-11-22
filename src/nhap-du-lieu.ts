@@ -12,6 +12,9 @@ export async function nhapDuLieu(lops: KqLop[], hss: KqHs[], lopCo: Lop[], baoTi
   const capNhat = hss.filter((h) => h.trangThai === 'da_co' && h.capNhatLink)
   const { tong } = demCongViecImport(lops, hss)
   const kq: KetQuaNhap = { lopMoi: 0, hsMoi: 0, lopThem: 0, linkMoi: 0, loi: [] }
+  const daCapNhatLink = new Set<string>()
+  const coLinkTheoDong = new Set<number>()
+  const coSdtTheoDong = new Set<number>()
 
   // lớp trước để học sinh xếp được vào lớp mới trong cùng file
   baoTienDo({ xong: 0, tong, dang: 'Đang thêm lớp' })
@@ -43,6 +46,8 @@ export async function nhapDuLieu(lops: KqLop[], hss: KqHs[], lopCo: Lop[], baoTi
         if (loiXoa) throw new Error(`${(loiGd as Error).message} (chưa dọn được hồ sơ: ${loiXoa.message})`)
         throw loiGd
       }
+      if (h.link_zalo) coLinkTheoDong.add(h.so)
+      if (h.sdt_phu_huynh) coSdtTheoDong.add(h.so)
       idHsTheoDong.set(h.so, moi.id)
       kq.hsMoi++
     } catch (e) {
@@ -67,14 +72,31 @@ export async function nhapDuLieu(lops: KqLop[], hss: KqHs[], lopCo: Lop[], baoTi
       }
       // Đồng bộ hoc_sinh.trang_thai = 'dang_hoc' khi thêm/bật lại lớp cho học sinh sẵn có (có thể đang ngưng toàn bộ trước đó)
       if (h.hocSinhId) {
+        const canCapNhatLink = h.capNhatLink === hsId && !daCapNhatLink.has(hsId)
         await q(sb.from('hoc_sinh').update({
           trang_thai: 'dang_hoc',
-          ...(h.capNhatLink === hsId ? { link_zalo: h.link_zalo } : {}),
+          ...(canCapNhatLink ? { link_zalo: h.link_zalo } : {}),
         }).eq('id', hsId))
-        if (h.capNhatLink === hsId) kq.linkMoi++
+        if (canCapNhatLink) { daCapNhatLink.add(hsId); kq.linkMoi++ }
+      } else if (h.gopVoiDong != null) {
+        // Dòng đầu tiên để trống link/SĐT nhưng dòng gộp phía dưới có → điền bù cho hồ sơ vừa tạo
+        const boSung: Record<string, string | null> = {}
+        if (h.link_zalo && !coLinkTheoDong.has(h.gopVoiDong) && !daCapNhatLink.has(hsId)) {
+          boSung.link_zalo = h.link_zalo
+          coLinkTheoDong.add(h.gopVoiDong)
+          daCapNhatLink.add(hsId)
+        }
+        if (h.sdt_phu_huynh && !coSdtTheoDong.has(h.gopVoiDong)) {
+          boSung.sdt_phu_huynh = h.sdt_phu_huynh
+          coSdtTheoDong.add(h.gopVoiDong)
+        }
+        if (Object.keys(boSung).length > 0) {
+          await q(sb.from('hoc_sinh').update(boSung).eq('id', hsId))
+        }
       }
-      if (h.capNhatLink && h.capNhatLink !== hsId) {
+      if (h.capNhatLink && h.capNhatLink !== hsId && !daCapNhatLink.has(h.capNhatLink)) {
         await q(sb.from('hoc_sinh').update({ link_zalo: h.link_zalo }).eq('id', h.capNhatLink))
+        daCapNhatLink.add(h.capNhatLink)
         kq.linkMoi++
       }
       kq.lopThem++
@@ -87,7 +109,9 @@ export async function nhapDuLieu(lops: KqLop[], hss: KqHs[], lopCo: Lop[], baoTi
   for (const [i, h] of capNhat.entries()) {
     baoTienDo({ xong: kq.lopMoi + hsMoi.length + themLop.length + i, tong, dang: `Đang cập nhật link nhóm cho ${h.ho_ten}` })
     try {
+      if (daCapNhatLink.has(h.capNhatLink!)) continue
       await q(sb.from('hoc_sinh').update({ link_zalo: h.link_zalo }).eq('id', h.capNhatLink!))
+      daCapNhatLink.add(h.capNhatLink!)
       kq.linkMoi++
     } catch (e) {
       kq.loi.push({ so: h.so, ten: h.ho_ten, loi: (e as Error).message })

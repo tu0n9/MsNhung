@@ -109,7 +109,7 @@ export default function ImportExcel() {
       ) : !kq ? (
         <>
           <Card size="small" title="1. Tải file mẫu">
-            <p style={{ marginTop: 0, color: MAU.chuPhu }}>File có 3 trang: Hướng dẫn, Lớp (đã điền sẵn các lớp đang có), Học sinh (đã điền sẵn các lượt ghi danh cùng Mã HS). Muốn xếp thêm lớp cho em đã có thì dùng Mã HS hoặc giống hệt Họ tên + SĐT.</p>
+            <p style={{ marginTop: 0, color: MAU.chuPhu }}>File có 3 trang: Hướng dẫn, Lớp (đã điền sẵn các lớp đang có), Học sinh (đã điền sẵn các lượt ghi danh cùng mức Đơn giá/buổi cố định cho mọi lớp). Mã HS được hệ thống tự cấp sau khi nhập. Các dòng cùng Họ tên (khi chưa có SĐT hoặc cùng SĐT phụ huynh) sẽ tự gộp thành 1 học sinh; chỉ tách riêng khi có 2 SĐT khác nhau.</p>
             <Button icon={<DownloadOutlined />} onClick={() => taiFileMau(lopCo, hsCo, gdCo).catch((e) => message.error(e.message))}>Tải file mẫu</Button>
           </Card>
           <Card size="small" title="2. Chọn file đã điền">
