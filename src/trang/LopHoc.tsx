@@ -1,24 +1,26 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Alert, App, AutoComplete, Avatar, Button, Checkbox, Collapse, DatePicker, Form, Input, InputNumber, List, Modal, Popconfirm, Segmented, Select, Space, Tag, Upload } from 'antd'
-import { MinusOutlined, PlusOutlined } from '@ant-design/icons'
+import { Alert, App, AutoComplete, Avatar, Button, Checkbox, Collapse, DatePicker, Empty, Form, Input, InputNumber, List, Modal, Popconfirm, Segmented, Select, Space, Tag, Upload } from 'antd'
+import { ArrowLeftOutlined, FileExcelOutlined, MergeCellsOutlined, MinusOutlined, PlusOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useToi } from '../App'
-import { giaGhiDanh, hsDangHoc, laQuanLy, lopCuaHs, q, sb, taiAnhLen, taiHet, taiTongSticker, THU, urlAnh, useMotLan, type GhiDanh, type HocSinh, type Lop } from '../supabase'
+import { giaGhiDanh, laQuanLy, lopCuaHs, q, sb, taiAnhLen, taiHet, taiTongSticker, THU, urlAnh, useMotLan, type GhiDanh, type HocSinh, type Lop } from '../supabase'
 import { vnd } from '../hoc-phi'
 import { cong2Gio, moTaLich, thieuGio, type GioThu } from '../gio-hoc'
 import { khoa } from '../import-excel'
-import { coCanHienGiaRieng, conHocSauSua, ghiDanhCanDongBoNgay, khongDau, locGoiYHocSinh } from '../lop-hoc'
+import { coCanHienGiaRieng, dsHocSinhCoTheThemVaoLop, ghiDanhCanDongBoNgay, khongDau, locGoiYHocSinh, locHocSinh, phanLoaiHocSinh, trangThaiHsSauGhiDanh, trangThaiHsSauSua, type PhanLoaiHs } from '../lop-hoc'
 import { MAU, O_TIEN } from '../giao-dien'
 import HocSinhChiTiet from './HocSinhChiTiet'
 
 type FormHsGiaTri = HocSinh & {
-  lop_ids: string[]
+  lop_ids?: string[]
   gia_rieng?: Record<string, number | null | undefined>
   ngay_vao_d: dayjs.Dayjs
   ngay_vao_lop_moi?: dayjs.Dayjs
   anh?: File
 }
+type ManHinh = 'chon' | 'lop' | 'hs'
+type LocHs = 'tat_ca' | PhanLoaiHs
 const giaSo = (x: unknown): number | null => (typeof x === 'number' && !Number.isNaN(x) ? x : null)
 
 export default function LopHoc() {
@@ -26,17 +28,20 @@ export default function LopHoc() {
   const toi = useToi()
   const ql = laQuanLy(toi.vai_tro)
   const nav = useNavigate()
+  const [man, setMan] = useState<ManHinh>('chon')
   const [lops, setLops] = useState<Lop[]>([])
   const [hs, setHs] = useState<HocSinh[]>([])
   const [gds, setGds] = useState<GhiDanh[]>([])
   const [url, setUrl] = useState<Record<string, string>>({})
   const [suaLop, setSuaLop] = useState<Partial<Lop> | null>(null)
   const [suaHs, setSuaHs] = useState<(Partial<HocSinh> & { lop_ids?: string[] }) | null>(null)
+  const [lopThemHs, setLopThemHs] = useState<Lop | null>(null)
   const [emDaChon, setEmDaChon] = useState<HocSinh | null>(null)
   const [trungHoi, setTrungHoi] = useState<{ ungVien: HocSinh[]; v: FormHsGiaTri } | null>(null)
   const [moGop, setMoGop] = useState(false)
   const [xem, setXem] = useState<HocSinh | null>(null)
   const [hienNgung, setHienNgung] = useState(false)
+  const [locHs, setLocHs] = useState<LocHs>('tat_ca')
   // thu gọn mọi lớp khi mở trang (14 lớp mở cùng lúc rối mắt); tìm tên thì tự mở các lớp có em đó
   const [mo, setMo] = useState<string[]>([])
   const [tim, setTim] = useState('')
@@ -91,7 +96,9 @@ export default function LopHoc() {
           .eq('hoc_sinh_id', em.id).eq('lop_id', lop_id))
       }
     }
-    await q(sb.from('hoc_sinh').update({ trang_thai: 'dang_hoc' }).eq('id', em.id))
+    if (them.length || batLai.length) {
+      await q(sb.from('hoc_sinh').update({ trang_thai: 'dang_hoc' }).eq('id', em.id))
+    }
     setSuaHs(null); setTrungHoi(null)
     message.success(them.length || batLai.length ? `Đã gộp thêm lớp vào học sinh ${em.ho_ten} (${em.ma_hs})` : `${em.ho_ten} (${em.ma_hs}) đã có trong các lớp này`)
     tai()
@@ -100,22 +107,26 @@ export default function LopHoc() {
   const taoHocSinhMoi = async (v: FormHsGiaTri) => {
     const sdt = v.sdt_phu_huynh?.replace(/\D/g, '') || null
     const ngayVao = v.ngay_vao_d.format('YYYY-MM-DD')
+    const lopIds = v.lop_ids ?? []
     const ban = {
       ho_ten: v.ho_ten.trim(), don_gia: v.don_gia, ten_phu_huynh: v.ten_phu_huynh || null, sdt_phu_huynh: sdt,
       ngay_vao: ngayVao, ghi_chu: v.ghi_chu || null, sticker_dau_ky: v.sticker_dau_ky ?? 0,
     }
     const luu = await q(sb.from('hoc_sinh').insert(ban).select().single()) as HocSinh
-    // Nếu ghi_danh lỗi sau khi đã insert hoc_sinh, dọn ngay bản ghi hoc_sinh vừa tạo để tránh mồ côi không lớp
-    try {
-      await q(sb.from('ghi_danh').insert(v.lop_ids.map((lop_id) => ({
-        hoc_sinh_id: luu.id, lop_id, ngay_vao: ngayVao, don_gia_rieng: giaSo(v.gia_rieng?.[lop_id]),
-      }))))
-    } catch (loiGd) {
-      const { error: loiXoa } = await sb.from('hoc_sinh').delete().eq('id', luu.id)
-      if (loiXoa) throw new Error(`${(loiGd as Error).message} (chưa dọn được hồ sơ: ${loiXoa.message})`)
-      throw loiGd
+    if (lopIds.length) {
+      // Nếu ghi_danh lỗi sau khi đã insert hoc_sinh, dọn ngay bản ghi hoc_sinh vừa tạo để tránh nửa vời
+      try {
+        await q(sb.from('ghi_danh').insert(lopIds.map((lop_id) => ({
+          hoc_sinh_id: luu.id, lop_id, ngay_vao: ngayVao, don_gia_rieng: giaSo(v.gia_rieng?.[lop_id]),
+        }))))
+      } catch (loiGd) {
+        const { error: loiXoa } = await sb.from('hoc_sinh').delete().eq('id', luu.id)
+        if (loiXoa) throw new Error(`${(loiGd as Error).message} (chưa dọn được hồ sơ: ${loiXoa.message})`)
+        throw loiGd
+      }
     }
     setSuaHs(null); setTrungHoi(null); tai()
+    message.success(lopIds.length ? `Đã thêm học sinh ${luu.ho_ten} (${luu.ma_hs})` : `Đã thêm hồ sơ ${luu.ho_ten} (${luu.ma_hs}) · Chưa xếp lớp`)
     if (v.anh) {
       try {
         const duong = await taiAnhLen(`avatar/${luu.id}-${Date.now()}.jpg`, v.anh, 400)
@@ -129,19 +140,20 @@ export default function LopHoc() {
     try {
       const sdt = v.sdt_phu_huynh?.replace(/\D/g, '') || null
       const ngayVao = v.ngay_vao_d.format('YYYY-MM-DD')
+      const lopIds = v.lop_ids ?? []
       if (suaHs?.id) {
         const cuGds = lopCuaHs(gds, suaHs.id)
         const cu = cuGds.map((x) => x.lop_id)
-        const them = v.lop_ids.filter((id) => !cu.includes(id))
-        const bo = cu.filter((id) => !v.lop_ids.includes(id))
+        const them = lopIds.filter((id) => !cu.includes(id))
+        const bo = cu.filter((id) => !lopIds.includes(id))
         // Bỏ tick lớp sẽ xoá ghi_danh khỏi lớp đó → bắt buộc hỏi xác nhận trước khi ghi DB
         if (bo.length) {
           const tenBo = bo.map((id) => lopMap.get(id)?.ten ?? id).join(', ')
           const xacNhan = await new Promise<boolean>((resolve) => {
             modal.confirm({
               title: `Gỡ ${v.ho_ten.trim()} khỏi ${bo.length} lớp?`,
-              content: `Sẽ xoá ghi danh khỏi lớp: ${tenBo}. Muốn giữ lịch sử nghỉ học hãy dùng nút "Ngừng" ở danh sách lớp.`,
-              okText: 'Xoá ghi danh',
+              content: `Sẽ gỡ khỏi lớp: ${tenBo} (hồ sơ học sinh vẫn được giữ nguyên). Muốn giữ lịch sử nghỉ học hãy dùng nút "Ngừng" ở danh sách lớp.`,
+              okText: 'Gỡ khỏi lớp',
               okButtonProps: { danger: true },
               cancelText: 'Quay lại',
               onOk: () => resolve(true),
@@ -156,7 +168,7 @@ export default function LopHoc() {
         }
         await q(sb.from('hoc_sinh').update(ban).eq('id', suaHs.id))
         daGhi = true
-        for (const g of ghiDanhCanDongBoNgay(cuGds, v.lop_ids, suaHs.ngay_vao, ngayVao)) {
+        for (const g of ghiDanhCanDongBoNgay(cuGds, lopIds, suaHs.ngay_vao, ngayVao)) {
           await q(sb.from('ghi_danh').update({ ngay_vao: ngayVao }).eq('id', g.id))
         }
         if (them.length) {
@@ -167,13 +179,13 @@ export default function LopHoc() {
         }
         if (bo.length) await q(sb.from('ghi_danh').delete().eq('hoc_sinh_id', suaHs.id).in('lop_id', bo))
         for (const g of cuGds) {
-          if (!v.lop_ids.includes(g.lop_id)) continue
+          if (!lopIds.includes(g.lop_id)) continue
           const gr = giaSo(v.gia_rieng?.[g.lop_id])
           if ((g.don_gia_rieng ?? null) !== gr) {
             await q(sb.from('ghi_danh').update({ don_gia_rieng: gr }).eq('id', g.id))
           }
         }
-        const trangThaiMoi = conHocSauSua(cuGds, v.lop_ids) ? 'dang_hoc' : 'ngung'
+        const trangThaiMoi = trangThaiHsSauSua(cuGds, lopIds)
         if (trangThaiMoi !== suaHs.trang_thai) {
           await q(sb.from('hoc_sinh').update({ trang_thai: trangThaiMoi }).eq('id', suaHs.id))
         }
@@ -188,12 +200,12 @@ export default function LopHoc() {
       }
 
       // Nếu cô đã chọn học sinh có sẵn trong danh sách gợi ý -> gộp lớp thẳng vào hồ sơ đó
-      if (emDaChon) return await gopLopVaoEm(emDaChon, v.lop_ids, ngayVao, v.gia_rieng)
+      if (emDaChon) return await gopLopVaoEm(emDaChon, lopIds, ngayVao, v.gia_rieng)
 
-      // Luồng thêm mới: trùng Họ tên + SĐT -> gộp luôn vào học sinh sẵn có; chỉ trùng Họ tên -> hỏi xác nhận
+      // Luồng thêm mới: trùng Họ tên + SĐT (và có chọn lớp) -> gộp luôn; trùng Họ tên -> hỏi xác nhận tránh trùng hồ sơ
       const tenK = khoa(v.ho_ten)
       const trungChinhXac = sdt ? hs.find((x) => khoa(x.ho_ten) === tenK && x.sdt_phu_huynh === sdt) : undefined
-      if (trungChinhXac) return await gopLopVaoEm(trungChinhXac, v.lop_ids, ngayVao, v.gia_rieng)
+      if (trungChinhXac && lopIds.length > 0) return await gopLopVaoEm(trungChinhXac, lopIds, ngayVao, v.gia_rieng)
 
       const trungTen = hs.filter((x) => khoa(x.ho_ten) === tenK)
       if (trungTen.length > 0) {
@@ -209,14 +221,11 @@ export default function LopHoc() {
   })
 
   const xoaLop = (l: Partial<Lop>) => {
-    const dsGd = gds.filter((g) => g.lop_id === l.id)
-    const chiLopNay = dsGd.filter((g) => lopCuaHs(gds, g.hoc_sinh_id).length === 1).length
-    const conLopKhac = dsGd.length - chiLopNay
+    const soHsLop = gds.filter((g) => g.lop_id === l.id).length
     const hop = modal.confirm({
-      title: `Xoá hẳn lớp ${l.ten}?`, okText: 'Xoá hẳn', okButtonProps: { danger: true, disabled: true },
+      title: `Xoá hẳn lớp ${l.ten}?`, okText: 'Xoá lớp', okButtonProps: { danger: true, disabled: true },
       content: <>
-        <p>Xoá luôn {chiLopNay} học sinh chỉ học lớp này{conLopKhac > 0 ? ` (giữ nguyên hồ sơ ${conLopKhac} em còn học lớp khác)` : ''} cùng toàn bộ buổi học, điểm danh, ảnh của lớp. Không lấy
-          lại được trong app (chỉ còn trong bản sao lưu đêm). Lớp có dữ liệu ở tháng đã chốt sổ thì phải mở khoá tháng đó trước.</p>
+        <p>Xoá lớp cùng toàn bộ buổi học, điểm danh và ảnh buổi của lớp.{soHsLop > 0 ? ` Toàn bộ hồ sơ, gói học và lịch sử thu tiền của ${soHsLop} học sinh vẫn được giữ nguyên ở mục Học sinh (các em không còn lớp nào sẽ chuyển về "Chưa xếp lớp").` : ''} Lớp có dữ liệu ở tháng đã chốt sổ thì phải mở khoá tháng đó trước.</p>
         <Input placeholder="Gõ lại tên lớp để xác nhận" aria-label="Gõ lại tên lớp"
           onChange={(e) => hop.update({ okButtonProps: { danger: true, disabled: e.target.value.trim() !== l.ten?.trim() } })} />
       </>,
@@ -234,24 +243,28 @@ export default function LopHoc() {
     try {
       const moi = gd.trang_thai === 'ngung' ? 'dang_hoc' : 'ngung'
       await q(sb.from('ghi_danh').update({ trang_thai: moi }).eq('id', gd.id))
-      const conDangHoc = moi === 'dang_hoc' || gds.some((g) => g.hoc_sinh_id === h.id && g.id !== gd.id && g.trang_thai === 'dang_hoc')
-      await q(sb.from('hoc_sinh').update({ trang_thai: conDangHoc ? 'dang_hoc' : 'ngung' }).eq('id', h.id))
+      const conLai = lopCuaHs(gds, h.id).map((g) => (g.id === gd.id ? { ...g, trang_thai: moi as 'dang_hoc' | 'ngung' } : g))
+      await q(sb.from('hoc_sinh').update({ trang_thai: trangThaiHsSauGhiDanh(conLai) }).eq('id', h.id))
     } catch (e) { return message.error((e as Error).message) }
     tai()
   }
 
-  const xoaKhoiLop = async (h: HocSinh, gd: GhiDanh) => {
+  // Ở màn Quản lý Lớp: chỉ gỡ học sinh khỏi lớp này, KHÔNG xoá hồ sơ gốc (nếu hết lớp sẽ chuyển về "Chưa xếp lớp")
+  const goKhoiLop = async (h: HocSinh, gd: GhiDanh) => {
     try {
-      const tatCaGd = lopCuaHs(gds, h.id)
-      if (tatCaGd.length > 1) {
-        await q(sb.from('ghi_danh').delete().eq('id', gd.id))
-        const conDangHoc = tatCaGd.some((g) => g.id !== gd.id && g.trang_thai === 'dang_hoc')
-        await q(sb.from('hoc_sinh').update({ trang_thai: conDangHoc ? 'dang_hoc' : 'ngung' }).eq('id', h.id))
-        message.success(`Đã gỡ ${h.ho_ten} khỏi lớp này`)
-        tai()
-        return
-      }
-      // kiểm tra dữ liệu trước khi xoá ghi_danh cuối cùng để tránh làm mồ côi hoc_sinh nếu bảng con chặn xoá
+      await q(sb.from('ghi_danh').delete().eq('id', gd.id))
+      const conLai = lopCuaHs(gds, h.id).filter((g) => g.id !== gd.id)
+      await q(sb.from('hoc_sinh').update({ trang_thai: trangThaiHsSauGhiDanh(conLai) }).eq('id', h.id))
+      message.success(conLai.length
+        ? `Đã gỡ ${h.ho_ten} khỏi lớp này`
+        : `Đã gỡ ${h.ho_ten} khỏi lớp · hồ sơ chuyển về mục Học sinh (Chưa xếp lớp)`)
+      tai()
+    } catch (e) { message.error((e as Error).message) }
+  }
+
+  // Ở màn Quản lý Học sinh: xoá hẳn hồ sơ học sinh khi nhập nhầm và chưa có dữ liệu điểm danh / học phí / sticker / chi phí
+  const xoaHoSoHs = async (h: HocSinh) => {
+    try {
       const kq = await Promise.all([
         sb.from('diem_danh').select('hoc_sinh_id', { count: 'exact', head: true }).eq('hoc_sinh_id', h.id),
         sb.from('goi_hoc').select('id', { count: 'exact', head: true }).eq('hoc_sinh_id', h.id),
@@ -260,12 +273,13 @@ export default function LopHoc() {
       ])
       for (const r of kq) if (r.error) throw new Error(r.error.message)
       if (kq.some((r) => (r.count ?? 0) > 0)) {
-        message.error('Học sinh đã có dữ liệu, chỉ chuyển sang "Ngừng học" được')
+        message.error('Học sinh đã có dữ liệu điểm danh hoặc học phí, không thể xoá hẳn (chỉ nên ngừng học trong lớp)')
         return
       }
-      await q(sb.from('ghi_danh').delete().eq('id', gd.id))
+      await q(sb.from('ghi_danh').delete().eq('hoc_sinh_id', h.id))
       await q(sb.from('hoc_sinh').delete().eq('id', h.id))
       if (h.avatar) await sb.storage.from('anh').remove([h.avatar])
+      message.success(`Đã xoá hồ sơ ${h.ho_ten} (${h.ma_hs})`)
       tai()
     } catch (e) { message.error((e as Error).message) }
   }
@@ -309,71 +323,210 @@ export default function LopHoc() {
 
   if (xem) return <HocSinhChiTiet hs={xem} lops={lops} ghiDanh={gds} quayLai={() => { setXem(null); tai() }} />
 
-  // tìm không dấu theo tên hoặc mã HS
+  // Thống kê nhanh cho màn chọn & thanh lọc học sinh
+  const phanLoaiMap = new Map(hs.map((h) => [h.id, phanLoaiHocSinh(h.id, gds)]))
+  const demDangHoc = hs.filter((h) => phanLoaiMap.get(h.id) === 'dang_hoc').length
+  const demChuaXep = hs.filter((h) => phanLoaiMap.get(h.id) === 'chua_xep').length
+  const demNgung = hs.filter((h) => phanLoaiMap.get(h.id) === 'ngung').length
+  const soLopMo = lops.filter((l) => l.hoat_dong).length
+
+  // Tìm kiếm màn Lớp
   const timKhong = khongDau(tim.trim())
   const dsCuaLop = (lopId: string) => gds
     .filter((g) => g.lop_id === lopId && (hienNgung || g.trang_thai === 'dang_hoc'))
     .map((g) => ({ gd: g, h: hsMap.get(g.hoc_sinh_id)! }))
     .filter((x) => x.h && (!timKhong || khongDau(x.h.ho_ten).includes(timKhong) || khongDau(x.h.ma_hs).includes(timKhong)))
     .sort((a, b) => a.h.ho_ten.localeCompare(b.h.ho_ten))
-  const lopTimThay = lops.filter((l) => dsCuaLop(l.id).length > 0)
+  const lopTimThay = lops.filter((l) => khongDau(l.ten).includes(timKhong) || dsCuaLop(l.id).length > 0)
+
+  // Tìm kiếm & lọc màn Học sinh
+  const hsTheoLoc = locHs === 'tat_ca' ? hs : hs.filter((h) => phanLoaiMap.get(h.id) === locHs)
+  const hsHienThi = locHocSinh(hsTheoLoc, tim)
+
+  const quayLaiChon = () => { setMan('chon'); setTim('') }
+
+  const theNutStyle: React.CSSProperties = {
+    cursor: 'pointer',
+    textAlign: 'left',
+    padding: '22px 20px',
+    borderRadius: 16,
+    border: `1px solid ${MAU.vien}`,
+    background: MAU.mat,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 16,
+    width: '100%',
+    color: MAU.chu,
+    transition: 'border-color 0.2s, transform 0.15s',
+  }
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }}>
-      {ql && <Space wrap>
-        <Button icon={<PlusOutlined />} onClick={() => setSuaLop({ lich: [], hoat_dong: true })}>Thêm lớp</Button>
-        <Button icon={<PlusOutlined />} type="primary" disabled={!lops.length} onClick={() => moThemHs()}>Thêm học sinh</Button>
-        <Button onClick={() => nav('/import')}>Import Excel</Button>
-        <Button onClick={() => setMoGop(true)} disabled={hs.length < 2}>Gộp học sinh</Button>
-        <Checkbox checked={hienNgung} onChange={(e) => setHienNgung(e.target.checked)}>Hiện học sinh đã ngừng học</Checkbox>
-      </Space>}
-      <Input.Search allowClear size="large" placeholder="Tìm tên hoặc mã học sinh" aria-label="Tìm tên học sinh" value={tim}
-        onChange={(e) => setTim(e.target.value)} />
-      <Collapse activeKey={timKhong ? lopTimThay.map((l) => l.id) : mo} onChange={(k) => { if (timKhong) return; setMo(k as string[]) }}
-        items={(timKhong ? lopTimThay : lops).map((l) => {
-        const ds = dsCuaLop(l.id)
-        return {
-          key: l.id,
-          label: <Space wrap><b>{l.ten}</b>{l.lich.length > 0 && <span>{moTaLich(l)}</span>}{thieuGio(l) && <Tag color="red">Chưa có giờ</Tag>}
-            {ql && <span>{vnd(l.don_gia)}/buổi</span>}<Tag>{ds.length} HS</Tag>{!l.hoat_dong && <Tag>Ngừng</Tag>}</Space>,
-          extra: ql && <Space size="small" onClick={(e) => e.stopPropagation()}>
-            <Button size="small" onClick={() => moThemHs(l)}>+ HS</Button>
-            <Button size="small" onClick={() => setSuaLop(l)}>Sửa lớp</Button>
-          </Space>,
-          children: <List dataSource={ds} locale={{ emptyText: 'Chưa có học sinh' }} renderItem={({ gd, h }) => {
-            const soLopKhac = lopCuaHs(gds, h.id, true).filter((x) => x.lop_id !== l.id).length
-            const nhieuLop = lopCuaHs(gds, h.id).length > 1
-            return (
-              <List.Item style={{ cursor: 'pointer' }} onClick={() => setXem(h)} actions={ql ? [
-                <a key="s" onClick={(e) => { e.stopPropagation(); setSuaHs(h) }}>Sửa</a>,
-                <Popconfirm key="n" title={gd.trang_thai === 'ngung' ? 'Cho học lại lớp này?' : 'Chuyển sang ngừng học lớp này?'} onConfirm={() => doiTrangThai(h, gd)}>
-                  <a onClick={(e) => e.stopPropagation()}>{gd.trang_thai === 'ngung' ? 'Học lại' : 'Ngừng'}</a></Popconfirm>,
-                <Popconfirm key="x" title={nhieuLop ? `Gỡ ${h.ho_ten} khỏi lớp ${l.ten}? (Vẫn giữ hồ sơ ở lớp khác)` : 'Xoá hẳn? Chỉ xoá được học sinh nhập nhầm, chưa có dữ liệu.'}
-                  onConfirm={() => xoaKhoiLop(h, gd)}>
-                  <a style={{ color: 'red' }} onClick={(e) => e.stopPropagation()}>{nhieuLop ? 'Gỡ' : 'Xoá'}</a></Popconfirm>,
-              ] : []}>
-                <List.Item.Meta
-                  avatar={<Avatar shape="square" size={48} src={h.avatar && url[h.avatar]}>{h.ho_ten.split(' ').pop()?.[0]}</Avatar>}
-                  title={<>
-                    <span>{h.ho_ten}</span> <Tag>{h.ma_hs}</Tag>
-                    {soLopKhac > 0 && <Tag color="blue">+{soLopKhac} lớp</Tag>}
-                    {gd.trang_thai === 'ngung' && <Tag>Ngừng lớp này</Tag>}
-                    <Button size="small" style={{ marginLeft: 4 }} aria-label={`Sticker của ${h.ho_ten}`}
-                      onClick={(e) => { e.stopPropagation(); setHsSticker(h) }}>⭐ {tong[h.id] ?? 0}</Button>
-                  </>}
-                  description={[ql && `${vnd(giaGhiDanh(h, gd))}/buổi${gd.don_gia_rieng != null && gd.don_gia_rieng !== h.don_gia ? ' (giá riêng lớp)' : ''}`,
-                    h.ten_phu_huynh, h.sdt_phu_huynh].filter(Boolean).join(' · ')} />
-              </List.Item>
-            )
-          }} />,
-        }
-      })} />
+    <Space direction="vertical" style={{ width: '100%' }} size={12}>
+      {man === 'chon' && (
+        <>
+          <div>
+            <h2 style={{ margin: '4px 0 4px' }}>Lớp & Học sinh</h2>
+            <div style={{ color: MAU.chuPhu, fontSize: 13 }}>Chọn mục bạn muốn quản lý (tạo lớp và tạo hồ sơ học sinh độc lập, rồi xếp học sinh vào lớp).</div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 14 }}>
+            <button type="button" style={theNutStyle} onClick={() => { setTim(''); setMan('lop') }}>
+              <span style={{ width: 52, height: 52, borderRadius: 14, background: MAU.chinhNhat, color: MAU.chinh, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
+                <TeamOutlined />
+              </span>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 17, fontWeight: 600 }}>Quản lý Lớp học</div>
+                <div style={{ fontSize: 13, color: MAU.chuPhu, marginTop: 4 }}>
+                  {soLopMo} lớp đang mở{lops.length > soLopMo ? ` · ${lops.length} tổng` : ''}
+                </div>
+                <div style={{ fontSize: 12, color: MAU.chuMo, marginTop: 2 }}>Tạo lớp, xếp lịch, thêm hoặc gỡ học sinh khỏi lớp</div>
+              </div>
+            </button>
+
+            <button type="button" style={theNutStyle} onClick={() => { setTim(''); setMan('hs') }}>
+              <span style={{ width: 52, height: 52, borderRadius: 14, background: MAU.xanhNhat, color: MAU.xanh, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24, flexShrink: 0 }}>
+                <UserOutlined />
+              </span>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontSize: 17, fontWeight: 600 }}>Quản lý Học sinh</div>
+                <div style={{ fontSize: 13, color: MAU.chuPhu, marginTop: 4 }}>
+                  {hs.length} học sinh · {demDangHoc} đang học{demChuaXep > 0 ? ` · ${demChuaXep} chưa xếp lớp` : ''}
+                </div>
+                <div style={{ fontSize: 12, color: MAU.chuMo, marginTop: 2 }}>Tạo hồ sơ học sinh, đơn giá cố định, SĐT & xếp lớp</div>
+              </div>
+            </button>
+          </div>
+          {ql && (
+            <Space wrap style={{ marginTop: 4 }}>
+              <Button icon={<FileExcelOutlined />} onClick={() => nav('/import')}>Import từ Excel</Button>
+              <Button icon={<MergeCellsOutlined />} onClick={() => setMoGop(true)} disabled={hs.length < 2}>Gộp học sinh trùng</Button>
+            </Space>
+          )}
+        </>
+      )}
+
+      {man === 'lop' && (
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+            <Space>
+              <Button icon={<ArrowLeftOutlined />} onClick={quayLaiChon}>Quay lại</Button>
+              <h2 style={{ margin: 0, fontSize: 18 }}>Quản lý Lớp học ({lops.length})</h2>
+            </Space>
+            {ql && (
+              <Space wrap>
+                <Button icon={<PlusOutlined />} type="primary" onClick={() => setSuaLop({ lich: [], hoat_dong: true })}>Thêm lớp</Button>
+                <Checkbox checked={hienNgung} onChange={(e) => setHienNgung(e.target.checked)}>Hiện HS đã ngừng</Checkbox>
+              </Space>
+            )}
+          </div>
+          <Input.Search allowClear size="large" placeholder="Tìm tên lớp, tên học sinh hoặc mã HS" aria-label="Tìm lớp hoặc học sinh" value={tim}
+            onChange={(e) => setTim(e.target.value)} />
+          {lops.length === 0 ? (
+            <Empty description="Chưa có lớp học nào" style={{ padding: '24px 0' }}>
+              {ql && <Button type="primary" icon={<PlusOutlined />} onClick={() => setSuaLop({ lich: [], hoat_dong: true })}>Tạo lớp đầu tiên</Button>}
+            </Empty>
+          ) : (
+            <Collapse activeKey={timKhong ? lopTimThay.map((l) => l.id) : mo} onChange={(k) => { if (timKhong) return; setMo(k as string[]) }}
+              items={(timKhong ? lopTimThay : lops).map((l) => {
+                const ds = dsCuaLop(l.id)
+                return {
+                  key: l.id,
+                  label: <Space wrap><b>{l.ten}</b>{l.lich.length > 0 && <span>{moTaLich(l)}</span>}{thieuGio(l) && <Tag color="red">Chưa có giờ</Tag>}
+                    {ql && <span>{vnd(l.don_gia)}/buổi</span>}<Tag>{ds.length} HS</Tag>{!l.hoat_dong && <Tag>Ngừng</Tag>}</Space>,
+                  extra: ql && <Space size="small" onClick={(e) => e.stopPropagation()}>
+                    <Button size="small" type="primary" ghost onClick={() => setLopThemHs(l)}>+ Thêm HS</Button>
+                    <Button size="small" onClick={() => setSuaLop(l)}>Sửa lớp</Button>
+                  </Space>,
+                  children: <List dataSource={ds} locale={{ emptyText: 'Chưa có học sinh trong lớp này' }} renderItem={({ gd, h }) => {
+                    const soLopKhac = lopCuaHs(gds, h.id, true).filter((x) => x.lop_id !== l.id).length
+                    return (
+                      <List.Item style={{ cursor: 'pointer' }} onClick={() => setXem(h)} actions={ql ? [
+                        <a key="s" onClick={(e) => { e.stopPropagation(); setSuaHs(h) }}>Sửa</a>,
+                        <Popconfirm key="n" title={gd.trang_thai === 'ngung' ? 'Cho học lại lớp này?' : 'Chuyển sang ngừng học lớp này?'} onConfirm={() => doiTrangThai(h, gd)}>
+                          <a onClick={(e) => e.stopPropagation()}>{gd.trang_thai === 'ngung' ? 'Học lại' : 'Ngừng'}</a></Popconfirm>,
+                        <Popconfirm key="x" title={`Gỡ ${h.ho_ten} khỏi lớp ${l.ten}?`}
+                          description="Hồ sơ học sinh & lịch sử học phí vẫn giữ ở mục Học sinh."
+                          onConfirm={() => goKhoiLop(h, gd)}>
+                          <a style={{ color: 'red' }} onClick={(e) => e.stopPropagation()}>Gỡ</a></Popconfirm>,
+                      ] : []}>
+                        <List.Item.Meta
+                          avatar={<Avatar shape="square" size={48} src={h.avatar && url[h.avatar]}>{h.ho_ten.split(' ').pop()?.[0]}</Avatar>}
+                          title={<>
+                            <span>{h.ho_ten}</span> <Tag>{h.ma_hs}</Tag>
+                            {soLopKhac > 0 && <Tag color="blue">+{soLopKhac} lớp</Tag>}
+                            {gd.trang_thai === 'ngung' && <Tag>Ngừng lớp này</Tag>}
+                            <Button size="small" style={{ marginLeft: 4 }} aria-label={`Sticker của ${h.ho_ten}`}
+                              onClick={(e) => { e.stopPropagation(); setHsSticker(h) }}>⭐ {tong[h.id] ?? 0}</Button>
+                          </>}
+                          description={[ql && `${vnd(giaGhiDanh(h, gd))}/buổi${gd.don_gia_rieng != null && gd.don_gia_rieng !== h.don_gia ? ' (giá riêng lớp)' : ''}`,
+                            h.ten_phu_huynh, h.sdt_phu_huynh].filter(Boolean).join(' · ')} />
+                      </List.Item>
+                    )
+                  }} />,
+                }
+              })} />
+          )}
+        </>
+      )}
+
+      {man === 'hs' && (
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+            <Space>
+              <Button icon={<ArrowLeftOutlined />} onClick={quayLaiChon}>Quay lại</Button>
+              <h2 style={{ margin: 0, fontSize: 18 }}>Quản lý Học sinh ({hs.length})</h2>
+            </Space>
+            {ql && (
+              <Space wrap>
+                <Button icon={<PlusOutlined />} type="primary" onClick={() => moThemHs()}>Thêm học sinh</Button>
+                <Button icon={<MergeCellsOutlined />} onClick={() => setMoGop(true)} disabled={hs.length < 2}>Gộp trùng</Button>
+              </Space>
+            )}
+          </div>
+          <Segmented value={locHs} onChange={(v) => setLocHs(v as LocHs)} options={[
+            { value: 'tat_ca', label: `Tất cả (${hs.length})` },
+            { value: 'dang_hoc', label: `Đang học (${demDangHoc})` },
+            { value: 'chua_xep', label: `Chưa xếp lớp (${demChuaXep})` },
+            { value: 'ngung', label: `Đã ngừng (${demNgung})` },
+          ]} />
+          <Input.Search allowClear size="large" placeholder="Tìm theo họ tên, mã HS hoặc SĐT phụ huynh" aria-label="Tìm học sinh" value={tim}
+            onChange={(e) => setTim(e.target.value)} />
+          <List bordered style={{ background: MAU.mat, borderRadius: 12 }} dataSource={hsHienThi}
+            locale={{ emptyText: 'Không có học sinh nào' }} renderItem={(h) => {
+              const loai = phanLoaiMap.get(h.id) ?? 'chua_xep'
+              const dsLopDangHoc = lopCuaHs(gds, h.id, true).map((g) => lopMap.get(g.lop_id)?.ten).filter(Boolean) as string[]
+              const dsLopNgung = lopCuaHs(gds, h.id).filter((g) => g.trang_thai === 'ngung').map((g) => lopMap.get(g.lop_id)?.ten).filter(Boolean) as string[]
+              return (
+                <List.Item style={{ cursor: 'pointer' }} onClick={() => setXem(h)} actions={ql ? [
+                  <a key="s" onClick={(e) => { e.stopPropagation(); setSuaHs(h) }}>{loai === 'chua_xep' ? 'Xếp lớp / Sửa' : 'Sửa'}</a>,
+                  <Popconfirm key="x" title={`Xoá hẳn hồ sơ ${h.ho_ten} (${h.ma_hs})?`}
+                    description="Chỉ xoá được học sinh nhập nhầm, chưa có điểm danh hay phiếu thu."
+                    okText="Xoá hẳn" okButtonProps={{ danger: true }}
+                    onConfirm={() => xoaHoSoHs(h)}>
+                    <a style={{ color: 'red' }} onClick={(e) => e.stopPropagation()}>Xoá</a></Popconfirm>,
+                ] : []}>
+                  <List.Item.Meta
+                    avatar={<Avatar shape="square" size={48} src={h.avatar && url[h.avatar]}>{h.ho_ten.split(' ').pop()?.[0]}</Avatar>}
+                    title={<Space wrap size={4}>
+                      <span>{h.ho_ten}</span>
+                      <Tag>{h.ma_hs}</Tag>
+                      {loai === 'chua_xep' && <Tag color="orange">Chưa xếp lớp</Tag>}
+                      {loai === 'ngung' && <Tag>Đã ngừng{dsLopNgung.length ? ` (${dsLopNgung.join(', ')})` : ''}</Tag>}
+                      {dsLopDangHoc.map((ten) => <Tag key={ten} color="blue">{ten}</Tag>)}
+                      <Button size="small" aria-label={`Sticker của ${h.ho_ten}`}
+                        onClick={(e) => { e.stopPropagation(); setHsSticker(h) }}>⭐ {tong[h.id] ?? 0}</Button>
+                    </Space>}
+                    description={[ql && `${vnd(h.don_gia)}/buổi`, h.ten_phu_huynh, h.sdt_phu_huynh].filter(Boolean).join(' · ')} />
+                </List.Item>
+              )
+            }} />
+        </>
+      )}
 
       <Modal open={!!suaLop} title={suaLop?.id ? 'Sửa lớp' : 'Thêm lớp'} onCancel={() => setSuaLop(null)} footer={null} destroyOnHidden>
         <Form layout="vertical" initialValues={suaLop ? { ...suaLop, gio_thu: gioThuSua(suaLop) } : {}} onFinish={luuLop}>
           <Form.Item name="ten" label="Tên lớp" rules={[{ required: true, whitespace: true }]}><Input /></Form.Item>
           <Form.Item name="don_gia" label="Đơn giá một buổi (đ)" rules={[{ required: true }]}>
-            <InputNumber<number> {...O_TIEN} step={10000} />
+            <InputNumber<number> {...O_TIEN} controls={false} inputMode="numeric" placeholder="Ví dụ: 150,000" />
           </Form.Item>
           <Form.Item name="gio_thu" label="Lịch học trong tuần (giờ bắt đầu → kết thúc)" rules={[{
             validator: (_, v: GioThu = {}) => Object.values(v).every((g) => g.bd && g.kt && g.kt > g.bd) ? Promise.resolve()
@@ -385,6 +538,15 @@ export default function LopHoc() {
         </Form>
       </Modal>
 
+      {lopThemHs && (
+        <ThemHsVaoLopModal
+          lop={lopThemHs} hs={hs} gds={gds} url={url} tenCacLop={tenCacLop}
+          onCancel={() => setLopThemHs(null)}
+          onDone={() => { setLopThemHs(null); tai() }}
+          onTaoMoi={() => { const l = lopThemHs; setLopThemHs(null); moThemHs(l) }}
+        />
+      )}
+
       {hsSticker && <CongTruSticker hs={hsSticker} tong={tong[hsSticker.id] ?? 0} dong={(daLuu) => {
         setHsSticker(null)
         if (daLuu) taiTongSticker().then(setTong).catch((e) => message.error(`Đã lưu nhưng chưa tải lại được tổng: ${e.message}`))
@@ -393,8 +555,8 @@ export default function LopHoc() {
       <Modal open={!!suaHs} title={suaHs?.id ? `Sửa học sinh (${suaHs.ma_hs})` : 'Thêm học sinh'} onCancel={() => setSuaHs(null)} footer={null} destroyOnHidden>
         <Form form={formHs} layout="vertical" onFinish={luuHs}>
           {/* Đặt Các lớp học lên trước Họ tên để dropdown AutoComplete mở xuống không che mất ô chọn lớp */}
-          <Form.Item name="lop_ids" label="Các lớp học" rules={[{ required: true, type: 'array', min: 1, message: 'Chọn ít nhất một lớp' }]}>
-            <Select mode="multiple" placeholder="Chọn một hoặc nhiều lớp"
+          <Form.Item name="lop_ids" label="Các lớp học (không bắt buộc — có thể xếp lớp sau)">
+            <Select mode="multiple" allowClear placeholder={lops.length ? 'Chọn một hoặc nhiều lớp, hoặc để trống' : 'Chưa có lớp nào — sẽ lưu ở mục Chưa xếp lớp'}
               options={lops.map((l) => ({ value: l.id, label: `${l.ten} (${vnd(l.don_gia)})` }))}
               onChange={(ids: string[]) => {
                 if (!suaHs?.id && !emDaChon && formHs.getFieldValue('don_gia') == null && ids.length > 0) {
@@ -429,7 +591,7 @@ export default function LopHoc() {
                     ? <span>Đang chọn học sinh sẵn có <b>{emDaChon.ho_ten}</b> ({emDaChon.ma_hs}) · <Button type="link" size="small" style={{ padding: 0, height: 'auto' }} onClick={boChonEm}>Bỏ chọn · Đổi sang tạo mới</Button></span>
                     : biCat
                       ? `Đang gợi ý ${goiY.length}/${tongGoiY} học sinh — gõ thêm tên, mã HS hoặc SĐT để thu hẹp, hoặc nhập tên mới.`
-                      : laMoi ? 'Không chọn từ danh sách → sẽ tạo hồ sơ học sinh mới.' : 'Gõ tên, mã HS hoặc SĐT để lọc học sinh có sẵn, hoặc nhập tên mới.'}>
+                      : laMoi ? 'Không chọn từ danh sách → sẽ tạo hồ sơ học sinh mới.' : 'Nhập tên học sinh mới, hoặc chọn học sinh sẵn có để gộp lớp.'}>
                   <AutoComplete
                     listHeight={220}
                     popupRender={(menu) => (
@@ -455,7 +617,7 @@ export default function LopHoc() {
                               <Tag style={{ marginInlineEnd: 0, flexShrink: 0 }}>{x.ma_hs}</Tag>
                             </div>
                             <div style={{ fontSize: 12, color: MAU.chuPhu, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                              {[tenCacLop(x.id), vnd(x.don_gia), x.sdt_phu_huynh].filter(Boolean).join(' · ')}
+                              {[tenCacLop(x.id) || 'Chưa xếp lớp', vnd(x.don_gia), x.sdt_phu_huynh].filter(Boolean).join(' · ')}
                             </div>
                           </div>
                         </div>
@@ -482,7 +644,7 @@ export default function LopHoc() {
                         gia_rieng: { ...giaCu, ...giaHienTai },
                       })
                     }}>
-                    <Input placeholder="Nhập tên, mã HS hoặc SĐT..."
+                    <Input placeholder="Nhập tên học sinh..."
                       suffix={emDaChon
                         ? <Tag color="blue" closable style={{ marginInlineEnd: 0 }} onClose={(e) => { e.preventDefault(); boChonEm() }}>{emDaChon.ma_hs}</Tag>
                         : laMoi ? <Tag color="green" style={{ marginInlineEnd: 0 }}>Mới</Tag> : undefined} />
@@ -494,12 +656,12 @@ export default function LopHoc() {
           {khoaHoSo && (
             <Alert type="info" showIcon style={{ marginBottom: 12 }}
               title="Đang gộp lớp vào hồ sơ sẵn có"
-              description="6 mục hồ sơ bên dưới giữ theo hồ sơ cũ (chỉ lưu lớp mới, giá riêng và ngày vào lớp). Muốn sửa thông tin cá nhân hãy bấm Sửa ở danh sách lớp, hoặc Bỏ chọn để tạo mới." />
+              description="6 mục hồ sơ bên dưới giữ theo hồ sơ cũ (chỉ lưu lớp mới, giá riêng và ngày vào lớp). Muốn sửa thông tin cá nhân hãy bấm Sửa ở danh sách, hoặc Bỏ chọn để tạo mới." />
           )}
           <Form.Item noStyle shouldUpdate={(a, b) => a.don_gia !== b.don_gia}>{({ getFieldValue }) => (
             <Form.Item name="don_gia" label="Đơn giá/buổi cố định của học sinh (đ)" rules={[{ required: true, message: 'Nhập đơn giá/buổi' }]}
               extra={khoaHoSo ? 'Giữ theo hồ sơ sẵn có.' : getFieldValue('don_gia') === 0 ? <span style={{ color: MAU.do }}>0 = em học miễn phí.</span> : undefined}>
-              <InputNumber<number> {...O_TIEN} step={10000} disabled={khoaHoSo} />
+              <InputNumber<number> {...O_TIEN} controls={false} inputMode="numeric" placeholder="Ví dụ: 150,000" disabled={khoaHoSo} />
             </Form.Item>
           )}</Form.Item>
           <Form.Item noStyle shouldUpdate={(a, b) => a.lop_ids !== b.lop_ids || a.gia_rieng !== b.gia_rieng}>{({ getFieldValue }) => {
@@ -512,7 +674,7 @@ export default function LopHoc() {
               if (!l) return null
               return (
                 <Form.Item key={id} name={['gia_rieng', id]} label={`Giá riêng lớp ${l.ten} (trống = theo giá học sinh)`}>
-                  <InputNumber<number> {...O_TIEN} step={10000} placeholder="Theo giá học sinh" />
+                  <InputNumber<number> {...O_TIEN} controls={false} inputMode="numeric" placeholder="Theo giá học sinh" />
                 </Form.Item>
               )
             })
@@ -531,8 +693,10 @@ export default function LopHoc() {
         </Form>
       </Modal>
 
-      {trungHoi && <TrungTenModal ungVien={trungHoi.ungVien} tenCacLop={tenCacLop} onCancel={() => setTrungHoi(null)}
-        onGop={(em) => gopLopVaoEm(em, trungHoi.v.lop_ids, trungHoi.v.ngay_vao_d.format('YYYY-MM-DD'), trungHoi.v.gia_rieng).catch((e) => message.error((e as Error).message))}
+      {trungHoi && <TrungTenModal ungVien={trungHoi.ungVien} tenCacLop={tenCacLop}
+        coLop={(trungHoi.v.lop_ids?.length ?? 0) > 0}
+        onCancel={() => setTrungHoi(null)}
+        onGop={(em) => gopLopVaoEm(em, trungHoi.v.lop_ids ?? [], trungHoi.v.ngay_vao_d.format('YYYY-MM-DD'), trungHoi.v.gia_rieng).catch((e) => message.error((e as Error).message))}
         onTaoMoi={() => taoHocSinhMoi(trungHoi.v).catch((e) => message.error((e as Error).message))} />}
 
       {moGop && <GopHocSinhModal hs={hs} gds={gds} lops={lops} tong={tong}
@@ -541,8 +705,111 @@ export default function LopHoc() {
   )
 }
 
-function TrungTenModal({ ungVien, tenCacLop, onCancel, onGop, onTaoMoi }: {
-  ungVien: HocSinh[]; tenCacLop: (id: string) => string; onCancel: () => void; onGop: (em: HocSinh) => Promise<unknown>; onTaoMoi: () => Promise<unknown>
+function ThemHsVaoLopModal({ lop, hs, gds, url, tenCacLop, onCancel, onDone, onTaoMoi }: {
+  lop: Lop; hs: HocSinh[]; gds: GhiDanh[]; url: Record<string, string>; tenCacLop: (id: string) => string
+  onCancel: () => void; onDone: () => void; onTaoMoi: () => void
+}) {
+  const { message } = App.useApp()
+  const [chonIds, setChonIds] = useState<string[]>([])
+  const [tim, setTim] = useState('')
+  const [loc, setLoc] = useState<'tat_ca' | 'chua_xep'>('tat_ca')
+  const [ngayVao, setNgayVao] = useState<dayjs.Dayjs>(dayjs())
+
+  const ungVien = dsHocSinhCoTheThemVaoLop(hs, gds, lop.id)
+  const soChuaXep = ungVien.filter((x) => x.chuaXep).length
+  const dsLoc = loc === 'chua_xep' ? ungVien.filter((x) => x.chuaXep) : ungVien
+  const khopIds = new Set(locHocSinh(dsLoc.map((x) => x.h), tim).map((h) => h.id))
+  const dsHien = dsLoc.filter((x) => khopIds.has(x.h.id))
+
+  const doiChon = (id: string) => {
+    setChonIds((cu) => (cu.includes(id) ? cu.filter((x) => x !== id) : [...cu, id]))
+  }
+
+  const [luu, dangLuu] = useMotLan(async () => {
+    if (!chonIds.length) return
+    try {
+      const ngay = ngayVao.format('YYYY-MM-DD')
+      const tungHocSet = new Set(ungVien.filter((x) => x.tungHoc).map((x) => x.h.id))
+      const themMoi = chonIds.filter((id) => !tungHocSet.has(id))
+      const batLai = chonIds.filter((id) => tungHocSet.has(id))
+      if (themMoi.length) {
+        await q(sb.from('ghi_danh').insert(themMoi.map((hoc_sinh_id) => ({
+          hoc_sinh_id, lop_id: lop.id, ngay_vao: ngay,
+        }))))
+      }
+      for (const hoc_sinh_id of batLai) {
+        await q(sb.from('ghi_danh').update({ trang_thai: 'dang_hoc', ngay_vao: ngay })
+          .eq('hoc_sinh_id', hoc_sinh_id).eq('lop_id', lop.id))
+      }
+      await q(sb.from('hoc_sinh').update({ trang_thai: 'dang_hoc' }).in('id', chonIds))
+      message.success(`Đã thêm ${chonIds.length} học sinh vào lớp ${lop.ten}`)
+      onDone()
+    } catch (e) { message.error((e as Error).message) }
+  })
+
+  return (
+    <Modal open title={`Thêm học sinh vào lớp ${lop.ten}`} onCancel={dangLuu ? undefined : onCancel} width={540}
+      footer={
+        <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+          <Button icon={<PlusOutlined />} onClick={onTaoMoi} disabled={dangLuu}>Tạo học sinh mới</Button>
+          <Space>
+            <Button onClick={onCancel} disabled={dangLuu}>Huỷ</Button>
+            <Button type="primary" loading={dangLuu} disabled={!chonIds.length} onClick={() => luu()}>
+              Thêm {chonIds.length > 0 ? `${chonIds.length} HS` : ''} vào lớp
+            </Button>
+          </Space>
+        </div>
+      }>
+      <Space direction="vertical" style={{ width: '100%' }} size={10}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
+          <Segmented value={loc} onChange={(v) => setLoc(v as 'tat_ca' | 'chua_xep')} options={[
+            { value: 'tat_ca', label: `Tất cả (${ungVien.length})` },
+            { value: 'chua_xep', label: `Chưa xếp lớp (${soChuaXep})` },
+          ]} />
+          <Space size={6}>
+            <span style={{ fontSize: 13, color: MAU.chuPhu }}>Ngày vào:</span>
+            <DatePicker format="DD/MM/YYYY" allowClear={false} value={ngayVao} onChange={(d) => d && setNgayVao(d)} style={{ width: 130 }} />
+          </Space>
+        </div>
+        <Input.Search allowClear placeholder="Tìm tên, mã HS hoặc SĐT để chọn nhanh" value={tim} onChange={(e) => setTim(e.target.value)} />
+        <div style={{ maxHeight: 340, overflowY: 'auto', border: `1px solid ${MAU.vien}`, borderRadius: 10 }}>
+          {dsHien.length === 0 ? (
+            <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={ungVien.length === 0 ? 'Tất cả học sinh đã ở trong lớp này' : 'Không tìm thấy học sinh phù hợp'} style={{ margin: '20px 0' }} />
+          ) : (
+            <List dataSource={dsHien} renderItem={({ h, chuaXep, tungHoc }) => {
+              const daChon = chonIds.includes(h.id)
+              return (
+                <List.Item style={{ cursor: 'pointer', padding: '10px 12px', background: daChon ? MAU.chinhNhat : undefined }}
+                  onClick={() => doiChon(h.id)}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', minWidth: 0 }}>
+                    <Checkbox checked={daChon} onClick={(e) => e.stopPropagation()} onChange={() => doiChon(h.id)} />
+                    <Avatar shape="square" size={36} src={h.avatar && url[h.avatar]} style={{ flexShrink: 0 }}>
+                      {h.ho_ten.split(' ').pop()?.[0]}
+                    </Avatar>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <Space wrap size={4}>
+                        <span style={{ fontWeight: 500 }}>{h.ho_ten}</span>
+                        <Tag style={{ marginInlineEnd: 0 }}>{h.ma_hs}</Tag>
+                        {chuaXep && <Tag color="orange" style={{ marginInlineEnd: 0 }}>Chưa xếp lớp</Tag>}
+                        {tungHoc && <Tag color="default" style={{ marginInlineEnd: 0 }}>Từng học lớp này</Tag>}
+                      </Space>
+                      <div style={{ fontSize: 12, color: MAU.chuPhu, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {[chuaXep ? '' : tenCacLop(h.id), `${vnd(h.don_gia)}/buổi`, h.sdt_phu_huynh].filter(Boolean).join(' · ')}
+                      </div>
+                    </div>
+                  </div>
+                </List.Item>
+              )
+            }} />
+          )}
+        </div>
+      </Space>
+    </Modal>
+  )
+}
+
+function TrungTenModal({ ungVien, tenCacLop, coLop, onCancel, onGop, onTaoMoi }: {
+  ungVien: HocSinh[]; tenCacLop: (id: string) => string; coLop: boolean; onCancel: () => void; onGop: (em: HocSinh) => Promise<unknown>; onTaoMoi: () => Promise<unknown>
 }) {
   const [chon, setChon] = useState(ungVien[0].id)
   const [hanhDong, setHanhDong] = useState<'gop' | 'tao' | null>(null)
@@ -556,13 +823,21 @@ function TrungTenModal({ ungVien, tenCacLop, onCancel, onGop, onTaoMoi }: {
     <Modal open title={`Đã có học sinh tên "${ungVien[0].ho_ten}"`} onCancel={dangXuLy ? undefined : onCancel}
       footer={<Space wrap>
         <Button onClick={onCancel} disabled={dangXuLy}>Thôi</Button>
-        <Button loading={hanhDong === 'tao'} disabled={dangXuLy && hanhDong !== 'tao'} onClick={() => thucHien('tao', onTaoMoi)}>Tạo học sinh mới khác người</Button>
-        <Button type="primary" loading={hanhDong === 'gop'} disabled={dangXuLy && hanhDong !== 'gop'} onClick={() => thucHien('gop', () => onGop(emChon))}>Gộp vào {emChon.ma_hs}</Button>
+        <Button type={coLop ? 'default' : 'primary'} loading={hanhDong === 'tao'} disabled={dangXuLy && hanhDong !== 'tao'} onClick={() => thucHien('tao', onTaoMoi)}>
+          {coLop ? 'Tạo học sinh mới khác người' : 'Vẫn tạo học sinh mới khác người'}
+        </Button>
+        {coLop && (
+          <Button type="primary" loading={hanhDong === 'gop'} disabled={dangXuLy && hanhDong !== 'gop'} onClick={() => thucHien('gop', () => onGop(emChon))}>
+            Gộp vào {emChon.ma_hs}
+          </Button>
+        )}
       </Space>}>
-      <p>Nếu đây là cùng một em học thêm lớp mới, hãy gộp vào hồ sơ sẵn có thay vì tạo thành 2 học sinh khác nhau:</p>
+      <p>{coLop
+        ? 'Nếu đây là cùng một em học thêm lớp mới, hãy gộp vào hồ sơ sẵn có thay vì tạo thành 2 học sinh khác nhau:'
+        : 'Trung tâm đã có hồ sơ trùng tên bên dưới. Hãy kiểm tra trước khi tạo hồ sơ mới để tránh trùng lặp:'}</p>
       <Select style={{ width: '100%' }} value={chon} onChange={setChon} options={ungVien.map((x) => ({
         value: x.id,
-        label: `${x.ho_ten} (${x.ma_hs}) · ${tenCacLop(x.id) || 'Chưa có lớp'}${x.sdt_phu_huynh ? ` · ${x.sdt_phu_huynh}` : ''}`,
+        label: `${x.ho_ten} (${x.ma_hs}) · ${tenCacLop(x.id) || 'Chưa xếp lớp'}${x.sdt_phu_huynh ? ` · ${x.sdt_phu_huynh}` : ''}`,
       }))} />
     </Modal>
   )
@@ -598,7 +873,7 @@ function GopHocSinhModal({ hs, gds, lops, tong, onCancel, onDone }: {
 
   const opts = hs.map((h) => ({
     value: h.id,
-    label: `${h.ho_ten} (${h.ma_hs}) · ${tenLopCua(h.id) || 'Chưa có lớp'} · ${vnd(h.don_gia)}${h.sdt_phu_huynh ? ` · ${h.sdt_phu_huynh}` : ''}`,
+    label: `${h.ho_ten} (${h.ma_hs}) · ${tenLopCua(h.id) || 'Chưa xếp lớp'} · ${vnd(h.don_gia)}${h.sdt_phu_huynh ? ` · ${h.sdt_phu_huynh}` : ''}`,
   }))
 
   return (
@@ -612,7 +887,7 @@ function GopHocSinhModal({ hs, gds, lops, tong, onCancel, onDone }: {
               {nhomTrung.map((nh) => (
                 <Button key={nh[0].id} size="small" style={{ height: 'auto', textAlign: 'left', whiteSpace: 'normal', padding: '4px 8px' }}
                   onClick={() => { setGiuId(nh[0].id); setBoId(nh[1].id) }}>
-                  {nh[0].ho_ten}: {nh.map((x) => `${x.ma_hs} (${tenLopCua(x.id)})`).join(' + ')}
+                  {nh[0].ho_ten}: {nh.map((x) => `${x.ma_hs} (${tenLopCua(x.id) || 'Chưa xếp lớp'})`).join(' + ')}
                 </Button>
               ))}
             </div>} />
@@ -630,7 +905,7 @@ function GopHocSinhModal({ hs, gds, lops, tong, onCancel, onDone }: {
         {giu && bo && (
           <div style={{ padding: 10, borderRadius: 6, background: MAU.nen, border: `1px solid ${MAU.vien}`, fontSize: 13 }}>
             <div><b>Sau khi gộp:</b> {giu.ho_ten} ({giu.ma_hs})</div>
-            <div>Các lớp: {lopSauGop.join(', ') || '—'}</div>
+            <div>Các lớp: {lopSauGop.join(', ') || 'Chưa xếp lớp'}</div>
             <div>Đơn giá giữ lại: <b>{vnd(giu.don_gia)}/buổi</b>{giu.don_gia !== bo.don_gia && <span style={{ color: MAU.do }}> (hồ sơ bị gộp đang là {vnd(bo.don_gia)})</span>}</div>
             <div>Tổng sticker dự kiến: <b>⭐ {(tong[giu.id] ?? 0) + (tong[bo.id] ?? 0)}</b></div>
           </div>

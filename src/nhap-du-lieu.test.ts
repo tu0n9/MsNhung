@@ -170,4 +170,16 @@ describe('nhapDuLieu (8c, 8e)', () => {
     })
     expect(state.hocSinhUpdates.filter((u) => u.id === 'h1')).toHaveLength(1)
   })
+
+  it('nhập học sinh mới chưa xếp lớp (tenLop rỗng): chỉ tạo hoc_sinh, không insert ghi_danh', async () => {
+    const chuaXep: KqHs = {
+      loai: 'hs', so: 2, trangThai: 'moi', ma_hs: null, ho_ten: 'Em Chưa Xếp', tenLop: '',
+      ten_phu_huynh: 'Chị Lan', sdt_phu_huynh: '0911222333', ngay_vao: '2026-11-15', don_gia: 150000,
+      sticker_dau_ky: 0, ghi_chu: null, link_zalo: null,
+    }
+    const kq = await nhapDuLieu([], [chuaXep], lopCo, () => {})
+    expect(kq).toMatchObject({ hsMoi: 1, lopThem: 0, loi: [] })
+    expect(state.hocSinhInserts).toHaveLength(1)
+    expect(state.ghiDanhInserts).toEqual([])
+  })
 })

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { chuanSdtTim, coCanHienGiaRieng, conHocSauSua, ghiDanhCanDongBoNgay, locGoiYHocSinh } from './lop-hoc'
+import { chuanSdtTim, coCanHienGiaRieng, conHocSauSua, dsHocSinhCoTheThemVaoLop, ghiDanhCanDongBoNgay, locGoiYHocSinh, locHocSinh, phanLoaiHocSinh, trangThaiHsSauGhiDanh, trangThaiHsSauSua } from './lop-hoc'
+import { O_TIEN } from './giao-dien'
 
 const dsMau = [
   { id: '1', ho_ten: 'Nguyễn Bảo An', ma_hs: 'HS001', sdt_phu_huynh: '0911223344' },
@@ -103,5 +104,50 @@ describe('ghiDanhCanDongBoNgay (7d)', () => {
     const cuGds = [{ id: 'g1', lop_id: 'lop-a', ngay_vao: '2026-11-01' }]
     expect(ghiDanhCanDongBoNgay(cuGds, ['lop-a'], '2026-11-01', '2026-11-01')).toEqual([])
     expect(ghiDanhCanDongBoNgay(cuGds, [], '2026-11-01', '2026-11-05')).toEqual([])
+  })
+})
+
+describe('quản lý học sinh độc lập (chưa xếp lớp, thêm vào lớp, định dạng đơn giá)', () => {
+  it('phanLoaiHocSinh phân biệt đúng dang_hoc, chua_xep và ngung', () => {
+    const gds = [
+      { hoc_sinh_id: 'h1', trang_thai: 'dang_hoc' as const },
+      { hoc_sinh_id: 'h2', trang_thai: 'ngung' as const },
+      { hoc_sinh_id: 'h3', trang_thai: 'ngung' as const },
+      { hoc_sinh_id: 'h3', trang_thai: 'dang_hoc' as const },
+    ]
+    expect(phanLoaiHocSinh('h1', gds)).toBe('dang_hoc')
+    expect(phanLoaiHocSinh('h2', gds)).toBe('ngung')
+    expect(phanLoaiHocSinh('h3', gds)).toBe('dang_hoc')
+    expect(phanLoaiHocSinh('h4', gds)).toBe('chua_xep')
+  })
+
+  it('trangThaiHsSauGhiDanh & trangThaiHsSauSua giữ dang_hoc khi học sinh chuyển về Chưa xếp lớp (0 lớp)', () => {
+    expect(trangThaiHsSauGhiDanh([])).toBe('dang_hoc')
+    expect(trangThaiHsSauGhiDanh([{ trang_thai: 'ngung' }])).toBe('ngung')
+    expect(trangThaiHsSauGhiDanh([{ trang_thai: 'ngung' }, { trang_thai: 'dang_hoc' }])).toBe('dang_hoc')
+    expect(trangThaiHsSauSua([{ lop_id: 'l1', trang_thai: 'dang_hoc' }], [])).toBe('dang_hoc')
+    expect(trangThaiHsSauSua([{ lop_id: 'l1', trang_thai: 'ngung' }], ['l1'])).toBe('ngung')
+  })
+
+  it('dsHocSinhCoTheThemVaoLop bỏ qua em đang học lớp đó, giữ em chưa xếp lớp và đánh dấu em từng học (ngung)', () => {
+    const gds = [
+      { hoc_sinh_id: '1', lop_id: 'l1', trang_thai: 'dang_hoc' as const },
+      { hoc_sinh_id: '2', lop_id: 'l1', trang_thai: 'ngung' as const },
+    ]
+    const kq = dsHocSinhCoTheThemVaoLop(dsMau, gds, 'l1')
+    expect(kq.map((x) => [x.h.id, x.chuaXep, x.tungHoc])).toEqual([
+      ['3', true, false],
+      ['2', false, true],
+    ])
+    expect(locHocSinh(dsMau, '0988777666').map((x) => x.id)).toEqual(['2'])
+  })
+
+  it('O_TIEN định dạng dấu phẩy mỗi 3 chữ số và đọc được cả dấu phẩy lẫn dấu chấm', () => {
+    expect(O_TIEN.formatter(150000)).toBe('150,000')
+    expect(O_TIEN.formatter(1000000)).toBe('1,000,000')
+    expect(O_TIEN.formatter(0)).toBe('0')
+    expect(O_TIEN.parser('150,000')).toBe('150000')
+    expect(O_TIEN.parser('150.000')).toBe('150000')
+    expect(O_TIEN.parser('')).toBe('')
   })
 })

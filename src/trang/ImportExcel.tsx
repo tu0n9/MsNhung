@@ -109,7 +109,7 @@ export default function ImportExcel() {
       ) : !kq ? (
         <>
           <Card size="small" title="1. Tải file mẫu">
-            <p style={{ marginTop: 0, color: MAU.chuPhu }}>File có 3 trang: Hướng dẫn, Lớp (đã điền sẵn các lớp đang có), Học sinh (đã điền sẵn các lượt ghi danh cùng mức Đơn giá/buổi cố định cho mọi lớp). Mã HS được hệ thống tự cấp sau khi nhập. Các dòng cùng Họ tên (khi chưa có SĐT hoặc cùng SĐT phụ huynh) sẽ tự gộp thành 1 học sinh; chỉ tách riêng khi có 2 SĐT khác nhau.</p>
+            <p style={{ marginTop: 0, color: MAU.chuPhu }}>File có 3 trang: Hướng dẫn, Lớp (đã điền sẵn các lớp đang có), Học sinh (đã điền sẵn Mã HS, các lượt ghi danh và học sinh chưa xếp lớp). Cột <b>Lớp</b> có thể để trống để nhập vào danh sách <i>Chưa xếp lớp</i> (nhớ điền Đơn giá/buổi). Khi trùng tên, app phân biệt hoặc gộp lớp theo <b>Mã HS</b>, <b>SĐT phụ huynh</b> hoặc <b>Link nhóm Zalo</b> (thiếu cả 3 sẽ báo lỗi để tránh gộp nhầm).</p>
             <Button icon={<DownloadOutlined />} onClick={() => taiFileMau(lopCo, hsCo, gdCo).catch((e) => message.error(e.message))}>Tải file mẫu</Button>
           </Card>
           <Card size="small" title="2. Chọn file đã điền">
@@ -160,7 +160,7 @@ export default function ImportExcel() {
                 </> : <>
                   <b>{d.ho_ten || '(chưa có tên)'}</b>
                   <div style={{ fontSize: 12, color: MAU.chuPhu }}>
-                    {[d.ma_hs, d.tenLop, `${vnd(d.don_gia)}/buổi`, d.ten_phu_huynh, d.sdt_phu_huynh, d.sticker_dau_ky ? `${d.sticker_dau_ky} sticker` : ''].filter(Boolean).join(', ')}
+                    {[d.ma_hs, d.tenLop || 'Chưa xếp lớp', `${vnd(d.don_gia)}/buổi`, d.ten_phu_huynh, d.sdt_phu_huynh, d.sticker_dau_ky ? `${d.sticker_dau_ky} sticker` : ''].filter(Boolean).join(', ')}
                   </div>
                 </>}
                 {d.loi && <div style={{ fontSize: 12, color: d.trangThai === 'loi' ? MAU.do : MAU.chuPhu, marginTop: 2 }}>{d.loi}</div>}

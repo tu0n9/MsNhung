@@ -73,11 +73,11 @@ export function theme(cheDo: CheDo): ThemeConfig {
 export const CheDoCtx = createContext<{ cheDo: CheDo; doi: () => void }>({ cheDo: 'sang', doi: () => {} })
 export const useCheDo = () => useContext(CheDoCtx)
 
-/** Ô nhập tiền: số nguyên VND (precision 0), hiện dấu chấm nghìn. Dùng `{...O_TIEN}` cho mọi InputNumber tiền. */
+/** Ô nhập tiền: số nguyên VND (precision 0), tự thêm dấu phẩy mỗi 3 chữ số. Dùng `{...O_TIEN}` cho mọi InputNumber tiền. */
 export const O_TIEN = {
   min: 0, step: 50000, precision: 0, style: { width: '100%' },
-  formatter: (s?: number | string) => `${s ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, '.'),
+  formatter: (s?: number | string) => `${s ?? ''}`.replace(/\B(?=(\d{3})+(?!\d))/g, ','),
   // xoá trắng ô phải ra trống (null), không ra 0: "Đơn giá riêng" trống = theo lớp, còn 0 = miễn phí
-  // antd chấp nhận chuỗi (chuỗi rỗng → null) dù kiểu khai là number
-  parser: (s?: string) => (s?.replace(/\./g, '') ?? '') as unknown as number,
+  // antd chấp nhận chuỗi (chuỗi rỗng → null) dù kiểu khai là number; chấp nhận cả dấu phẩy lẫn dấu chấm khi dán vào
+  parser: (s?: string) => (s?.replace(/[.,\s]/g, '') ?? '') as unknown as number,
 }

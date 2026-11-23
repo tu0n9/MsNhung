@@ -25,26 +25,28 @@ export async function nhapDuLieu(lops: KqLop[], hss: KqHs[], lopCo: Lop[], baoTi
     kq.lopMoi = da.length
   }
 
-  // học sinh mới: tạo 1 bản ghi hoc_sinh + ghi_danh lớp đầu tiên, lưu lại id theo dòng để các dòng sau gộp lớp
+  // học sinh mới: tạo 1 bản ghi hoc_sinh (+ ghi_danh nếu có chọn lớp), lưu lại id theo dòng để các dòng sau gộp lớp
   const idHsTheoDong = new Map<number, string>()
   for (const [i, h] of hsMoi.entries()) {
     baoTienDo({ xong: kq.lopMoi + i, tong, dang: `Đang thêm ${h.ho_ten}` })
     try {
-      const lopId = idLop.get(khoa(h.tenLop))
-      if (!lopId) throw new Error(`Không tìm thấy lớp "${h.tenLop}"`)
+      const lopId = h.tenLop ? idLop.get(khoa(h.tenLop)) : undefined
+      if (h.tenLop && !lopId) throw new Error(`Không tìm thấy lớp "${h.tenLop}"`)
       const moi = await q(sb.from('hoc_sinh').insert({
         ho_ten: h.ho_ten, don_gia: h.don_gia, ten_phu_huynh: h.ten_phu_huynh, sdt_phu_huynh: h.sdt_phu_huynh,
         ngay_vao: h.ngay_vao, sticker_dau_ky: h.sticker_dau_ky, ghi_chu: h.ghi_chu, link_zalo: h.link_zalo,
       }).select('id').single()) as { id: string }
-      // Nếu ghi_danh lỗi sau khi đã insert hoc_sinh, dọn ngay bản ghi hoc_sinh vừa tạo để tránh mồ côi không lớp
-      try {
-        await q(sb.from('ghi_danh').insert({
-          hoc_sinh_id: moi.id, lop_id: lopId, ngay_vao: h.ngay_vao,
-        }))
-      } catch (loiGd) {
-        const { error: loiXoa } = await sb.from('hoc_sinh').delete().eq('id', moi.id)
-        if (loiXoa) throw new Error(`${(loiGd as Error).message} (chưa dọn được hồ sơ: ${loiXoa.message})`)
-        throw loiGd
+      if (lopId) {
+        // Nếu ghi_danh lỗi sau khi đã insert hoc_sinh, dọn ngay bản ghi hoc_sinh vừa tạo để tránh mồ côi khi đăng ký lớp
+        try {
+          await q(sb.from('ghi_danh').insert({
+            hoc_sinh_id: moi.id, lop_id: lopId, ngay_vao: h.ngay_vao,
+          }))
+        } catch (loiGd) {
+          const { error: loiXoa } = await sb.from('hoc_sinh').delete().eq('id', moi.id)
+          if (loiXoa) throw new Error(`${(loiGd as Error).message} (chưa dọn được hồ sơ: ${loiXoa.message})`)
+          throw loiGd
+        }
       }
       if (h.link_zalo) coLinkTheoDong.add(h.so)
       if (h.sdt_phu_huynh) coSdtTheoDong.add(h.so)
