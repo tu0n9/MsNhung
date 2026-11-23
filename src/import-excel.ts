@@ -109,7 +109,7 @@ export function chuanTien(v: unknown, ten: string, batBuoc: boolean): { so: numb
   if (!tho) return batBuoc ? { so: null, loi: `Thiếu ${ten.toLowerCase()}` } : { so: null }
   if (tho.includes('-')) return { so: null, loi: `${ten} không được âm` }
   const sach = tho.replace(/\s*(?:vn[dđ]|đồng|đ)\.?$/i, '').trim()
-  const hopLe = /^(?:\d+|\d{1,3}(?:\.\d{3})+|\d{1,3}(?:,\d{3})+|\d{1,3}(?: \d{3})+)$/.test(sach)
+  const hopLe = /^(?:\d+|\d{1,3}(?:\.\d{3})+|\d{1,3}(?:,\d{3})+|\d{1,3}(?:[ \u00A0\u202F]\d{3})+)$/.test(sach)
   if (!hopLe) return { so: null, loi: `${ten} "${tho}" không phải số nguyên hợp lệ` }
   const so = Number(sach.replace(/\D/g, ''))
   if (!Number.isSafeInteger(so)) return { so: null, loi: `${ten} "${tho}" không hợp lệ` }
@@ -161,17 +161,18 @@ const normLink = (l?: string | null) => (l ? l.trim().toLowerCase() : null)
 
 /**
  * So sánh định danh 2 bản ghi cùng Họ tên khi không có Mã HS:
- * - 'khac': có 2 SĐT khác nhau, hoặc chưa trùng SĐT mà có 2 Link nhóm Zalo khác nhau -> chắc chắn 2 học sinh khác nhau.
  * - 'cung': trùng SĐT (vẫn cho phép cập nhật Link Zalo mới) hoặc trùng Link nhóm Zalo (và không mâu thuẫn SĐT) -> cùng 1 học sinh.
+ * - 'mau_thuan': khác SĐT nhưng lại trùng Link nhóm Zalo (vd 1 dòng ghi SĐT bố, 1 dòng ghi SĐT mẹ) -> báo lỗi để cô kiểm tra, không tách nhầm.
+ * - 'khac': khác SĐT (và không trùng Link Zalo), hoặc chưa trùng SĐT mà khác Link nhóm Zalo -> 2 học sinh khác nhau.
  * - 'mo_ho': thiếu SĐT/Link Zalo để khẳng định cùng hay khác -> báo lỗi, không tự gộp nhầm im lặng.
  */
 function soSanhDinhDanh(
   sdt1: string | null, link1: string | null,
   sdt2: string | null, link2: string | null,
-): 'cung' | 'khac' | 'mo_ho' {
-  if (sdt1 && sdt2 && sdt1 !== sdt2) return 'khac'
-  if (sdt1 && sdt2 && sdt1 === sdt2) return 'cung'
+): 'cung' | 'khac' | 'mo_ho' | 'mau_thuan' {
   const l1 = normLink(link1), l2 = normLink(link2)
+  if (sdt1 && sdt2 && sdt1 !== sdt2) return l1 && l2 && l1 === l2 ? 'mau_thuan' : 'khac'
+  if (sdt1 && sdt2 && sdt1 === sdt2) return 'cung'
   if (l1 && l2) return l1 === l2 ? 'cung' : 'khac'
   return 'mo_ho'
 }
@@ -263,10 +264,12 @@ export function kiemTra(
       const ungVienDb = tenToHsCo.get(tenK) ?? []
       if (ungVienDb.length > 0) {
         const khopCung: HocSinh[] = []
+        const mauThuan: HocSinh[] = []
         const moHo: HocSinh[] = []
         for (const h of ungVienDb) {
           const kqSs = soSanhDinhDanh(sdt.sdt, link.link, sdtDb(h.sdt_phu_huynh), h.link_zalo)
           if (kqSs === 'cung') khopCung.push(h)
+          else if (kqSs === 'mau_thuan') mauThuan.push(h)
           else if (kqSs === 'mo_ho') moHo.push(h)
         }
         if (khopCung.length === 1) {
@@ -275,6 +278,11 @@ export function kiemTra(
           return {
             ...kq, trangThai: 'loi',
             loi: `Có ${khopCung.length} học sinh tên "${hoTen}" khớp SĐT/Link Zalo (${khopCung.map((h) => h.ma_hs).join(', ')}). Ghi rõ Mã HS để xác định đúng em`,
+          }
+        } else if (mauThuan.length > 0) {
+          return {
+            ...kq, trangThai: 'loi',
+            loi: `Trùng tên "${hoTen}" và cùng Link nhóm Zalo với ${mauThuan.map((h) => h.ma_hs).join(', ')} nhưng khác SĐT phụ huynh — ghi rõ Mã HS hoặc thống nhất SĐT/Link Zalo`,
           }
         } else if (moHo.length > 0) {
           return {
@@ -315,14 +323,21 @@ export function kiemTra(
     let truoc: NhomMoiTheoTen | undefined
     if (dsCungTen.length > 0) {
       const khopFile: NhomMoiTheoTen[] = []
+      const mauThuanFile: NhomMoiTheoTen[] = []
       const moHoFile: NhomMoiTheoTen[] = []
       for (const x of dsCungTen) {
         const kqSs = soSanhDinhDanh(sdt.sdt, link.link, x.sdt, x.link)
         if (kqSs === 'cung') khopFile.push(x)
+        else if (kqSs === 'mau_thuan') mauThuanFile.push(x)
         else if (kqSs === 'mo_ho') moHoFile.push(x)
       }
       if (khopFile.length === 1) {
         truoc = khopFile[0]
+      } else if (mauThuanFile.length > 0) {
+        return {
+          ...kq, trangThai: 'loi',
+          loi: `Trùng tên "${hoTen}" và cùng Link nhóm Zalo với dòng ${mauThuanFile[0].so} nhưng khác SĐT phụ huynh — kiểm tra lại để tránh tách nhầm 2 học sinh`,
+        }
       } else if (khopFile.length > 1 || moHoFile.length > 0) {
         const dongTrung = (khopFile[0] ?? moHoFile[0]).so
         return {

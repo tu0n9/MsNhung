@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { taoWorkbookExcel } from './xuat-excel'
+import { anToanO, taoWorkbookExcel } from './xuat-excel'
 import type { DuLieuThang } from './du-lieu'
 import type { Goi } from './hoc-phi'
 import type { GhiDanh, HocSinh, Lop } from './supabase'
@@ -231,5 +231,37 @@ describe('taoWorkbookExcel (theo học sinh)', () => {
     expect(wsDd0.getCell('B2').value).toBe('Trần Ngừng Sticker')
     expect(wsDd0.getCell('C2').value).toBe(0)
     expect(wsDd0.getCell('D2').value).toBe(4)
+  })
+
+  it('chặn công thức Excel vô tình (CWE-1236) cho chuỗi người dùng nhập bắt đầu bằng =, +, -, @, tab, CR', async () => {
+    expect(anToanO('- Con thích lớp')).toBe("'- Con thích lớp")
+    expect(anToanO('+ Cô giảng hay')).toBe("'+ Cô giảng hay")
+    expect(anToanO('=1+1')).toBe("'=1+1")
+    expect(anToanO('@admin')).toBe("'@admin")
+    expect(anToanO('\tghi chú')).toBe("'\tghi chú")
+    expect(anToanO('\rghi chú')).toBe("'\rghi chú")
+    expect(anToanO('Nguyễn An')).toBe('Nguyễn An')
+    expect(anToanO(null)).toBe('')
+
+    const hs1 = hs('h1', 'HS001', '=CMD()', 150_000)
+    const wb = await taoWorkbookExcel({
+      thang: '2026-11', lops: [lopA], hocSinh: [hs1], ghiDanh: [],
+      goi: [], phieu: [], chi: [{ id: 'c1', ngay: '2026-11-10', danh_muc: '+Mực in', so_tien: 50_000, ghi_chu: '- Ghi chú âm' }],
+      luongTg: [], diemDanh: [], stickerNgoai: [], dong: [],
+      danhGia: [{
+        id: 'dg1', thang: '2026-11', hoc_sinh_id: 'h1', lop_id: 'la',
+        ten_hoc_sinh: 'Nguyễn An', ten_lop: 'Starters 1', gui_luc: '2026-11-20T10:00:00Z',
+        khoa_hoc: '- Lớp học rất vui', kho_khan: '+ Chưa nhớ từ vựng',
+        tro_giang: [{ id: 'tg1', ten: 'Lan', kien_thuc: 5, tuong_tac: 5, ho_tro: 5, nhan_xet: '=SUM(A1:A2)', chua_bai: '@tốt' }],
+      }],
+    })
+    const wsChi = wb.getWorksheet('Chi phí')!
+    expect(wsChi.getCell('B2').value).toBe("'+Mực in")
+    expect(wsChi.getCell('D2').value).toBe("'- Ghi chú âm")
+    const wsDg = wb.getWorksheet('Đánh giá')!
+    expect(wsDg.getCell('H5').value).toBe("'- Lớp học rất vui")
+    expect(wsDg.getCell('I5').value).toBe("'+ Chưa nhớ từ vựng")
+    expect(wsDg.getCell('J5').value).toBe("'=SUM(A1:A2)")
+    expect(wsDg.getCell('K5').value).toBe("'@tốt")
   })
 })

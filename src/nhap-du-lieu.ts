@@ -66,7 +66,7 @@ export async function nhapDuLieu(lops: KqLop[], hss: KqHs[], lopCo: Lop[], baoTi
       const lopId = idLop.get(khoa(h.tenLop))
       if (!lopId) throw new Error(`Không tìm thấy lớp "${h.tenLop}"`)
       if (h.batLai) {
-        await q(sb.from('ghi_danh').update({ trang_thai: 'dang_hoc', ngay_vao: h.ngay_vao }).eq('hoc_sinh_id', hsId).eq('lop_id', lopId))
+        await q(sb.from('ghi_danh').update({ trang_thai: 'dang_hoc', ngay_vao: h.ngay_vao, don_gia_rieng: null }).eq('hoc_sinh_id', hsId).eq('lop_id', lopId))
       } else {
         await q(sb.from('ghi_danh').insert({
           hoc_sinh_id: hsId, lop_id: lopId, ngay_vao: h.ngay_vao,
@@ -83,17 +83,17 @@ export async function nhapDuLieu(lops: KqLop[], hss: KqHs[], lopCo: Lop[], baoTi
       } else if (h.gopVoiDong != null) {
         // Dòng đầu tiên để trống link/SĐT nhưng dòng gộp phía dưới có → điền bù cho hồ sơ vừa tạo
         const boSung: Record<string, string | null> = {}
-        if (h.link_zalo && !coLinkTheoDong.has(h.gopVoiDong) && !daCapNhatLink.has(hsId)) {
-          boSung.link_zalo = h.link_zalo
-          coLinkTheoDong.add(h.gopVoiDong)
-          daCapNhatLink.add(hsId)
-        }
-        if (h.sdt_phu_huynh && !coSdtTheoDong.has(h.gopVoiDong)) {
-          boSung.sdt_phu_huynh = h.sdt_phu_huynh
-          coSdtTheoDong.add(h.gopVoiDong)
-        }
+        const boSungLink = !!(h.link_zalo && !coLinkTheoDong.has(h.gopVoiDong) && !daCapNhatLink.has(hsId))
+        const boSungSdt = !!(h.sdt_phu_huynh && !coSdtTheoDong.has(h.gopVoiDong))
+        if (boSungLink) boSung.link_zalo = h.link_zalo
+        if (boSungSdt) boSung.sdt_phu_huynh = h.sdt_phu_huynh
         if (Object.keys(boSung).length > 0) {
           await q(sb.from('hoc_sinh').update(boSung).eq('id', hsId))
+          if (boSungLink) {
+            coLinkTheoDong.add(h.gopVoiDong)
+            daCapNhatLink.add(hsId)
+          }
+          if (boSungSdt) coSdtTheoDong.add(h.gopVoiDong)
         }
       }
       if (h.capNhatLink && h.capNhatLink !== hsId && !daCapNhatLink.has(h.capNhatLink)) {

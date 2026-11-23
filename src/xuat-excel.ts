@@ -9,6 +9,12 @@ const TIEN = '#,##0'
 // bảng rỗng thì dòng TỔNG nằm ở dòng 2, SUM(X2:X1) tự trỏ vào chính nó (Excel báo circular reference)
 const tongCot = (c: string, cuoi: number) => (cuoi < 2 ? 0 : { formula: `SUM(${c}2:${c}${cuoi})` })
 
+// Chặn Excel hiểu nhầm chuỗi bắt đầu bằng =, +, -, @, tab, CR là công thức (vd nhận xét gạch đầu dòng "- Con thích...")
+export const anToanO = (v: string | null | undefined): string => {
+  if (!v) return ''
+  return /^[=+\-@\t\r]/.test(v) ? `'${v}` : v
+}
+
 function tieuDe(ws: ExcelJS.Worksheet, cot: { header: string; key: string; width: number; tien?: boolean }[]) {
   ws.columns = cot.map((c) => ({ header: c.header, key: c.key, width: c.width, style: c.tien ? { numFmt: TIEN } : {} }))
   ws.getRow(1).font = { bold: true }
@@ -65,8 +71,8 @@ export async function taoWorkbookExcel(d: DuLieuThang): Promise<ExcelJS.Workbook
     const g = goiCuaThang(d.goi.filter((x) => x.hoc_sinh_id === r.hs.id), d.thang)
     const chuaGoi = chuaCoGoiThang(r, d.goi, d.thang)
     wsHp.addRow({
-      stt: i + 1, ma: r.hs.ma_hs, ten: r.hs.ho_ten, lop: r.tenLops,
-      ph: r.hs.ten_phu_huynh ?? '', sdt: r.hs.sdt_phu_huynh ?? '',
+      stt: i + 1, ma: anToanO(r.hs.ma_hs), ten: anToanO(r.hs.ho_ten), lop: anToanO(r.tenLops),
+      ph: anToanO(r.hs.ten_phu_huynh), sdt: anToanO(r.hs.sdt_phu_huynh),
       // Ưu tiên đơn giá đã chốt trên gói của tháng đó để xuất lại tháng cũ không bị nhảy theo đơn giá mới
       dg: g ? g.don_gia : r.hs.don_gia, buoi: r.soBuoi, hp: r.phaiThu - r.dieuChinh, dc: r.dieuChinh,
       no: r.noKyTruoc, thu: r.daThu,
@@ -100,7 +106,7 @@ export async function taoWorkbookExcel(d: DuLieuThang): Promise<ExcelJS.Workbook
     const ngoai = d.stickerNgoai.filter((x) => x.hoc_sinh_id === r.hs.id)
     if (!cua.length && !ngoai.length) continue
     // em chỉ được cộng/trừ ngoài buổi (tháng này không đi học) vẫn cần dòng để cột Sticker khớp với app
-    const row = wsDd.addRow({ lop: r.tenLops, ten: r.hs.ho_ten,
+    const row = wsDd.addRow({ lop: anToanO(r.tenLops), ten: anToanO(r.hs.ho_ten),
       ...gopTheoNgay(cua.map((x) => [x.ngay, kyHieu[x.trang_thai]])),
       st: cua.reduce((s, x) => s + x.sticker, 0) + ngoai.reduce((s, x) => s + x.so, 0) })
     const n = row.number
@@ -118,9 +124,9 @@ export async function taoWorkbookExcel(d: DuLieuThang): Promise<ExcelJS.Workbook
   for (const p of d.phieu) {
     const g = d.goi.find((x) => x.id === p.goi_id)
     const h = d.hocSinh.find((x) => x.id === g?.hoc_sinh_id)
-    wsThu.addRow({ ngay: p.ngay_thu.split('-').reverse().join('/'), ten: h?.ho_ten, lop: lopCuaHsTen(h?.id),
+    wsThu.addRow({ ngay: p.ngay_thu.split('-').reverse().join('/'), ten: anToanO(h?.ho_ten), lop: anToanO(lopCuaHsTen(h?.id)),
       goi: g && tenGoi(g), tien: p.so_tien,
-      ht: p.hinh_thuc === 'tien_mat' ? 'Tiền mặt' : 'Chuyển khoản', gc: p.ghi_chu })
+      ht: p.hinh_thuc === 'tien_mat' ? 'Tiền mặt' : 'Chuyển khoản', gc: anToanO(p.ghi_chu) })
   }
   const thuCuoi = d.phieu.length + 1
   const rThu = wsThu.addRow({ ten: 'TỔNG' }); rThu.getCell('tien').value = tongCot('E', thuCuoi); rThu.font = { bold: true }
@@ -129,7 +135,7 @@ export async function taoWorkbookExcel(d: DuLieuThang): Promise<ExcelJS.Workbook
   const tgCuoi = d.luongTg.length + 1
   const wsChi = wb.addWorksheet('Chi phí')
   tieuDe(wsChi, [{ header: 'Ngày', key: 'ngay', width: 11 }, { header: 'Mục', key: 'muc', width: 20 }, { header: 'Số tiền', key: 'tien', width: 13, tien: true }, { header: 'Ghi chú', key: 'gc', width: 28 }])
-  d.chi.forEach((c) => wsChi.addRow({ ngay: c.ngay.split('-').reverse().join('/'), muc: c.danh_muc, tien: c.so_tien, gc: c.ghi_chu }))
+  d.chi.forEach((c) => wsChi.addRow({ ngay: c.ngay.split('-').reverse().join('/'), muc: anToanO(c.danh_muc), tien: c.so_tien, gc: anToanO(c.ghi_chu) }))
   const rL = wsChi.addRow({ muc: 'Lương trợ giảng', gc: 'Lấy từ trang Trợ giảng' })
   rL.getCell('tien').value = { formula: `'Trợ giảng'!C${tgCuoi + 1}` }
   const chiCuoi = rL.number
@@ -140,13 +146,13 @@ export async function taoWorkbookExcel(d: DuLieuThang): Promise<ExcelJS.Workbook
   tieuDe(wsNo, [{ header: 'Học sinh', key: 'ten', width: 24 }, { header: 'Các lớp', key: 'lop', width: 20 }, { header: 'Phụ huynh', key: 'ph', width: 20 },
     { header: 'SĐT', key: 'sdt', width: 13 }, { header: 'Còn nợ', key: 'no', width: 13, tien: true }])
   const no = d.dong.filter((r) => r.conPhaiThu > 0)
-  no.forEach((r) => wsNo.addRow({ ten: r.hs.ho_ten, lop: r.tenLops, ph: r.hs.ten_phu_huynh, sdt: r.hs.sdt_phu_huynh, no: r.conPhaiThu }))
+  no.forEach((r) => wsNo.addRow({ ten: anToanO(r.hs.ho_ten), lop: anToanO(r.tenLops), ph: anToanO(r.hs.ten_phu_huynh), sdt: anToanO(r.hs.sdt_phu_huynh), no: r.conPhaiThu }))
   const rNo = wsNo.addRow({ ten: 'TỔNG' }); rNo.getCell('no').value = tongCot('E', no.length + 1); rNo.font = { bold: true }
 
   // ---- Trợ giảng ----
   const wsTg = wb.addWorksheet('Trợ giảng')
   tieuDe(wsTg, [{ header: 'Trợ giảng', key: 'ten', width: 24 }, { header: 'Số ca', key: 'buoi', width: 9 }, { header: 'Thành tiền', key: 'tien', width: 14, tien: true }])
-  d.luongTg.forEach((x) => wsTg.addRow({ ten: x.tg.ho_ten, buoi: x.soBuoi, tien: x.thanhTien }))
+  d.luongTg.forEach((x) => wsTg.addRow({ ten: anToanO(x.tg.ho_ten), buoi: x.soBuoi, tien: x.thanhTien }))
   const rTg = wsTg.addRow({ ten: 'TỔNG' })
   rTg.getCell('buoi').value = tongCot('B', tgCuoi); rTg.getCell('tien').value = tongCot('C', tgCuoi); rTg.font = { bold: true }
 
@@ -156,15 +162,15 @@ export async function taoWorkbookExcel(d: DuLieuThang): Promise<ExcelJS.Workbook
     tieuDe(ws, [{ header: 'Trợ giảng', key: 'a', width: 22 }, { header: 'Số phiếu', key: 'b', width: 14 },
       ...TIEU_CHI.map((c, i) => ({ header: c.ten, key: 'cde'[i], width: 10 })), { header: 'Chung', key: 'f', width: 15 },
       ...'ghijk'.split('').map((key) => ({ header: '', key, width: key === 'g' ? 18 : 36 }))])
-    for (const t of tongHop(d.danhGia).troGiang) ws.addRow({ a: t.ten, b: t.soPhieu, c: t.kien_thuc, d: t.tuong_tac, e: t.ho_tro, f: t.chung })
+    for (const t of tongHop(d.danhGia).troGiang) ws.addRow({ a: anToanO(t.ten), b: t.soPhieu, c: t.kien_thuc, d: t.tuong_tac, e: t.ho_tro, f: t.chung })
     ws.addRow({})
     const h = ws.addRow(['Học sinh', 'Lớp', ...TIEU_CHI.map((c) => c.ten), 'Gửi lúc', 'Trợ giảng', 'Nhận xét khoá học', 'Khó khăn', 'Nhận xét trợ giảng', 'Chữa bài'])
     h.font = { bold: true }
     for (const p of d.danhGia) {
       const luc = new Date(p.gui_luc).toLocaleString('vi-VN', { dateStyle: 'short', timeStyle: 'short' })
       for (const t of p.tro_giang.length ? p.tro_giang : [null]) {
-        ws.addRow([p.ten_hoc_sinh, p.ten_lop, t?.kien_thuc, t?.tuong_tac, t?.ho_tro, luc, t?.ten ?? 'Không có trợ giảng',
-          p.khoa_hoc, p.kho_khan, t?.nhan_xet, t?.chua_bai]).alignment = { wrapText: true, vertical: 'top' }
+        ws.addRow([anToanO(p.ten_hoc_sinh), anToanO(p.ten_lop), t?.kien_thuc, t?.tuong_tac, t?.ho_tro, luc, anToanO(t?.ten ?? 'Không có trợ giảng'),
+          anToanO(p.khoa_hoc), anToanO(p.kho_khan), anToanO(t?.nhan_xet), anToanO(t?.chua_bai)]).alignment = { wrapText: true, vertical: 'top' }
       }
     }
   }

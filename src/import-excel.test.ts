@@ -320,10 +320,13 @@ describe('sửa lỗi Bug 8 (gộp theo tên + SĐT/Link Zalo, Mã HS, bật l�
     expect(chuanNgay('01/11/1999', HOM_NAY).loi).toBeTruthy()
   })
 
-  it('8d: chuanTien từ chối số thập phân ("150.5") và chữ lẫn số ("abc 123")', () => {
+  it('8d: chuanTien từ chối số thập phân ("150.5") và chữ lẫn số ("abc 123"), nhận dấu cách NBSP', () => {
     expect(chuanTien('150.5', 'Đơn giá', true).loi).toBeTruthy()
     expect(chuanTien('abc 123', 'Đơn giá', true).loi).toBeTruthy()
+    expect(chuanTien('150\n000', 'Đơn giá', true).loi).toBeTruthy()
     expect(chuanTien('150.000 đ', 'Đơn giá', true).so).toBe(150000)
+    expect(chuanTien('150\u00A0000', 'Đơn giá', true).so).toBe(150000)
+    expect(chuanTien('1\u202F200\u202F000 đ', 'Đơn giá', true).so).toBe(1200000)
   })
 
   it('8d: chuanLinkZalo bỏ dấu câu cuối link và chặn scheme nguy hiểm / giả mạo domain', () => {
@@ -443,5 +446,23 @@ describe('đồng bộ logic chuẩn: 1 học phí cố định/HS & nhận di�
     expect(hss[1].loi).toMatch(/cố định/)
     expect(hss[3].trangThai).toBe('loi')
     expect(hss[3].loi).toMatch(/cố định/)
+  })
+
+  it('[KT-28] cùng tên + cùng Link nhóm Zalo nhưng khác SĐT (SĐT bố vs SĐT mẹ) báo lỗi thay vì tách nhầm thành 2 học sinh', () => {
+    const hsDb = [
+      { id: 'h1', ma_hs: 'HS001', ho_ten: 'Trần Khánh Linh', don_gia: 120000, sdt_phu_huynh: '0903615240', link_zalo: 'https://zalo.me/g/linh' },
+    ] as HocSinh[]
+    const { hss } = kiemTra([], [
+      // Mâu thuẫn với DB: cùng tên + cùng Link Zalo nhưng SĐT khác
+      hs(2, { hoTen: 'Trần Khánh Linh', lop: 'Starters 2', sdt: '0912345678', linkZalo: 'https://zalo.me/g/linh' }),
+      // Mâu thuẫn trong cùng file: 2 dòng học sinh mới cùng tên + cùng Link Zalo nhưng SĐT khác
+      hs(3, { hoTen: 'Phạm Gia Bảo', lop: 'Starters 1', sdt: '0911111111', linkZalo: 'https://zalo.me/g/bao', donGia: 150000 }),
+      hs(4, { hoTen: 'Phạm Gia Bảo', lop: 'Starters 2', sdt: '0922222222', linkZalo: 'https://zalo.me/g/bao', donGia: 150000 }),
+    ], lopCo, hsDb, gdCo, HOM_NAY)
+    expect(hss[0].trangThai).toBe('loi')
+    expect(hss[0].loi).toMatch(/cùng Link nhóm Zalo/)
+    expect(hss[1].trangThai).toBe('moi')
+    expect(hss[2].trangThai).toBe('loi')
+    expect(hss[2].loi).toMatch(/cùng Link nhóm Zalo/)
   })
 })

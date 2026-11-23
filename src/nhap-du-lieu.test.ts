@@ -7,6 +7,7 @@ const state = vi.hoisted(() => ({
   ghiDanhInserts: [] as Record<string, unknown>[],
   ghiDanhUpdates: [] as { hoc_sinh_id: string; lop_id: string; body: Record<string, unknown> }[],
   failGhiDanhInsert: false,
+  failHocSinhUpdateOnce: false,
 }))
 
 vi.mock('./supabase', () => {
@@ -27,6 +28,10 @@ vi.mock('./supabase', () => {
           update(body: Record<string, unknown>) {
             return {
               eq: async (_col: string, id: string) => {
+                if (state.failHocSinhUpdateOnce) {
+                  state.failHocSinhUpdateOnce = false
+                  return { data: null, error: { message: 'lỗi mạng tạm thời' } }
+                }
                 state.hocSinhUpdates.push({ id, body })
                 return { data: null, error: null }
               },
@@ -92,6 +97,7 @@ describe('nhapDuLieu (8c, 8e)', () => {
     state.ghiDanhInserts = []
     state.ghiDanhUpdates = []
     state.failGhiDanhInsert = false
+    state.failHocSinhUpdateOnce = false
   })
 
   it('8e: dọn hoc_sinh mồ côi khi ghi_danh.insert thất bại', async () => {
@@ -117,7 +123,7 @@ describe('nhapDuLieu (8c, 8e)', () => {
     expect(kq.lopThem).toBe(1)
     expect(state.ghiDanhInserts).toEqual([])
     expect(state.ghiDanhUpdates).toEqual([
-      { hoc_sinh_id: 'h1', lop_id: 'l1', body: { trang_thai: 'dang_hoc', ngay_vao: '2026-11-15' } },
+      { hoc_sinh_id: 'h1', lop_id: 'l1', body: { trang_thai: 'dang_hoc', ngay_vao: '2026-11-15', don_gia_rieng: null } },
     ])
     expect(state.hocSinhUpdates).toContainEqual({ id: 'h1', body: { trang_thai: 'dang_hoc' } })
   })
@@ -181,5 +187,34 @@ describe('nhapDuLieu (8c, 8e)', () => {
     expect(kq).toMatchObject({ hsMoi: 1, lopThem: 0, loi: [] })
     expect(state.hocSinhInserts).toHaveLength(1)
     expect(state.ghiDanhInserts).toEqual([])
+  })
+
+  it('[KT-36] dòng gộp lỗi mạng khi điền bù SĐT/Zalo thì dòng gộp kế tiếp vẫn điền bù thành công', async () => {
+    const lop3: Lop[] = [
+      ...lopCo,
+      { id: 'l2', ten: 'Movers 2', don_gia: 150000, lich: [2], gio_thu: {}, hoat_dong: true },
+      { id: 'l3', ten: 'Flyers 3', don_gia: 150000, lich: [4], gio_thu: {}, hoat_dong: true },
+    ]
+    const base: KqHs = {
+      loai: 'hs', so: 2, trangThai: 'moi', ma_hs: null, ho_ten: 'Bảo An', tenLop: 'Starters 1',
+      ten_phu_huynh: null, sdt_phu_huynh: null, ngay_vao: '2026-11-15', don_gia: 150000,
+      sticker_dau_ky: 0, ghi_chu: null, link_zalo: null,
+    }
+    const gop1: KqHs = {
+      ...base, so: 3, trangThai: 'them_lop', tenLop: 'Movers 2', gopVoiDong: 2,
+      sdt_phu_huynh: '0912345678', link_zalo: 'https://zalo.me/g/bao-an',
+    }
+    const gop2: KqHs = {
+      ...base, so: 4, trangThai: 'them_lop', tenLop: 'Flyers 3', gopVoiDong: 2,
+      sdt_phu_huynh: '0912345678', link_zalo: 'https://zalo.me/g/bao-an',
+    }
+    state.failHocSinhUpdateOnce = true
+    const kq = await nhapDuLieu([], [base, gop1, gop2], lop3, () => {})
+    expect(kq.hsMoi).toBe(1)
+    expect(kq.loi).toHaveLength(1)
+    expect(kq.lopThem).toBe(1)
+    expect(state.hocSinhUpdates).toEqual([
+      { id: 'hs-moi-1', body: { link_zalo: 'https://zalo.me/g/bao-an', sdt_phu_huynh: '0912345678' } },
+    ])
   })
 })

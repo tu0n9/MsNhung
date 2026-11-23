@@ -22,6 +22,7 @@ export default defineConfig({
       // exceljs nặng, không cache sẵn cho lần mở đầu. Video hướng dẫn (public/huong-dan, ~11 MB) không cache sẵn và không
       // bị service worker đổi thành index.html khi mở thẳng link mp4.
       workbox: {
+        cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, globPatterns: ['**/*.{js,css,html,png,woff2}'],
         navigateFallbackDenylist: [/^\/huong-dan\//],
       },
