@@ -5,7 +5,7 @@ from playwright.sync_api import sync_playwright, expect
 D = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(D, "out")
 os.makedirs(OUT, exist_ok=True)
-URL = "http://127.0.0.1:5180/"
+URL = os.environ.get("E2E_URL") or "http://127.0.0.1:5180/"
 PW = sys.argv[1]
 REPO = os.path.dirname(os.path.dirname(D))
 KQ = []
@@ -56,21 +56,24 @@ with sync_playwright() as pw:
     def nav(t):
         p.locator("nav").get_by_text(t, exact=True).click()
 
-    def mo_ql_lop():
+    def ve_chon_lop():
         nav("Lớp")
-        if p.get_by_role("button", name=re.compile("Quản lý Lớp học")).count():
-            p.get_by_role("button", name=re.compile("Quản lý Lớp học")).click()
-        elif p.get_by_role("button", name="Quay lại").count() and p.get_by_text(re.compile("^Quản lý Học sinh")).count():
-            p.get_by_role("button", name="Quay lại").click()
-            p.get_by_role("button", name=re.compile("Quản lý Lớp học")).click()
+        btn_chon = p.get_by_role("button", name=re.compile("Quản lý Lớp học"))
+        btn_back = p.get_by_role("button", name="Quay lại")
+        expect(btn_chon.or_(btn_back)).to_be_visible(timeout=15000)
+        if btn_back.count():
+            btn_back.click()
+            expect(btn_chon).to_be_visible(timeout=10000)
+
+    def mo_ql_lop():
+        ve_chon_lop()
+        p.get_by_role("button", name=re.compile("Quản lý Lớp học")).click()
+        expect(p.get_by_text(re.compile("^Quản lý Lớp học"))).to_be_visible(timeout=10000)
 
     def mo_ql_hs():
-        nav("Lớp")
-        if p.get_by_role("button", name=re.compile("Quản lý Học sinh")).count():
-            p.get_by_role("button", name=re.compile("Quản lý Học sinh")).click()
-        elif p.get_by_role("button", name="Quay lại").count() and p.get_by_text(re.compile("^Quản lý Lớp học")).count():
-            p.get_by_role("button", name="Quay lại").click()
-            p.get_by_role("button", name=re.compile("Quản lý Học sinh")).click()
+        ve_chon_lop()
+        p.get_by_role("button", name=re.compile("Quản lý Học sinh")).click()
+        expect(p.get_by_text(re.compile("^Quản lý Học sinh"))).to_be_visible(timeout=10000)
 
     def tim_hs(ten="TEST"):
         # trang Lớp thu gọn mọi lớp; gõ tên vào ô tìm thì các lớp có em đó tự mở
@@ -127,14 +130,17 @@ with sync_playwright() as pw:
         p.get_by_label(re.compile("SĐT phụ huynh")).fill("0922 000 002")
         p.get_by_label(re.compile("Sticker đã có")).fill("5")
         lab(p, "Ngày vào học").fill("01/11/2026")
-        p.keyboard.press("Enter")  # Enter gửi form ngay; bấm Lưu thêm lần nữa phải không tạo trùng
-        p.locator(".ant-modal").get_by_role("button", name="Lưu").click()
+        p.keyboard.press("Enter")  # Enter gửi form ngay; bấm Lưu thêm lần nữa (nếu modal chưa kịp đóng) phải không tạo trùng
+        try:
+            p.locator(".ant-modal").get_by_role("button", name="Lưu").click(timeout=500)
+        except Exception:
+            pass
         expect(p.locator(".ant-modal")).to_have_count(0, timeout=20000)
         mo_ql_lop()
         # mới vào màn Lớp, mọi lớp đang thu gọn: không thấy em nào cho tới khi tìm
         assert p.locator(".ant-list-item", has_text="TEST Nguyễn Bảo An").count() == 0, "lớp không thu gọn khi mở trang"
         tim_hs("nguyen bao an")  # tìm không dấu
-        expect(p.get_by_text("TEST Nguyễn Bảo An")).to_be_visible(timeout=20000)
+        expect(p.locator(".ant-list-item", has_text="TEST Nguyễn Bảo An")).to_be_visible(timeout=20000)
         p.wait_for_timeout(2500)
         n = p.locator(".ant-list-item", has_text="TEST Nguyễn Bảo An").count()
         assert n == 1, f"học sinh bị tạo {n} lần"
@@ -307,9 +313,7 @@ with sync_playwright() as pw:
     buoc("tab Học phí đúng số + dung lượng ảnh + Excel sheet Học phí đủ trang đúng thứ tự", b_hoc_phi)
 
     def b_import():
-        nav("Lớp")
-        if p.get_by_role("button", name="Quay lại").count():
-            p.get_by_role("button", name="Quay lại").click()
+        ve_chon_lop()
         p.get_by_role("button", name="Import từ Excel").click()
         with p.expect_download() as dl:
             p.get_by_role("button", name="Tải file mẫu").click()
@@ -453,12 +457,12 @@ with sync_playwright() as pw:
             p.reload()
             chon(p, "Em học lớp nào?", "TEST Lớp Starters")
             lab(p, "Tên em").click()
-            expect(p.locator(".ant-select-item-option-disabled", has_text="TEST Nguyễn Bảo An (đã gửi)")).to_be_visible(timeout=5000)
+            expect(p.locator(".ant-select-item-option-disabled", has_text=re.compile(r"TEST Nguyễn Bảo An \(HS\d+\) \(đã gửi\)"))).to_be_visible(timeout=5000)
             p.goto(URL + "#/danh-gia")
             expect(p.locator(".ant-table", has_text="TEST Trợ giảng Lan")).to_contain_text("4", timeout=15000)
             expect(p.get_by_text("TEST nhận xét khoá học")).to_be_visible()
-            # mục chưa gửi chia theo lớp: lớp TEST chỉ có 1 em và em đã gửi
-            expect(p.locator("[data-lop-chua-gui='TEST Lớp Starters']")).to_contain_text("đã gửi 1/1 ✓")
+            # mục chưa gửi chia theo lớp: TEST Lớp Starters có 2 em (TEST Nguyễn Bảo An đã gửi, TEST Lê Minh Châu chưa gửi)
+            expect(p.locator("[data-lop-chua-gui='TEST Lớp Starters']")).to_contain_text("đã gửi 1/2")
             p.get_by_text(re.compile(r"^Từng phiếu")).click()
             expect(p.locator(".ant-collapse", has_text="TEST Nguyễn Bảo An")).to_be_visible()
             p.screenshot(path=os.path.join(OUT, "a-danh-gia.png"), full_page=True)
@@ -510,9 +514,7 @@ with sync_playwright() as pw:
         expect(p.locator("button", has_text="TEST Em Đa Lớp")).to_contain_text("100.000 đ/buổi")
 
         # Mở modal Gộp học sinh kiểm tra không tràn 412px
-        nav("Lớp")
-        if p.get_by_role("button", name="Quay lại").count():
-            p.get_by_role("button", name="Quay lại").click()
+        ve_chon_lop()
         p.get_by_role("button", name="Gộp học sinh trùng").click()
         expect(p.locator(".ant-modal", has_text="Gộp 2 hồ sơ học sinh")).to_be_visible(timeout=10000)
         p.locator(".ant-modal").get_by_role("button", name="Cancel").or_(p.locator(".ant-modal .ant-modal-close")).first.click()

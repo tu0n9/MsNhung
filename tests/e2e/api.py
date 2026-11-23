@@ -4,7 +4,8 @@ from datetime import date, timedelta
 
 D = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(D))
-env = dict(l.split("=", 1) for l in open(os.path.join(REPO, ".env"), encoding="utf-8").read().splitlines() if "=" in l and not l.startswith("#"))
+env_path = os.environ.get("E2E_ENV_FILE") or os.path.join(REPO, ".env")
+env = dict(l.split("=", 1) for l in open(env_path, encoding="utf-8").read().splitlines() if "=" in l and not l.startswith("#"))
 U, K, S = env["VITE_SUPABASE_URL"].strip(), env["VITE_SUPABASE_PUBLISHABLE_KEY"].strip(), env["SUPABASE_SECRET_KEY"].strip()
 KQ = []
 HN = date.today().isoformat()
