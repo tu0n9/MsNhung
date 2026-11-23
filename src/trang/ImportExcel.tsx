@@ -156,7 +156,7 @@ export default function ImportExcel() {
               <div style={{ flexGrow: 1, minWidth: 0 }}>
                 {d.loai === 'lop' ? <>
                   <b>{d.ten || '(chưa có tên)'}</b>
-                  <div style={{ fontSize: 12, color: MAU.chuPhu }}>{vnd(d.don_gia)}/buổi, {d.lich.length ? moTaLich(d) : 'chưa có lịch'}</div>
+                  <div style={{ fontSize: 12, color: MAU.chuPhu }}>{d.don_gia > 0 ? `${vnd(d.don_gia)}/buổi` : 'Giá theo từng HS'}, {d.lich.length ? moTaLich(d) : 'chưa có lịch'}</div>
                 </> : <>
                   <b>{d.ho_ten || '(chưa có tên)'}</b>
                   <div style={{ fontSize: 12, color: MAU.chuPhu }}>

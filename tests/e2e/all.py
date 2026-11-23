@@ -56,9 +56,25 @@ with sync_playwright() as pw:
     def nav(t):
         p.locator("nav").get_by_text(t, exact=True).click()
 
+    def mo_ql_lop():
+        nav("Lớp")
+        if p.get_by_role("button", name=re.compile("Quản lý Lớp học")).count():
+            p.get_by_role("button", name=re.compile("Quản lý Lớp học")).click()
+        elif p.get_by_role("button", name="Quay lại").count() and p.get_by_text(re.compile("^Quản lý Học sinh")).count():
+            p.get_by_role("button", name="Quay lại").click()
+            p.get_by_role("button", name=re.compile("Quản lý Lớp học")).click()
+
+    def mo_ql_hs():
+        nav("Lớp")
+        if p.get_by_role("button", name=re.compile("Quản lý Học sinh")).count():
+            p.get_by_role("button", name=re.compile("Quản lý Học sinh")).click()
+        elif p.get_by_role("button", name="Quay lại").count() and p.get_by_text(re.compile("^Quản lý Lớp học")).count():
+            p.get_by_role("button", name="Quay lại").click()
+            p.get_by_role("button", name=re.compile("Quản lý Học sinh")).click()
+
     def tim_hs(ten="TEST"):
         # trang Lớp thu gọn mọi lớp; gõ tên vào ô tìm thì các lớp có em đó tự mở
-        p.get_by_label("Tìm tên học sinh").fill(ten)
+        p.get_by_label(re.compile(r"Tìm (lớp hoặc )?học sinh")).fill(ten)
 
     def huong_dan(vao, so_video):
         vao()
@@ -85,10 +101,10 @@ with sync_playwright() as pw:
     buoc("tạo trợ giảng", b_tao_tg)
 
     def b_lop_hs():
-        nav("Lớp")
+        mo_ql_lop()
         p.get_by_role("button", name="Thêm lớp").click()
         lab(p, "Tên lớp").fill("TEST Lớp Starters")
-        lab(p, "Đơn giá một buổi (đ)").fill("100000")
+        lab(p, "Đơn giá một buổi mặc định (đ)").fill("100000")
         m = p.locator(".ant-modal")
         m.get_by_text("T2", exact=True).click()
         m.get_by_label("T2 bắt đầu").fill("16:45")
@@ -100,9 +116,10 @@ with sync_playwright() as pw:
         p.locator(".ant-modal").get_by_role("button", name="Lưu").click()
         expect(p.get_by_text("TEST Lớp Starters")).to_be_visible(timeout=15000)
         expect(p.get_by_text(re.compile("16:45–18:15"))).to_be_visible()
+        mo_ql_hs()
         p.get_by_role("button", name="Thêm học sinh").click()
         lab(p, "Họ tên").fill("TEST Nguyễn Bảo An")
-        chon(p, "Các lớp học", "TEST Lớp Starters")
+        chon(p, p.get_by_label(re.compile("^Các lớp học")), "TEST Lớp Starters")
         p.keyboard.press("Escape")
         expect(lab(p, "Đơn giá/buổi cố định của học sinh (đ)")).to_have_value(re.compile(r"100[.,]?000"))
         p.locator(".ant-modal input[type=file]").set_input_files(os.path.join(D, "avatar.jpg"))
@@ -113,7 +130,8 @@ with sync_playwright() as pw:
         p.keyboard.press("Enter")  # Enter gửi form ngay; bấm Lưu thêm lần nữa phải không tạo trùng
         p.locator(".ant-modal").get_by_role("button", name="Lưu").click()
         expect(p.locator(".ant-modal")).to_have_count(0, timeout=20000)
-        # mới vào trang, mọi lớp đang thu gọn: không thấy em nào cho tới khi tìm
+        mo_ql_lop()
+        # mới vào màn Lớp, mọi lớp đang thu gọn: không thấy em nào cho tới khi tìm
         assert p.locator(".ant-list-item", has_text="TEST Nguyễn Bảo An").count() == 0, "lớp không thu gọn khi mở trang"
         tim_hs("nguyen bao an")  # tìm không dấu
         expect(p.get_by_text("TEST Nguyễn Bảo An")).to_be_visible(timeout=20000)
@@ -214,7 +232,7 @@ with sync_playwright() as pw:
         p.locator(".ant-list-item", has_text="TEST Nguyễn Bảo An").get_by_text("Học bù", exact=True).click()
         p.wait_for_timeout(1500)
         p.get_by_role("button", name="← Quay lại").click()
-        nav("Lớp")
+        mo_ql_lop()
         tim_hs()
         p.get_by_text("TEST Nguyễn Bảo An").click()
         kiem_luoi()
@@ -223,7 +241,7 @@ with sync_playwright() as pw:
     buoc("lưới điểm danh tháng (giáo viên): có mặt / vắng / học bù / chưa điểm danh, chạm ô hiện chi tiết", b_luoi)
 
     def b_thu_tien():
-        nav("Lớp")
+        mo_ql_lop()
         tim_hs()
         p.get_by_text("TEST Nguyễn Bảo An").click()
         p.get_by_role("button", name="Thu tiền").click()
@@ -290,7 +308,9 @@ with sync_playwright() as pw:
 
     def b_import():
         nav("Lớp")
-        p.get_by_role("button", name="Import Excel").click()
+        if p.get_by_role("button", name="Quay lại").count():
+            p.get_by_role("button", name="Quay lại").click()
+        p.get_by_role("button", name="Import từ Excel").click()
         with p.expect_download() as dl:
             p.get_by_role("button", name="Tải file mẫu").click()
         mau = os.path.join(OUT, "mau.xlsx")
@@ -303,7 +323,7 @@ with sync_playwright() as pw:
         p.get_by_role("button", name="3 dòng mới, 1 thêm lớp").click()
         expect(p.get_by_text("Đã thêm 1 lớp, 2 học sinh mới, 1 lượt thêm lớp")).to_be_visible(timeout=60000)
         p.get_by_role("button", name="Về trang Lớp").click()
-        p.get_by_role("button", name="Import Excel").click()
+        p.get_by_role("button", name="Import từ Excel").click()
         p.locator("input[type=file]").set_input_files(dien)
         p.wait_for_timeout(2000)
         expect(p.locator(".ant-segmented")).to_contain_text("Mới 0")
@@ -326,7 +346,7 @@ with sync_playwright() as pw:
     buoc("gỡ em lớp khác thêm nhầm vào buổi thường: chỉ em lớp khác có nút Gỡ, gỡ xong biến khỏi danh sách", b_go_hoc_bu)
 
     def b_sticker():
-        nav("Lớp")
+        mo_ql_lop()
         tim_hs()
         chip = p.get_by_role("button", name="Sticker của TEST Nguyễn Bảo An")
         expect(chip).to_be_visible(timeout=15000)
@@ -385,21 +405,24 @@ with sync_playwright() as pw:
     buoc("nhật ký thao tác: giáo viên mở từ trang Tài khoản, thấy cộng/trừ sticker vừa làm kể cả lần đã xoá", b_nhat_ky)
 
     def b_xoa_lop():
-        nav("Lớp")
+        mo_ql_lop()
         p.locator(".ant-collapse-item", has_text="TEST Movers 2").get_by_role("button", name="Sửa lớp", exact=True).click()
         p.locator(".ant-modal").get_by_role("button", name="Xoá lớp").click()
         hop = p.locator(".ant-modal-confirm")
-        expect(hop.get_by_role("button", name="Xoá hẳn")).to_be_disabled()
+        expect(hop.get_by_role("button", name="Xoá lớp")).to_be_disabled()
         hop.get_by_label("Gõ lại tên lớp").fill("TEST Movers")
-        expect(hop.get_by_role("button", name="Xoá hẳn")).to_be_disabled()
+        expect(hop.get_by_role("button", name="Xoá lớp")).to_be_disabled()
         hop.get_by_label("Gõ lại tên lớp").fill("TEST Movers 2")
-        hop.get_by_role("button", name="Xoá hẳn").click()
+        hop.get_by_role("button", name="Xoá lớp").click()
         expect(p.get_by_text("Đã xoá lớp TEST Movers 2")).to_be_visible(timeout=15000)
         expect(p.locator(".ant-collapse-item", has_text="TEST Movers 2")).to_have_count(0)
-        assert p.get_by_text("TEST Nguyễn Gia Bảo").count() == 0, "học sinh chỉ học lớp đã xoá vẫn còn"
         tim_hs("TEST Lê Minh Châu")
         expect(p.get_by_text("TEST Lê Minh Châu")).to_be_visible(timeout=10000)
-    buoc("xoá lớp có học sinh: em 1 lớp biến mất, em học 2 lớp vẫn giữ lại ở lớp còn lại", b_xoa_lop)
+        # Em chỉ học lớp vừa xoá được giữ nguyên hồ sơ ở mục Quản lý Học sinh với nhãn "Chưa xếp lớp"
+        mo_ql_hs()
+        tim_hs("TEST Nguyễn Gia Bảo")
+        expect(p.locator(".ant-list-item", has_text="TEST Nguyễn Gia Bảo")).to_contain_text("Chưa xếp lớp", timeout=10000)
+    buoc("xoá lớp có học sinh: em 1 lớp chuyển về Chưa xếp lớp ở mục Học sinh, em học 2 lớp vẫn giữ ở lớp còn lại", b_xoa_lop)
 
     def b_danh_gia():
         nav("Học phí")
@@ -446,11 +469,11 @@ with sync_playwright() as pw:
             p.goto(URL)
     buoc("đánh giá: tạo link, học sinh chọn lớp + tên gửi phiếu, tên mờ 'đã gửi', giáo viên thấy điểm + nhận xét", b_danh_gia)
     def b_nhieu_lop():
-        nav("Lớp")
+        mo_ql_lop()
         for ten_lop, thu, gia in [("TEST Lớp Đa Lớp A", "T2", "100000"), ("TEST Lớp Đa Lớp B", "T4", "150000")]:
             p.get_by_role("button", name="Thêm lớp").click()
             lab(p, "Tên lớp").fill(ten_lop)
-            lab(p, "Đơn giá một buổi (đ)").fill(gia)
+            lab(p, "Đơn giá một buổi mặc định (đ)").fill(gia)
             m = p.locator(".ant-modal")
             m.get_by_text(thu, exact=True).click()
             m.get_by_label(f"{thu} bắt đầu").fill("17:30")
@@ -458,9 +481,10 @@ with sync_playwright() as pw:
             m.get_by_role("button", name="Lưu").click()
             expect(p.get_by_text(ten_lop)).to_be_visible(timeout=15000)
 
+        mo_ql_hs()
         p.get_by_role("button", name="Thêm học sinh").click()
         lab(p, "Họ tên").fill("TEST Em Đa Lớp")
-        chon(p, "Các lớp học", "TEST Lớp Đa Lớp A")
+        chon(p, p.get_by_label(re.compile("^Các lớp học")), "TEST Lớp Đa Lớp A")
         p.keyboard.press("Escape")
         p.get_by_label(re.compile("SĐT phụ huynh")).fill("0988777666")
         p.locator(".ant-modal").get_by_role("button", name="Lưu").click()
@@ -469,12 +493,13 @@ with sync_playwright() as pw:
         # Thêm lại cùng tên + SĐT ở lớp B → tự gộp vào cùng học sinh
         p.get_by_role("button", name="Thêm học sinh").click()
         lab(p, "Họ tên").fill("TEST Em Đa Lớp")
-        chon(p, "Các lớp học", "TEST Lớp Đa Lớp B")
+        chon(p, p.get_by_label(re.compile("^Các lớp học")), "TEST Lớp Đa Lớp B")
         p.keyboard.press("Escape")
         p.get_by_label(re.compile("SĐT phụ huynh")).fill("0988777666")
         p.locator(".ant-modal").get_by_role("button", name="Lưu").click()
         expect(p.locator(".ant-modal")).to_have_count(0, timeout=15000)
 
+        mo_ql_lop()
         tim_hs("TEST Em Đa Lớp")
         expect(p.locator(".ant-list-item", has_text="TEST Em Đa Lớp").first.get_by_text("+1 lớp")).to_be_visible(timeout=10000)
 
@@ -486,7 +511,9 @@ with sync_playwright() as pw:
 
         # Mở modal Gộp học sinh kiểm tra không tràn 412px
         nav("Lớp")
-        p.get_by_role("button", name="Gộp học sinh").click()
+        if p.get_by_role("button", name="Quay lại").count():
+            p.get_by_role("button", name="Quay lại").click()
+        p.get_by_role("button", name="Gộp học sinh trùng").click()
         expect(p.locator(".ant-modal", has_text="Gộp 2 hồ sơ học sinh")).to_be_visible(timeout=10000)
         p.locator(".ant-modal").get_by_role("button", name="Cancel").or_(p.locator(".ant-modal .ant-modal-close")).first.click()
     buoc("nhiều lớp: thêm trùng tự gộp (+1 lớp), Học phí đúng 1 dòng, modal Gộp mở sạch", b_nhieu_lop)
@@ -504,7 +531,7 @@ with sync_playwright() as pw:
         p.get_by_role("button", name="Lưu").click()
         expect(p.get_by_text("Thoát")).to_be_visible(timeout=15000)
         assert p.locator("nav").get_by_text("Học phí", exact=True).count() == 0, "trợ giảng thấy tab Học phí"
-        nav("Lớp")
+        mo_ql_lop()
         tim_hs()
         expect(p.get_by_role("button", name="Sticker của TEST Nguyễn Bảo An")).to_be_visible(timeout=15000)
         nav("Tài khoản")

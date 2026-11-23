@@ -185,7 +185,8 @@ export function kiemTra(
 
   const lops: KqLop[] = lopTho.map((r) => {
     const ten = chu(r.ten)
-    const gia = chuanTien(r.donGia, 'Đơn giá/buổi', true)
+    // Đơn giá lớp là tuỳ chọn (bỏ trống lưu 0, đồng bộ với form Thêm/Sửa lớp; học phí chính tính theo từng học sinh)
+    const gia = chuanTien(r.donGia, 'Đơn giá/buổi', false)
     // ô thứ ghi giờ học "17:30-19:00"; ô trống = không học thứ đó
     const o = COT_THU.map((t, i) => ({ t, v: chu(r.thu[i]), g: docOGio(chu(r.thu[i])) })).filter((x) => x.v)
     const thuSai = o.find((x) => !x.g)
@@ -234,7 +235,8 @@ export function kiemTra(
     const sdt = chuanSdt(r.sdt), ngay = chuanNgay(r.ngayVao, homNay), link = chuanLinkZalo(r.linkZalo)
     const gia = chuanTien(r.donGia ?? r.donGiaRieng, 'Đơn giá/buổi', false)
     const st = chuanTien(r.sticker, 'Sticker đã có', false)
-    const donGiaHsMoi = gia.so ?? giaLop.get(kLop) ?? 0
+    const giaLopMacDinh = tenLop ? giaLop.get(kLop) : undefined
+    const donGiaHsMoi = gia.so ?? (giaLopMacDinh && giaLopMacDinh > 0 ? giaLopMacDinh : 0)
     const kq: KqHs = {
       loai: 'hs', so: r.so, trangThai: 'moi', ma_hs: maRaw ? maRaw.toUpperCase() : null,
       ho_ten: hoTen, tenLop, ten_phu_huynh: chu(r.tenPh) || null,
@@ -350,8 +352,13 @@ export function kiemTra(
       }
     }
 
-    if (!tenLop && gia.so === null) {
-      return { ...kq, trangThai: 'loi', loi: 'Chưa chọn lớp nên cần nhập Đơn giá/buổi (nhập 0 nếu miễn phí)' }
+    if (gia.so === null) {
+      if (!tenLop) {
+        return { ...kq, trangThai: 'loi', loi: 'Chưa chọn lớp nên cần nhập Đơn giá/buổi (nhập 0 nếu miễn phí)' }
+      }
+      if (!(giaLopMacDinh && giaLopMacDinh > 0)) {
+        return { ...kq, trangThai: 'loi', loi: `Lớp "${tenLop}" chưa đặt đơn giá mặc định nên cần nhập Đơn giá/buổi cho học sinh (nhập 0 nếu miễn phí)` }
+      }
     }
 
     dsCungTen.push({ so: r.so, sdt: sdt.sdt, link: link.link, donGia: donGiaHsMoi, lops: tenLop ? new Set([kLop]) : new Set(), coLink: !!link.link })
@@ -412,22 +419,22 @@ export async function taoBufferFileMau(lops: Lop[], hss: HocSinh[], gds: GhiDanh
   hd.getColumn(1).width = 110
   ;[
     'CÁCH DÙNG FILE MẪU',
-    '1. Trang "Lớp": mỗi dòng một lớp. Các lớp đang có đã điền sẵn, import sẽ bỏ qua chúng. Cột thứ có học ghi giờ bắt đầu-kết thúc, ví dụ 17:30-19:00; thứ không học để trống.',
+    '1. Trang "Lớp": mỗi dòng một lớp. Các lớp đang có đã điền sẵn, import sẽ bỏ qua chúng. Cột Đơn giá/buổi là tuỳ chọn (để trống nếu học phí tính theo từng học sinh). Cột thứ có học ghi giờ bắt đầu-kết thúc, ví dụ 17:30-19:00; thứ không học để trống.',
     '2. Trang "Học sinh": mỗi dòng là 1 học sinh (hoặc 1 lượt xếp lớp). Cột Lớp không bắt buộc: chọn trong ô thả xuống để xếp luôn vào lớp, hoặc để trống để nhập vào danh sách "Chưa xếp lớp" (khi để trống Lớp cần ghi Đơn giá/buổi).',
     '3. Cột có dấu * là bắt buộc. Dòng bắt đầu bằng "Ví dụ" sẽ được bỏ qua.',
     '4. Mã HS (không bắt buộc): học sinh mới cứ để trống (hệ thống tự cấp HS001...). Học sinh đã có được điền sẵn Mã HS để phân biệt tuyệt đối khi trùng tên và xếp thêm lớp.',
     '5. Phân biệt & gộp học sinh học nhiều lớp (khi không ghi Mã HS): app dựa vào Họ tên + SĐT phụ huynh HOẶC Link nhóm Zalo. Cùng tên + cùng SĐT/Link Zalo sẽ tự gộp thành 1 em; khác SĐT hoặc khác Link Zalo sẽ tách thành 2 em. Nếu trùng tên nhưng thiếu cả SĐT lẫn Link Zalo, app sẽ báo lỗi để tránh gộp nhầm.',
     '6. Ngày vào học: dạng ngày/tháng/năm, để trống thì lấy ngày import.',
-    '7. Đơn giá/buổi: mức học phí cố định duy nhất áp cho TẤT CẢ các lớp của học sinh (nhập 0 = học miễn phí; để trống = lấy theo đơn giá của lớp đầu tiên).',
+    '7. Đơn giá/buổi: mức học phí cố định duy nhất áp cho TẤT CẢ các lớp của học sinh (nhập 0 = học miễn phí; để trống = lấy theo đơn giá mặc định của lớp đầu tiên nếu lớp đó có đặt > 0).',
     '8. Dòng đã có trong đúng lớp đó được bỏ qua (trừ cột Link nhóm Zalo: có link mới thì cập nhật). Dòng lỗi không được nhập; sửa rồi import lại vẫn an toàn.',
     '9. CHÚ Ý: không sửa Mã HS, Họ tên, Lớp của các dòng điền sẵn để tránh nhận nhầm. Muốn sửa thông tin cá nhân thì sửa trực tiếp trong app.',
   ].forEach((t, i) => { const r = hd.addRow([t]); if (i === 0) r.font = { bold: true, size: 14 } })
 
   const wsLop = wb.addWorksheet(TRANG_LOP)
-  tieuDe(wsLop, [{ ten: 'Tên lớp', rong: 22, batBuoc: true }, { ten: 'Đơn giá/buổi', rong: 14, batBuoc: true },
+  tieuDe(wsLop, [{ ten: 'Tên lớp', rong: 22, batBuoc: true }, { ten: 'Đơn giá/buổi', rong: 14 },
     ...COT_THU.map((t) => ({ ten: THU[t], rong: 12 }))])
   wsLop.addRow(['Ví dụ: Movers 2', 120000, '', '17:30-19:00', '', '17:30-19:00', '', '08:00-09:30', '']).font = { italic: true, color: { argb: 'FF8C8C8C' } }
-  for (const l of lops) wsLop.addRow([l.ten, l.don_gia, ...COT_THU.map((t) => (l.lich.includes(t) ? (l.gio_thu[t] ? `${l.gio_thu[t].bd}-${l.gio_thu[t].kt}` : 'chưa có giờ') : ''))])
+  for (const l of lops) wsLop.addRow([l.ten, l.don_gia > 0 ? l.don_gia : '', ...COT_THU.map((t) => (l.lich.includes(t) ? (l.gio_thu[t] ? `${l.gio_thu[t].bd}-${l.gio_thu[t].kt}` : 'chưa có giờ') : ''))])
   wsLop.getColumn(2).numFmt = '#,##0'
 
   const wsHs = wb.addWorksheet(TRANG_HS)

@@ -514,7 +514,7 @@ finally:
     SV("DELETE", f"/rest/v1/nhat_ky_chot_so?id=gt.{nk_cuoi}")
     ok("khoá sổ đã trả về như trước", SV("GET", "/rest/v1/khoa_so?select=khoa_den")[1] == khoa_truoc)
 
-# --- xoa_lop: em học 1 lớp bị xoá sạch mọi bảng; em học 2 lớp được giữ lại và đồng bộ trang_thai ---
+# --- xoa_lop: giữ nguyên toàn bộ hồ sơ hoc_sinh, gói học, sticker; chỉ xoá lớp, buổi học, điểm danh, ảnh buổi và ghi_danh của lớp đó ---
 lop_id = lop_st[0]["id"]
 _, hs2_res = SV("POST", "/rest/v1/hoc_sinh", {"ho_ten": "TEST Em Hai Lớp", "don_gia": 100000, "ngay_vao": thang_nay}, prefer=R)
 hs_da_lop = hs2_res[0]["id"]
@@ -533,16 +533,18 @@ try:
     c, anh_xoa = goi("POST", "/rest/v1/rpc/xoa_lop", A, {"p_lop": lop_id, "p_ten": "TEST Lớp Starters"})
     con_lai = {
         "lop": SV("GET", f"/rest/v1/lop?select=id&id=eq.{lop_id}")[1],
-        "hoc_sinh": SV("GET", f"/rest/v1/hoc_sinh?select=id&id=eq.{hs_id}")[1],
         "ghi_danh_lop": SV("GET", f"/rest/v1/ghi_danh?select=id&lop_id=eq.{lop_id}")[1],
         "buoi_hoc": SV("GET", f"/rest/v1/buoi_hoc?select=id&lop_id=eq.{lop_id}")[1],
         "diem_danh": SV("GET", f"/rest/v1/diem_danh?select=buoi_id&buoi_id=in.({bids})")[1],
-        "goi_hoc": SV("GET", f"/rest/v1/goi_hoc?select=id&hoc_sinh_id=eq.{hs_id}")[1],
         "anh_buoi": SV("GET", f"/rest/v1/anh_buoi?select=id&buoi_id=in.({bids})")[1],
-        "sticker_cong_tru": SV("GET", f"/rest/v1/sticker_cong_tru?select=id&hoc_sinh_id=eq.{hs_id}")[1],
     }
-    ok(f"xoá lớp có dữ liệu: sạch mọi bảng với em 1 lớp, trả {len(anh_xoa) if c == 200 else '?'} đường dẫn ảnh",
-       c == 200 and not any(con_lai.values()) and len(anh_xoa) >= 2)
+    ok(f"xoá lớp có dữ liệu: xoá sạch lớp/buổi/điểm danh/ghi_danh/ảnh buổi, trả {len(anh_xoa) if c == 200 else '?'} ảnh buổi",
+       c == 200 and not any(con_lai.values()) and len(anh_xoa) >= 1)
+    ok("xoá lớp: em học 1 lớp vẫn giữ nguyên hồ sơ, gói học, sticker và chuyển về Chưa xếp lớp (0 ghi_danh, trang_thai='dang_hoc')",
+       SV("GET", f"/rest/v1/hoc_sinh?select=trang_thai&id=eq.{hs_id}")[1] == [{"trang_thai": "dang_hoc"}]
+       and SV("GET", f"/rest/v1/ghi_danh?select=id&hoc_sinh_id=eq.{hs_id}")[1] == []
+       and len(SV("GET", f"/rest/v1/goi_hoc?select=id&hoc_sinh_id=eq.{hs_id}")[1]) >= 1
+       and len(SV("GET", f"/rest/v1/sticker_cong_tru?select=id&hoc_sinh_id=eq.{hs_id}")[1]) >= 1)
     ok("xoá lớp: em học 2 lớp vẫn giữ nguyên hồ sơ và ghi_danh ở lớp còn lại (trang_thai='dang_hoc')",
        SV("GET", f"/rest/v1/hoc_sinh?select=trang_thai&id=eq.{hs_da_lop}")[1] == [{"trang_thai": "dang_hoc"}]
        and SV("GET", f"/rest/v1/ghi_danh?select=lop_id&hoc_sinh_id=eq.{hs_da_lop}")[1] == [{"lop_id": lop_b_id}])
@@ -550,7 +552,7 @@ try:
        SV("GET", f"/rest/v1/hoc_sinh?select=trang_thai&id=eq.{hs_ngung_giu}")[1] == [{"trang_thai": "ngung"}]
        and SV("GET", f"/rest/v1/ghi_danh?select=lop_id,trang_thai&hoc_sinh_id=eq.{hs_ngung_giu}")[1] == [{"lop_id": lop_b_id, "trang_thai": "ngung"}])
     _, dg = SV("GET", "/rest/v1/danh_gia?select=lop_id,hoc_sinh_id&ten_lop=eq.TEST%20L%E1%BB%9Bp%20Starters")
-    ok("xoá lớp: phiếu đánh giá của lớp vẫn giữ, chỉ bỏ liên kết", len(dg) == 1 and dg[0] == {"lop_id": None, "hoc_sinh_id": None})
+    ok("xoá lớp: phiếu đánh giá của lớp vẫn giữ (bỏ lop_id, giữ hoc_sinh_id vì hồ sơ HS còn)", len(dg) == 1 and dg[0] == {"lop_id": None, "hoc_sinh_id": hs_id})
     if c == 200 and anh_xoa:
         try:
             goi("DELETE", "/storage/v1/object/anh", S, {"prefixes": anh_xoa}, key=S)

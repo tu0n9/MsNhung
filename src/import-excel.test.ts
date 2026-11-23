@@ -50,7 +50,7 @@ describe('chuẩn hoá ô', () => {
 })
 
 describe('kiemTra', () => {
-  it('lớp: đã có thì bỏ qua (không phân biệt hoa thường), lớp mới cần đơn giá và ít nhất một thứ có giờ', () => {
+  it('lớp: đã có thì bỏ qua (không phân biệt hoa thường), đơn giá lớp tuỳ chọn (trống -> 0), cần ít nhất một thứ có giờ hợp lệ', () => {
     const { lops } = kiemTra([
       lop(2, 'starters 1', 999, 'g......'),
       lop(3, 'Movers 2', '120.000', '.g.g.g.'),
@@ -58,13 +58,45 @@ describe('kiemTra', () => {
       lop(5, 'Flyers B', 100000, '.......'),
       lop(6, 'Flyers C', 100000, 'x......'),
       lop(7, 'Flyers D', 100000, '.v.....'),
+      lop(8, 'Flyers E', -50000, 'g......'),
     ], [], lopCo, [], [], HOM_NAY)
-    expect(lops.map((l) => l.trangThai)).toEqual(['da_co', 'moi', 'loi', 'loi', 'loi', 'loi'])
+    expect(lops.map((l) => l.trangThai)).toEqual(['da_co', 'moi', 'moi', 'loi', 'loi', 'loi', 'loi'])
     expect(lops[1].lich).toEqual([2, 4, 6])
     expect(lops[1].gio_thu[4]).toEqual({ bd: '17:30', kt: '19:00' })
+    expect(lops[2].don_gia).toBe(0)
     expect(lops[4].loi).toBe('Cột T2 ghi giờ dạng 17:30-19:00 (đang có "x")')
     expect(lops[5].loi).toMatch(/Cột T3/)
+    expect(lops[6].loi).toMatch(/không hợp lệ/)
     expect(lops[1].don_gia).toBe(120000)
+  })
+
+  it('lớp không đặt đơn giá mặc định (don_gia = 0): HS mới để trống đơn giá phải báo lỗi thay vì âm thầm thành 0đ miễn phí', async () => {
+    const lopKhongGia: Lop[] = [
+      ...lopCo,
+      { id: 'l3', ten: 'Lớp Giá Theo HS', don_gia: 0, lich: [1], gio_thu: { 1: { bd: '17:30', kt: '19:00' } }, hoat_dong: true },
+    ]
+    const { lops, hss } = kiemTra([
+      lop(2, 'Lớp Mới Trống Giá', '', '.g.....'),
+    ], [
+      hs(2, { hoTen: 'Em Quên Ghi Giá DB', lop: 'Lớp Giá Theo HS', donGia: '' }),
+      hs(3, { hoTen: 'Em Quên Ghi Giá File', lop: 'Lớp Mới Trống Giá', donGia: '' }),
+      hs(4, { hoTen: 'Em Ghi Rõ 0đ', lop: 'Lớp Giá Theo HS', donGia: 0 }),
+      hs(5, { hoTen: 'Em Ghi Rõ 150k', lop: 'Lớp Mới Trống Giá', donGia: 150000 }),
+    ], lopKhongGia, [], [], HOM_NAY)
+    expect(lops[0]).toMatchObject({ trangThai: 'moi', don_gia: 0 })
+    expect(hss[0].trangThai).toBe('loi')
+    expect(hss[0].loi).toMatch(/chưa đặt đơn giá mặc định/)
+    expect(hss[1].trangThai).toBe('loi')
+    expect(hss[1].loi).toMatch(/chưa đặt đơn giá mặc định/)
+    expect(hss[2]).toMatchObject({ trangThai: 'moi', don_gia: 0 })
+    expect(hss[3]).toMatchObject({ trangThai: 'moi', don_gia: 150000 })
+
+    // taoBufferFileMau để trống cột Đơn giá ở trang Lớp khi lop.don_gia === 0 và round-trip vẫn 100% da_co
+    const buf = await taoBufferFileMau(lopKhongGia, [], [])
+    const { lopTho } = await docFile(buf)
+    expect(lopTho.find((x) => x.ten === 'Lớp Giá Theo HS')?.donGia).toBe('')
+    const rt = kiemTra(lopTho, [], lopKhongGia, [], [], HOM_NAY)
+    expect(rt.lops.every((x) => x.trangThai === 'da_co' && !x.loi)).toBe(true)
   })
 
   it('học sinh: trùng đúng lớp thì bỏ qua; cùng tên + SĐT ở lớp khác nhau được gộp thành 1 em (them_lop)', () => {
