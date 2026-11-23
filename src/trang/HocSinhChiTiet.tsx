@@ -11,6 +11,7 @@ import {
 import { moTaLich } from '../gio-hoc'
 import { luoiThang, type ONgay, type TrangThaiO } from '../diem-danh-thang'
 import { chuanLinkZalo } from '../import-excel'
+import { phanLoaiHocSinh, thongTinTrangThaiChiTiet } from '../lop-hoc'
 
 type Phieu = PhieuThu & { id: string; hinh_thuc: string; ghi_chu: string | null }
 
@@ -100,7 +101,8 @@ export default function HocSinhChiTiet({ hs, lops, ghiDanh, quayLai }: { hs: Hoc
   const th = useMemo(() => tongHopHocSinh(goi, phieu, thang), [goi, phieu, thang])
   const noTheoGoi = useMemo(() => noThucCuaGoi(goi, phieu), [goi, phieu])
   const dangNo = useMemo(() => goi.filter((g) => (noTheoGoi[g.id] ?? 0) > 0), [goi, noTheoGoi])
-  const chanThuTien = gdDangHoc.length === 0 && dangNo.length === 0
+  const loaiHs = useMemo(() => phanLoaiHocSinh(hs.id, ghiDanh), [hs.id, ghiDanh])
+  const trangThaiCt = thongTinTrangThaiChiTiet(loaiHs, dangNo.length > 0)
   const tinNhan = tinNhanPhuHuynh(hs.ho_ten, thang, th, soCoMat)
   const tt = tinhTrangGoiNhieuLop(goi, dsLopDangHoc, homNay())
   const ngayNgan = (n?: string) => n ? `${n.slice(8)}/${n.slice(5, 7)}` : ''
@@ -115,7 +117,7 @@ export default function HocSinhChiTiet({ hs, lops, ghiDanh, quayLai }: { hs: Hoc
             <b style={{ fontSize: 18 }}>{hs.ho_ten}</b>
             <Tag>{hs.ma_hs}</Tag>
             {ql && <Tag color="pink">{vnd(hs.don_gia)}/buổi</Tag>}
-            {gdDangHoc.length === 0 && <Tag>Ngừng học</Tag>}
+            {trangThaiCt.nhanTag && <Tag color={trangThaiCt.mauTag}>{trangThaiCt.nhanTag}</Tag>}
           </Space>
           <div style={{ fontSize: 13, color: MAU.chuPhu }}>
             {(gdDangHoc.length ? gdDangHoc : gdEm).map((g) => {
@@ -162,8 +164,8 @@ export default function HocSinhChiTiet({ hs, lops, ghiDanh, quayLai }: { hs: Hoc
       </Card>}
 
       {ql && <Card size="small" title="Học phí" extra={
-        <Button type="primary" disabled={chanThuTien}
-          title={chanThuTien ? 'Học sinh đã ngừng học và không còn gói nợ' : undefined}
+        <Button type="primary" disabled={trangThaiCt.chanThuTien}
+          title={trangThaiCt.lyDoChanThuTien}
           onClick={() => setThuTien(true)}>Thu tiền</Button>
       }>
         {gdDangHoc.length > 0 && <div style={{ marginBottom: 8, color: tt.loai === 'con' ? undefined : MAU.do }} data-goi-hien-tai>

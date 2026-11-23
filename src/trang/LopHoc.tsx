@@ -8,7 +8,7 @@ import { giaGhiDanh, laQuanLy, lopCuaHs, q, sb, taiAnhLen, taiHet, taiTongSticke
 import { vnd } from '../hoc-phi'
 import { cong2Gio, moTaLich, thieuGio, type GioThu } from '../gio-hoc'
 import { khoa } from '../import-excel'
-import { coCanHienGiaRieng, dsHocSinhCoTheThemVaoLop, ghiDanhCanDongBoNgay, khongDau, locGoiYHocSinh, locHocSinh, phanLoaiHocSinh, trangThaiHsSauGhiDanh, trangThaiHsSauSua, type PhanLoaiHs } from '../lop-hoc'
+import { chuanDonGiaLop, coCanHienGiaRieng, dsHocSinhCoTheThemVaoLop, ghiDanhCanDongBoNgay, goiYDonGiaTuLop, khongDau, kiemTraGopLopVaoEm, locGoiYHocSinh, locHocSinh, locHsTrongLop, phanLoaiHocSinh, thucHienThemHsVaoLop, trangThaiHsSauGhiDanh, trangThaiHsSauSua, type PhanLoaiHs } from '../lop-hoc'
 import { MAU, O_TIEN } from '../giao-dien'
 import HocSinhChiTiet from './HocSinhChiTiet'
 
@@ -69,10 +69,10 @@ export default function LopHoc() {
     return (dh.length ? dh : ds).map((g) => lopMap.get(g.lop_id)?.ten).filter(Boolean).join(', ')
   }
 
-  const [luuLop, dangLuuLop] = useMotLan(async (v: Lop) => {
+  const [luuLop, dangLuuLop] = useMotLan(async (v: Omit<Lop, 'don_gia'> & { don_gia?: number | null }) => {
     try {
       const gio_thu = v.gio_thu ?? {}
-      const ban = { ten: v.ten.trim(), don_gia: v.don_gia, lich: Object.keys(gio_thu).map(Number), gio_thu, hoat_dong: v.hoat_dong ?? true }
+      const ban = { ten: v.ten.trim(), don_gia: chuanDonGiaLop(v.don_gia), lich: Object.keys(gio_thu).map(Number), gio_thu, hoat_dong: v.hoat_dong ?? true }
       await q(suaLop?.id ? sb.from('lop').update(ban).eq('id', suaLop.id) : sb.from('lop').insert(ban))
       setSuaLop(null); tai()
     } catch (e) { message.error((e as Error).message) }
@@ -200,7 +200,11 @@ export default function LopHoc() {
       }
 
       // Nếu cô đã chọn học sinh có sẵn trong danh sách gợi ý -> gộp lớp thẳng vào hồ sơ đó
-      if (emDaChon) return await gopLopVaoEm(emDaChon, lopIds, ngayVao, v.gia_rieng)
+      if (emDaChon) {
+        const loiGop = kiemTraGopLopVaoEm(true, lopIds)
+        if (loiGop) { message.warning(loiGop); return }
+        return await gopLopVaoEm(emDaChon, lopIds, ngayVao, v.gia_rieng)
+      }
 
       // Luồng thêm mới: trùng Họ tên + SĐT (và có chọn lớp) -> gộp luôn; trùng Họ tên -> hỏi xác nhận tránh trùng hồ sơ
       const tenK = khoa(v.ho_ten)
@@ -285,14 +289,15 @@ export default function LopHoc() {
   }
 
   const moThemHs = (lopMacDinh?: Lop) => {
-    setSuaHs({ ngay_vao: dayjs().format('YYYY-MM-DD'), ...(lopMacDinh ? { lop_ids: [lopMacDinh.id], don_gia: lopMacDinh.don_gia } : { lop_ids: [] }) })
+    const giaMacDinh = goiYDonGiaTuLop(lopMacDinh)
+    setSuaHs({ ngay_vao: dayjs().format('YYYY-MM-DD'), ...(lopMacDinh ? { lop_ids: [lopMacDinh.id], ...(giaMacDinh != null ? { don_gia: giaMacDinh } : {}) } : { lop_ids: [] }) })
   }
 
   // Khi bỏ chọn em có sẵn (bấm "Bỏ chọn" hoặc gõ tên khác), xoá các ô hồ sơ cũ để tránh dính SĐT/đơn giá cũ hoặc bị auto-merge nhầm
   const boChonEm = () => {
     setEmDaChon(null)
     const lopHienTai: string[] = formHs.getFieldValue('lop_ids') ?? []
-    const donGiaMacDinh = (lopHienTai.length ? lops.find((l) => l.id === lopHienTai[0])?.don_gia : undefined) ?? suaHs?.don_gia
+    const donGiaMacDinh = (lopHienTai.length ? goiYDonGiaTuLop(lops.find((l) => l.id === lopHienTai[0])) : undefined) ?? suaHs?.don_gia
     formHs.setFieldsValue({
       don_gia: donGiaMacDinh,
       gia_rieng: {},
@@ -302,6 +307,7 @@ export default function LopHoc() {
       ghi_chu: undefined,
       anh: undefined,
     })
+    formHs.setFields([{ name: 'lop_ids', errors: [] }])
   }
   const khoaHoSo = !suaHs?.id && !!emDaChon
 
@@ -332,12 +338,8 @@ export default function LopHoc() {
 
   // Tìm kiếm màn Lớp
   const timKhong = khongDau(tim.trim())
-  const dsCuaLop = (lopId: string) => gds
-    .filter((g) => g.lop_id === lopId && (hienNgung || g.trang_thai === 'dang_hoc'))
-    .map((g) => ({ gd: g, h: hsMap.get(g.hoc_sinh_id)! }))
-    .filter((x) => x.h && (!timKhong || khongDau(x.h.ho_ten).includes(timKhong) || khongDau(x.h.ma_hs).includes(timKhong)))
-    .sort((a, b) => a.h.ho_ten.localeCompare(b.h.ho_ten))
-  const lopTimThay = lops.filter((l) => khongDau(l.ten).includes(timKhong) || dsCuaLop(l.id).length > 0)
+  const dsCuaLop = (lop: Lop) => locHsTrongLop(lop, gds, hsMap, tim, hienNgung)
+  const lopTimThay = lops.filter((l) => khongDau(l.ten).includes(timKhong) || dsCuaLop(l).length > 0)
 
   // Tìm kiếm & lọc màn Học sinh
   const hsTheoLoc = locHs === 'tat_ca' ? hs : hs.filter((h) => phanLoaiMap.get(h.id) === locHs)
@@ -427,11 +429,11 @@ export default function LopHoc() {
           ) : (
             <Collapse activeKey={timKhong ? lopTimThay.map((l) => l.id) : mo} onChange={(k) => { if (timKhong) return; setMo(k as string[]) }}
               items={(timKhong ? lopTimThay : lops).map((l) => {
-                const ds = dsCuaLop(l.id)
+                const ds = dsCuaLop(l)
                 return {
                   key: l.id,
                   label: <Space wrap><b>{l.ten}</b>{l.lich.length > 0 && <span>{moTaLich(l)}</span>}{thieuGio(l) && <Tag color="red">Chưa có giờ</Tag>}
-                    {ql && <span>{vnd(l.don_gia)}/buổi</span>}<Tag>{ds.length} HS</Tag>{!l.hoat_dong && <Tag>Ngừng</Tag>}</Space>,
+                    {ql && l.don_gia > 0 && <span>{vnd(l.don_gia)}/buổi</span>}<Tag>{ds.length} HS</Tag>{!l.hoat_dong && <Tag>Ngừng</Tag>}</Space>,
                   extra: ql && <Space size="small" onClick={(e) => e.stopPropagation()}>
                     <Button size="small" type="primary" ghost onClick={() => setLopThemHs(l)}>+ Thêm HS</Button>
                     <Button size="small" onClick={() => setSuaLop(l)}>Sửa lớp</Button>
@@ -482,12 +484,14 @@ export default function LopHoc() {
               </Space>
             )}
           </div>
-          <Segmented value={locHs} onChange={(v) => setLocHs(v as LocHs)} options={[
-            { value: 'tat_ca', label: `Tất cả (${hs.length})` },
-            { value: 'dang_hoc', label: `Đang học (${demDangHoc})` },
-            { value: 'chua_xep', label: `Chưa xếp lớp (${demChuaXep})` },
-            { value: 'ngung', label: `Đã ngừng (${demNgung})` },
-          ]} />
+          <div style={{ overflowX: 'auto', maxWidth: '100%', paddingBottom: 2 }}>
+            <Segmented value={locHs} onChange={(v) => setLocHs(v as LocHs)} options={[
+              { value: 'tat_ca', label: `Tất cả (${hs.length})` },
+              { value: 'dang_hoc', label: `Đang học (${demDangHoc})` },
+              { value: 'chua_xep', label: `Chưa xếp lớp (${demChuaXep})` },
+              { value: 'ngung', label: `Đã ngừng (${demNgung})` },
+            ]} />
+          </div>
           <Input.Search allowClear size="large" placeholder="Tìm theo họ tên, mã HS hoặc SĐT phụ huynh" aria-label="Tìm học sinh" value={tim}
             onChange={(e) => setTim(e.target.value)} />
           <List bordered style={{ background: MAU.mat, borderRadius: 12 }} dataSource={hsHienThi}
@@ -523,10 +527,11 @@ export default function LopHoc() {
       )}
 
       <Modal open={!!suaLop} title={suaLop?.id ? 'Sửa lớp' : 'Thêm lớp'} onCancel={() => setSuaLop(null)} footer={null} destroyOnHidden>
-        <Form layout="vertical" initialValues={suaLop ? { ...suaLop, gio_thu: gioThuSua(suaLop) } : {}} onFinish={luuLop}>
+        <Form layout="vertical" initialValues={suaLop ? { ...suaLop, don_gia: goiYDonGiaTuLop(suaLop), gio_thu: gioThuSua(suaLop) } : {}} onFinish={luuLop}>
           <Form.Item name="ten" label="Tên lớp" rules={[{ required: true, whitespace: true }]}><Input /></Form.Item>
-          <Form.Item name="don_gia" label="Đơn giá một buổi (đ)" rules={[{ required: true }]}>
-            <InputNumber<number> {...O_TIEN} controls={false} inputMode="numeric" placeholder="Ví dụ: 150,000" />
+          <Form.Item name="don_gia" label="Đơn giá một buổi mặc định (đ)"
+            extra="Tuỳ chọn — để trống nếu học phí tính riêng theo từng học sinh.">
+            <InputNumber<number> {...O_TIEN} controls={false} inputMode="numeric" placeholder="Tuỳ chọn (vd: 150,000)" />
           </Form.Item>
           <Form.Item name="gio_thu" label="Lịch học trong tuần (giờ bắt đầu → kết thúc)" rules={[{
             validator: (_, v: GioThu = {}) => Object.values(v).every((g) => g.bd && g.kt && g.kt > g.bd) ? Promise.resolve()
@@ -542,7 +547,8 @@ export default function LopHoc() {
         <ThemHsVaoLopModal
           lop={lopThemHs} hs={hs} gds={gds} url={url} tenCacLop={tenCacLop}
           onCancel={() => setLopThemHs(null)}
-          onDone={() => { setLopThemHs(null); tai() }}
+          onDone={() => { setLopThemHs(null); tai().catch((e) => message.error((e as Error).message)) }}
+          onDongBo={() => { tai().catch((e) => message.error((e as Error).message)) }}
           onTaoMoi={() => { const l = lopThemHs; setLopThemHs(null); moThemHs(l) }}
         />
       )}
@@ -555,12 +561,19 @@ export default function LopHoc() {
       <Modal open={!!suaHs} title={suaHs?.id ? `Sửa học sinh (${suaHs.ma_hs})` : 'Thêm học sinh'} onCancel={() => setSuaHs(null)} footer={null} destroyOnHidden>
         <Form form={formHs} layout="vertical" onFinish={luuHs}>
           {/* Đặt Các lớp học lên trước Họ tên để dropdown AutoComplete mở xuống không che mất ô chọn lớp */}
-          <Form.Item name="lop_ids" label="Các lớp học (không bắt buộc — có thể xếp lớp sau)">
+          <Form.Item name="lop_ids"
+            label={khoaHoSo ? 'Các lớp học (chọn ít nhất 1 lớp để gộp)' : 'Các lớp học (không bắt buộc — có thể xếp lớp sau)'}
+            rules={[{
+              validator: (_, ids?: string[]) => {
+                const loiGop = kiemTraGopLopVaoEm(khoaHoSo, ids ?? [])
+                return loiGop ? Promise.reject(new Error(loiGop)) : Promise.resolve()
+              },
+            }]}>
             <Select mode="multiple" allowClear placeholder={lops.length ? 'Chọn một hoặc nhiều lớp, hoặc để trống' : 'Chưa có lớp nào — sẽ lưu ở mục Chưa xếp lớp'}
-              options={lops.map((l) => ({ value: l.id, label: `${l.ten} (${vnd(l.don_gia)})` }))}
+              options={lops.map((l) => ({ value: l.id, label: l.don_gia > 0 ? `${l.ten} (${vnd(l.don_gia)})` : l.ten }))}
               onChange={(ids: string[]) => {
                 if (!suaHs?.id && !emDaChon && formHs.getFieldValue('don_gia') == null && ids.length > 0) {
-                  const g = lops.find((l) => l.id === ids[0])?.don_gia
+                  const g = goiYDonGiaTuLop(lops.find((l) => l.id === ids[0]))
                   if (g != null) formHs.setFieldValue('don_gia', g)
                 }
               }} />
@@ -705,9 +718,9 @@ export default function LopHoc() {
   )
 }
 
-function ThemHsVaoLopModal({ lop, hs, gds, url, tenCacLop, onCancel, onDone, onTaoMoi }: {
+function ThemHsVaoLopModal({ lop, hs, gds, url, tenCacLop, onCancel, onDone, onDongBo, onTaoMoi }: {
   lop: Lop; hs: HocSinh[]; gds: GhiDanh[]; url: Record<string, string>; tenCacLop: (id: string) => string
-  onCancel: () => void; onDone: () => void; onTaoMoi: () => void
+  onCancel: () => void; onDone: () => void; onDongBo: () => void; onTaoMoi: () => void
 }) {
   const { message } = App.useApp()
   const [chonIds, setChonIds] = useState<string[]>([])
@@ -727,24 +740,26 @@ function ThemHsVaoLopModal({ lop, hs, gds, url, tenCacLop, onCancel, onDone, onT
 
   const [luu, dangLuu] = useMotLan(async () => {
     if (!chonIds.length) return
-    try {
-      const ngay = ngayVao.format('YYYY-MM-DD')
-      const tungHocSet = new Set(ungVien.filter((x) => x.tungHoc).map((x) => x.h.id))
-      const themMoi = chonIds.filter((id) => !tungHocSet.has(id))
-      const batLai = chonIds.filter((id) => tungHocSet.has(id))
-      if (themMoi.length) {
-        await q(sb.from('ghi_danh').insert(themMoi.map((hoc_sinh_id) => ({
-          hoc_sinh_id, lop_id: lop.id, ngay_vao: ngay,
-        }))))
+    const ngay = ngayVao.format('YYYY-MM-DD')
+    const tungHocSet = new Set(ungVien.filter((x) => x.tungHoc).map((x) => x.h.id))
+    const kq = await thucHienThemHsVaoLop(chonIds, tungHocSet, ngay, {
+      themGhiDanh: (hsIds) => q(sb.from('ghi_danh').insert(hsIds.map((hoc_sinh_id) => ({
+        hoc_sinh_id, lop_id: lop.id, ngay_vao: ngay,
+      })))).then(() => undefined),
+      batLaiGhiDanh: (hoc_sinh_id, payload) => q(sb.from('ghi_danh').update(payload)
+        .eq('hoc_sinh_id', hoc_sinh_id).eq('lop_id', lop.id)).then(() => undefined),
+      datDangHoc: (hsIds) => q(sb.from('hoc_sinh').update({ trang_thai: 'dang_hoc' }).in('id', hsIds)).then(() => undefined),
+    })
+    if (kq.loi) {
+      message.error(kq.loi)
+      if (kq.daGhi) {
+        setChonIds((cu) => cu.filter((id) => !kq.daThemIds.includes(id)))
+        onDongBo()
       }
-      for (const hoc_sinh_id of batLai) {
-        await q(sb.from('ghi_danh').update({ trang_thai: 'dang_hoc', ngay_vao: ngay })
-          .eq('hoc_sinh_id', hoc_sinh_id).eq('lop_id', lop.id))
-      }
-      await q(sb.from('hoc_sinh').update({ trang_thai: 'dang_hoc' }).in('id', chonIds))
-      message.success(`Đã thêm ${chonIds.length} học sinh vào lớp ${lop.ten}`)
-      onDone()
-    } catch (e) { message.error((e as Error).message) }
+      return
+    }
+    message.success(`Đã thêm ${chonIds.length} học sinh vào lớp ${lop.ten}`)
+    onDone()
   })
 
   return (
@@ -776,8 +791,11 @@ function ThemHsVaoLopModal({ lop, hs, gds, url, tenCacLop, onCancel, onDone, onT
           {dsHien.length === 0 ? (
             <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={ungVien.length === 0 ? 'Tất cả học sinh đã ở trong lớp này' : 'Không tìm thấy học sinh phù hợp'} style={{ margin: '20px 0' }} />
           ) : (
-            <List dataSource={dsHien} renderItem={({ h, chuaXep, tungHoc }) => {
+            <List dataSource={dsHien} renderItem={({ h, chuaXep, tungHoc, donGiaRiengCu }) => {
               const daChon = chonIds.includes(h.id)
+              const ghiChuGia = tungHoc && donGiaRiengCu != null && donGiaRiengCu !== h.don_gia
+                ? `giá cũ lớp này ${vnd(donGiaRiengCu)} → áp giá HS ${vnd(h.don_gia)}/buổi`
+                : `${vnd(h.don_gia)}/buổi`
               return (
                 <List.Item style={{ cursor: 'pointer', padding: '10px 12px', background: daChon ? MAU.chinhNhat : undefined }}
                   onClick={() => doiChon(h.id)}>
@@ -794,7 +812,7 @@ function ThemHsVaoLopModal({ lop, hs, gds, url, tenCacLop, onCancel, onDone, onT
                         {tungHoc && <Tag color="default" style={{ marginInlineEnd: 0 }}>Từng học lớp này</Tag>}
                       </Space>
                       <div style={{ fontSize: 12, color: MAU.chuPhu, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {[chuaXep ? '' : tenCacLop(h.id), `${vnd(h.don_gia)}/buổi`, h.sdt_phu_huynh].filter(Boolean).join(' · ')}
+                        {[chuaXep ? '' : tenCacLop(h.id), ghiChuGia, h.sdt_phu_huynh].filter(Boolean).join(' · ')}
                       </div>
                     </div>
                   </div>
