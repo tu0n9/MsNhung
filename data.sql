@@ -4,7 +4,7 @@ SET session_replication_role = replica;
 -- PostgreSQL database dump
 --
 
--- \restrict HtSZX789s92JfnW5SI1Bth3ve9W5B3VtQfp2L4BdKhPx7XR3theAjSAGK0wpFTh
+-- \restrict c33X7GSMnI6kZoozCCSs4qOvu8g0DP43eryAPQYq04hErsaMVUI3wdfRUg8RJ0Q
 
 -- Dumped from database version 17.11
 -- Dumped by pg_dump version 17.12
@@ -59,7 +59,7 @@ COPY "auth"."users" ("instance_id", "id", "aud", "role", "email", "encrypted_pas
 00000000-0000-0000-0000-000000000000	906a5d63-7289-4b55-a279-ff8db9b1a5c4	authenticated	authenticated	fcc895cd-f026-4e3f-81d1-1544acf6f727@msnhung.local	$2a$10$fk7lu2GZgnCeo8pi.fU9FOcvyaorYm2xYyyHDFwwDcs5.K2upZ5ia	2026-11-18 10:50:37.366255+00	\N		\N		\N			\N	2026-11-20 10:26:49.265772+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:50:37.354077+00	2026-11-21 11:04:35.736881+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	authenticated	authenticated	19f38f04-61b3-43ca-8335-d6f1b809a252@msnhung.local	$2a$10$tgJwaw/JFI4E7hab8YRaGOOclde/9PSkhcngbqfe6d7aeED.Crtfm	2026-11-18 10:49:19.499215+00	\N		\N		\N			\N	2026-11-20 09:39:16.892235+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:49:19.494982+00	2026-11-21 12:01:34.506023+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	authenticated	authenticated	8a80fc97-4996-4655-afee-8eac991e9a12@msnhung.local	$2a$10$97fyKO0vuMQfYkBUWS32X.Q56vy5lBsfCC.aooYX7mAnGjFJmA3xW	2026-11-18 10:48:28.317304+00	\N		\N		\N			\N	2026-11-19 13:09:30.603649+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:48:28.280417+00	2026-11-20 06:20:35.317963+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	43d2ab0d-e902-49d7-9e81-a3696d296ad2	authenticated	authenticated	admin@msnhung.local	$2a$10$BCdkciwG3PPPv4yCMa50oefbpbFKmU9xlXou.UTQCXONcdSKZxnAO	2026-11-15 10:27:58.76274+00	\N		\N		\N			\N	2026-11-22 15:03:34.173806+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-15 10:27:58.741954+00	2026-11-22 20:15:24.269186+00	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	43d2ab0d-e902-49d7-9e81-a3696d296ad2	authenticated	authenticated	admin@msnhung.local	$2a$10$BCdkciwG3PPPv4yCMa50oefbpbFKmU9xlXou.UTQCXONcdSKZxnAO	2026-11-15 10:27:58.76274+00	\N		\N		\N			\N	2026-11-23 06:00:14.163932+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-15 10:27:58.741954+00	2026-11-23 06:00:14.198482+00	\N	\N			\N		0	\N		\N	f	\N	f
 \.
 
 
@@ -105,14 +105,8 @@ COPY "auth"."sessions" ("id", "user_id", "created_at", "updated_at", "factor_id"
 138b0991-bade-4ac1-99f0-d5b4e29bfcce	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	2026-11-18 11:15:04.570018+00	2026-11-19 09:28:18.636381+00	\N	aal1	\N	2026-11-19 09:28:18.636189	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Mobile/15E148 Safari/604.1	171.251.153.178	\N	\N	\N	\N	\N
 eeb51907-2ea4-4b83-ac18-4d4d82e61ad1	7925dcdb-7311-4634-896a-b4b6386b2df2	2026-11-19 15:33:10.47744+00	2026-11-19 15:33:10.47744+00	\N	aal1	\N	\N	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0	183.80.74.68	\N	\N	\N	\N	\N
 c0d0a073-5f8e-45d2-b701-61fb6aee22fd	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	2026-11-19 13:09:30.604521+00	2026-11-20 06:20:35.345899+00	\N	aal1	\N	2026-11-20 06:20:35.345772	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Mobile/15E148 Safari/604.1	118.68.111.181	\N	\N	\N	\N	\N
-516ceaae-f4e9-4fb2-949a-89f7802cb620	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-21 05:17:20.027603+00	2026-11-21 05:17:20.027603+00	\N	aal1	\N	\N	Python-urllib/3.12	117.1.90.139	\N	\N	\N	\N	\N
-66ba1b64-acaa-44cc-b4bd-3b794a6f4d93	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-21 08:57:12.600183+00	2026-11-21 08:57:12.600183+00	\N	aal1	\N	\N	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Zalo iOS/261101802 ZaloTheme/dark ZaloLanguage/vn	1.52.70.168	\N	\N	\N	\N	\N
+b293431f-2dd6-4ff8-8742-7fcd8230d8cb	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-23 06:00:14.166308+00	2026-11-23 06:00:14.166308+00	\N	aal1	\N	\N	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36 Edg/158.0.0.0	42.113.16.7	\N	\N	\N	\N	\N
 98d9f79f-0ff0-4861-aa57-09ae20073ef4	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	2026-11-20 09:39:16.892389+00	2026-11-21 12:01:34.537626+00	\N	aal1	\N	2026-11-21 12:01:34.537496	Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Mobile Safari/537.36	42.118.51.176	\N	\N	\N	\N	\N
-c0d8d08a-b7b5-4d0c-8fd1-a28467d039a6	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-21 12:41:14.88356+00	2026-11-21 14:15:05.961424+00	\N	aal1	\N	2026-11-21 14:15:05.961295	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Mobile/15E148 Safari/604.1	42.113.16.7	\N	\N	\N	\N	\N
-47f9013e-1239-4b44-8092-601a20a6a137	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-21 11:08:45.436168+00	2026-11-21 16:14:07.702311+00	\N	aal1	\N	2026-11-21 16:14:07.702106	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6.1 Mobile/15E148 Safari/604.1	118.69.162.70	\N	\N	\N	\N	\N
-6d07f565-9ecc-4bf9-b4fa-f99e925e9f62	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-21 11:51:57.80846+00	2026-11-22 02:13:32.383297+00	\N	aal1	\N	2026-11-22 02:13:32.383179	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0	14.166.194.194	\N	\N	\N	\N	\N
-b7d6d855-2d8f-4eca-b1e8-ba9c4df511bb	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-21 07:38:24.102893+00	2026-11-22 14:16:15.420534+00	\N	aal1	\N	2026-11-22 14:16:15.420375	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36 Edg/158.0.0.0	42.113.16.7	\N	\N	\N	\N	\N
-ea885e67-0701-45eb-8d66-7aa9cdbaccc5	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-22 15:03:34.17553+00	2026-11-22 20:15:24.292914+00	\N	aal1	\N	2026-11-22 20:15:24.292459	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36 Edg/158.0.0.0	42.113.16.7	\N	\N	\N	\N	\N
 \.
 
 
@@ -121,16 +115,10 @@ ea885e67-0701-45eb-8d66-7aa9cdbaccc5	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-1
 --
 
 COPY "auth"."mfa_amr_claims" ("session_id", "created_at", "updated_at", "authentication_method", "id") FROM stdin;
-b7d6d855-2d8f-4eca-b1e8-ba9c4df511bb	2026-11-21 07:38:24.186891+00	2026-11-21 07:38:24.186891+00	password	baf8b4ec-587a-41bc-96f1-a56e6cf09262
-66ba1b64-acaa-44cc-b4bd-3b794a6f4d93	2026-11-21 08:57:12.6595+00	2026-11-21 08:57:12.6595+00	password	7207e07b-854d-4c0d-9d95-9d6f2b8ff078
-47f9013e-1239-4b44-8092-601a20a6a137	2026-11-21 11:08:45.471933+00	2026-11-21 11:08:45.471933+00	password	445b4110-7a7a-4e6a-b372-711ef2f3525e
-6d07f565-9ecc-4bf9-b4fa-f99e925e9f62	2026-11-21 11:51:57.871991+00	2026-11-21 11:51:57.871991+00	password	415845cc-d26b-4cd3-9b35-f1837699b8b6
-c0d8d08a-b7b5-4d0c-8fd1-a28467d039a6	2026-11-21 12:41:14.929348+00	2026-11-21 12:41:14.929348+00	password	f0da0b57-a542-4055-924c-f896680261e4
-ea885e67-0701-45eb-8d66-7aa9cdbaccc5	2026-11-22 15:03:34.226813+00	2026-11-22 15:03:34.226813+00	password	2fa0ed7e-746a-4505-9d7a-f614b0dccf97
+b293431f-2dd6-4ff8-8742-7fcd8230d8cb	2026-11-23 06:00:14.208561+00	2026-11-23 06:00:14.208561+00	password	a64df7ce-958f-4c16-b7c0-8e99d3084521
 138b0991-bade-4ac1-99f0-d5b4e29bfcce	2026-11-18 11:15:04.66948+00	2026-11-18 11:15:04.66948+00	password	0e8bcbd4-b605-4f8d-92ef-a09f44104bec
 c0d0a073-5f8e-45d2-b701-61fb6aee22fd	2026-11-19 13:09:30.662961+00	2026-11-19 13:09:30.662961+00	password	af8deb5d-c21a-41f3-832b-e2efa8a9f085
 eeb51907-2ea4-4b83-ac18-4d4d82e61ad1	2026-11-19 15:33:10.569478+00	2026-11-19 15:33:10.569478+00	password	f9153c04-47e8-4095-9108-0105f4f831fa
-516ceaae-f4e9-4fb2-949a-89f7802cb620	2026-11-21 05:17:20.045338+00	2026-11-21 05:17:20.045338+00	password	dc39e158-9fd2-4594-b43e-ef660f30275b
 98d9f79f-0ff0-4861-aa57-09ae20073ef4	2026-11-20 09:39:16.896264+00	2026-11-20 09:39:16.896264+00	password	da5d062e-4f09-4350-8fbb-d9456f1a1731
 \.
 
@@ -206,36 +194,18 @@ COPY "auth"."one_time_tokens" ("id", "user_id", "token_type", "token_hash", "rel
 COPY "auth"."refresh_tokens" ("instance_id", "id", "token", "user_id", "revoked", "created_at", "updated_at", "parent", "session_id") FROM stdin;
 00000000-0000-0000-0000-000000000000	730	fb66bcnm4y6s	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	t	2026-11-21 10:06:35.983043+00	2026-11-21 12:01:34.47202+00	4hswtw7g2mpu	98d9f79f-0ff0-4861-aa57-09ae20073ef4
 00000000-0000-0000-0000-000000000000	734	cohzw6uh3o6y	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	f	2026-11-21 12:01:34.491139+00	2026-11-21 12:01:34.491139+00	fb66bcnm4y6s	98d9f79f-0ff0-4861-aa57-09ae20073ef4
-00000000-0000-0000-0000-000000000000	732	2u75ir5gktx4	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-21 11:08:45.459764+00	2026-11-21 12:38:26.019967+00	\N	47f9013e-1239-4b44-8092-601a20a6a137
 00000000-0000-0000-0000-000000000000	517	5aimmp2svbp6	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-19 16:31:49.525176+00	2026-11-20 06:20:35.280109+00	uqzjyb2jzeez	c0d0a073-5f8e-45d2-b701-61fb6aee22fd
 00000000-0000-0000-0000-000000000000	528	6hom4mlbwosb	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	f	2026-11-20 06:20:35.301906+00	2026-11-20 06:20:35.301906+00	5aimmp2svbp6	c0d0a073-5f8e-45d2-b701-61fb6aee22fd
-00000000-0000-0000-0000-000000000000	733	fwjfyv4cy7ez	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-21 11:51:57.842204+00	2026-11-21 13:12:56.113268+00	\N	6d07f565-9ecc-4bf9-b4fa-f99e925e9f62
-00000000-0000-0000-0000-000000000000	736	dtc4mwzh3ahw	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-21 12:41:14.915105+00	2026-11-21 14:15:05.909574+00	\N	c0d8d08a-b7b5-4d0c-8fd1-a28467d039a6
-00000000-0000-0000-0000-000000000000	738	pdgrbzdx37fl	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-21 14:15:05.930294+00	2026-11-21 14:15:05.930294+00	dtc4mwzh3ahw	c0d8d08a-b7b5-4d0c-8fd1-a28467d039a6
 00000000-0000-0000-0000-000000000000	541	vdo4zwc6q2dr	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	t	2026-11-20 12:34:38.272158+00	2026-11-20 15:05:28.547244+00	em3biwnp7sp4	98d9f79f-0ff0-4861-aa57-09ae20073ef4
-00000000-0000-0000-0000-000000000000	735	w6okmgcy7pqe	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-21 12:38:26.034267+00	2026-11-21 16:14:07.626347+00	2u75ir5gktx4	47f9013e-1239-4b44-8092-601a20a6a137
-00000000-0000-0000-0000-000000000000	739	u2acme2c3qkz	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-21 16:14:07.650965+00	2026-11-21 16:14:07.650965+00	w6okmgcy7pqe	47f9013e-1239-4b44-8092-601a20a6a137
-00000000-0000-0000-0000-000000000000	737	dmjnoylrvqq4	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-21 13:12:56.134565+00	2026-11-21 22:58:49.022529+00	fwjfyv4cy7ez	6d07f565-9ecc-4bf9-b4fa-f99e925e9f62
-00000000-0000-0000-0000-000000000000	740	uyhh4izikyby	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-21 22:58:49.032572+00	2026-11-21 23:57:06.591437+00	dmjnoylrvqq4	6d07f565-9ecc-4bf9-b4fa-f99e925e9f62
-00000000-0000-0000-0000-000000000000	741	vmt6hxj5oenp	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-21 23:57:06.603264+00	2026-11-22 02:13:32.331026+00	uyhh4izikyby	6d07f565-9ecc-4bf9-b4fa-f99e925e9f62
-00000000-0000-0000-0000-000000000000	742	dofr2h32nzf5	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-22 02:13:32.34937+00	2026-11-22 02:13:32.34937+00	vmt6hxj5oenp	6d07f565-9ecc-4bf9-b4fa-f99e925e9f62
-00000000-0000-0000-0000-000000000000	727	js5fdfecgsy2	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-21 07:38:24.161191+00	2026-11-22 07:52:19.974544+00	\N	b7d6d855-2d8f-4eca-b1e8-ba9c4df511bb
-00000000-0000-0000-0000-000000000000	743	zleqgvukmdtg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-22 07:52:19.994588+00	2026-11-22 13:10:33.115728+00	js5fdfecgsy2	b7d6d855-2d8f-4eca-b1e8-ba9c4df511bb
-00000000-0000-0000-0000-000000000000	744	zu6lookq7jmu	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-22 13:10:33.13325+00	2026-11-22 14:16:15.374084+00	zleqgvukmdtg	b7d6d855-2d8f-4eca-b1e8-ba9c4df511bb
 00000000-0000-0000-0000-000000000000	533	em3biwnp7sp4	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	t	2026-11-20 09:39:16.893934+00	2026-11-20 12:34:38.26187+00	\N	98d9f79f-0ff0-4861-aa57-09ae20073ef4
-00000000-0000-0000-0000-000000000000	745	zzdmejnqjrjk	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-22 14:16:15.392543+00	2026-11-22 14:16:15.392543+00	zu6lookq7jmu	b7d6d855-2d8f-4eca-b1e8-ba9c4df511bb
-00000000-0000-0000-0000-000000000000	746	osjhrh6tikpz	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-22 15:03:34.205997+00	2026-11-22 18:12:21.294423+00	\N	ea885e67-0701-45eb-8d66-7aa9cdbaccc5
 00000000-0000-0000-0000-000000000000	492	4ar5dq6mxsrv	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-18 11:15:04.612498+00	2026-11-18 12:20:21.000342+00	\N	138b0991-bade-4ac1-99f0-d5b4e29bfcce
-00000000-0000-0000-0000-000000000000	747	6lppne7pntil	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-22 18:12:21.312024+00	2026-11-22 20:15:24.235746+00	osjhrh6tikpz	ea885e67-0701-45eb-8d66-7aa9cdbaccc5
-00000000-0000-0000-0000-000000000000	748	sjaps7ryi2yr	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-22 20:15:24.258535+00	2026-11-22 20:15:24.258535+00	6lppne7pntil	ea885e67-0701-45eb-8d66-7aa9cdbaccc5
 00000000-0000-0000-0000-000000000000	497	oiucqvgppb62	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-18 12:20:21.012121+00	2026-11-18 13:22:21.165498+00	4ar5dq6mxsrv	138b0991-bade-4ac1-99f0-d5b4e29bfcce
 00000000-0000-0000-0000-000000000000	499	he4pscw7nv4q	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-18 13:22:21.175637+00	2026-11-18 16:34:59.646129+00	oiucqvgppb62	138b0991-bade-4ac1-99f0-d5b4e29bfcce
-00000000-0000-0000-0000-000000000000	722	l2akjtmdylmv	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-21 05:17:20.03725+00	2026-11-21 05:17:20.03725+00	\N	516ceaae-f4e9-4fb2-949a-89f7802cb620
+00000000-0000-0000-0000-000000000000	753	xzrznbki4g57	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-23 06:00:14.193646+00	2026-11-23 06:00:14.193646+00	\N	b293431f-2dd6-4ff8-8742-7fcd8230d8cb
 00000000-0000-0000-0000-000000000000	502	hk4ftmgehg54	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-18 16:34:59.669286+00	2026-11-19 09:28:18.584226+00	he4pscw7nv4q	138b0991-bade-4ac1-99f0-d5b4e29bfcce
 00000000-0000-0000-0000-000000000000	511	4b3s52br5fd3	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	f	2026-11-19 09:28:18.60024+00	2026-11-19 09:28:18.60024+00	hk4ftmgehg54	138b0991-bade-4ac1-99f0-d5b4e29bfcce
 00000000-0000-0000-0000-000000000000	515	tez5ezxmlo7a	7925dcdb-7311-4634-896a-b4b6386b2df2	f	2026-11-19 15:33:10.535556+00	2026-11-19 15:33:10.535556+00	\N	eeb51907-2ea4-4b83-ac18-4d4d82e61ad1
 00000000-0000-0000-0000-000000000000	514	uqzjyb2jzeez	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-19 13:09:30.633872+00	2026-11-19 16:31:49.504555+00	\N	c0d0a073-5f8e-45d2-b701-61fb6aee22fd
-00000000-0000-0000-0000-000000000000	729	rcsmxh5fq6tu	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-21 08:57:12.633862+00	2026-11-21 08:57:12.633862+00	\N	66ba1b64-acaa-44cc-b4bd-3b794a6f4d93
 00000000-0000-0000-0000-000000000000	584	4hswtw7g2mpu	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	t	2026-11-20 15:05:28.582283+00	2026-11-21 10:06:35.968768+00	vdo4zwc6q2dr	98d9f79f-0ff0-4861-aa57-09ae20073ef4
 \.
 
@@ -750,6 +720,7 @@ COPY "public"."nhat_ky" ("id", "luc", "nguoi", "ten_nguoi", "bang", "hanh_dong",
 1273	2026-11-21 08:59:13.384652+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	buoi_hoc	xoa	Ielts pre chiều t7 · 28/11/2026	{"id": "256eace7-fc21-4c4f-b5f7-9688da6a1291", "loai": "lich", "ngay": "2026-11-28", "lop_id": "0d76975d-4f18-47de-adb8-3992850432eb", "bat_dau": "15:15:00", "ghi_chu": null, "ket_thuc": "17:15:00", "lop_nghi": false}
 1274	2026-11-21 08:59:13.384652+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	lop	xoa	Ielts pre chiều t7	{"id": "0d76975d-4f18-47de-adb8-3992850432eb", "gio": null, "ten": "Ielts pre chiều t7", "lich": [6], "don_gia": 200000, "gio_thu": {"6": {"bd": "15:15", "kt": "17:15"}}, "tao_luc": "2026-11-18T11:05:43.398604+00:00", "hoat_dong": true}
 1289	2026-11-21 11:19:34.802578+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Lê Minh Huy	{"link_zalo": [null, "https://zalo.me/g/txfgex990"]}
+1301	2026-11-23 06:00:14.42233+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
 1275	2026-11-21 09:04:45.424931+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	them	Hoàng Diệu Linh	{"id": "6be26019-2c76-4991-ad4c-8b444d4a5eb0", "avatar": null, "ho_ten": "Hoàng Diệu Linh", "lop_id": "0a6a5510-3d31-4b1c-96ca-09889eef3bc1", "ghi_chu": null, "tao_luc": "2026-11-21T09:04:45.424931+00:00", "ngay_vao": "2026-11-01", "link_zalo": null, "trang_thai": "dang_hoc", "phu_huynh_id": null, "don_gia_rieng": null, "sdt_phu_huynh": null, "ten_phu_huynh": null, "sticker_dau_ky": 0}
 1278	2026-11-21 09:05:50.151541+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	them	Nguyễn Hải Sơn	{"id": "4e25df69-7985-44e0-ad18-4855a5b4ebb5", "avatar": null, "ho_ten": "Nguyễn Hải Sơn", "lop_id": "0a6a5510-3d31-4b1c-96ca-09889eef3bc1", "ghi_chu": null, "tao_luc": "2026-11-21T09:05:50.151541+00:00", "ngay_vao": "2026-11-01", "link_zalo": null, "trang_thai": "dang_hoc", "phu_huynh_id": null, "don_gia_rieng": null, "sdt_phu_huynh": null, "ten_phu_huynh": null, "sticker_dau_ky": 0}
 1290	2026-11-21 11:20:13.670013+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Nguyễn Đăng Dương 	{"link_zalo": [null, "https://zalo.me/g/zwmmze689"]}
@@ -938,7 +909,7 @@ COPY "storage"."vector_indexes" ("id", "name", "bucket_id", "data_type", "dimens
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: supabase_auth_admin
 --
 
-SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 748, true);
+SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 753, true);
 
 
 --
@@ -952,13 +923,13 @@ SELECT pg_catalog.setval('"public"."nhat_ky_chot_so_id_seq"', 173, true);
 -- Name: nhat_ky_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."nhat_ky_id_seq"', 1300, true);
+SELECT pg_catalog.setval('"public"."nhat_ky_id_seq"', 1301, true);
 
 
 --
 -- PostgreSQL database dump complete
 --
 
--- \unrestrict HtSZX789s92JfnW5SI1Bth3ve9W5B3VtQfp2L4BdKhPx7XR3theAjSAGK0wpFTh
+-- \unrestrict c33X7GSMnI6kZoozCCSs4qOvu8g0DP43eryAPQYq04hErsaMVUI3wdfRUg8RJ0Q
 
 RESET ALL;
