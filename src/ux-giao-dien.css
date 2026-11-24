@@ -128,7 +128,8 @@ html[data-che-do="toi"] .u219-tg .u219-moon {
    Header, Thanh điều hướng dưới & Tinh chỉnh chung Ant Design
    ========================================================= */
 .ux-header {
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 60;
   display: flex;
   align-items: center;
@@ -142,6 +143,36 @@ html[data-che-do="toi"] .u219-tg .u219-moon {
   gap: 8px;
   min-width: 0;
   flex-shrink: 0;
+  border: 0;
+  background: none;
+  padding: 4px 6px 4px 0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: opacity .2s, transform .3s var(--ux-spring);
+}
+.ux-header-brand:hover {
+  opacity: .88;
+}
+.ux-header-brand:active {
+  transform: scale(.96);
+}
+.ux-header .ant-menu-horizontal {
+  border-bottom: 0 !important;
+  background: transparent !important;
+  line-height: 36px;
+}
+.ux-header .ant-menu-horizontal > .ant-menu-item {
+  border-radius: 999px !important;
+  margin-inline: 2px !important;
+  padding-inline: 12px !important;
+  transition: background-color .2s, color .2s !important;
+}
+.ux-header .ant-menu-horizontal > .ant-menu-item::after {
+  display: none !important;
+}
+.ux-header .ant-menu-horizontal > .ant-menu-item-selected {
+  background: var(--ux-accent-soft) !important;
+  font-weight: 600;
 }
 .ux-header-actions {
   display: inline-flex;
@@ -2097,9 +2128,419 @@ html[data-che-do="toi"] .u300-ad[aria-pressed="true"] {
   .u431-sel,
   .u431-g,
   .u300-rw,
-  .u300-ct i {
+  .u300-ct i,
+  .ux-page-in {
     animation-duration: .001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: .001ms !important;
   }
+}
+
+/* =========================================================
+   Nâng cấp trải nghiệm hàng ngày: chuyển trang, chọn ngày/tháng,
+   điểm danh theo màu, sổ tháng kính mờ & thẻ lớp học
+   ========================================================= */
+.ux-page-in {
+  animation: ux-page-in .2s var(--ux-ease);
+}
+@keyframes ux-page-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+
+.ux-scroll-x {
+  overflow-x: auto;
+  max-width: 100%;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.ux-scroll-x::-webkit-scrollbar {
+  display: none;
+}
+
+.ux-time-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 4px;
+  border-radius: 14px;
+  background: var(--ux-surface-glass);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--ux-line);
+  box-shadow: 0 8px 20px -16px var(--ux-shadow-strong);
+  max-width: 100%;
+  flex-wrap: nowrap;
+}
+.ux-time-nav .ant-picker {
+  border-radius: 10px !important;
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding-inline: 6px !important;
+}
+.ux-time-nav .ant-picker:hover,
+.ux-time-nav .ant-picker-focused {
+  background: var(--ux-surface) !important;
+}
+@media (max-width: 440px) {
+  .ux-time-nav .ant-picker {
+    max-width: 185px;
+  }
+}
+.ux-time-step {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--ux-ink-2);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color .15s, color .15s, transform .3s var(--ux-spring);
+}
+.ux-time-step:hover {
+  background: var(--ux-surface-2);
+  color: var(--ux-ink);
+}
+.ux-time-step:active {
+  transform: scale(.88);
+}
+.ux-time-step svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.ux-today-btn {
+  height: 26px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ux-accent-soft);
+  color: var(--ux-accent-2);
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: background-color .15s, transform .3s var(--ux-spring);
+}
+.ux-today-btn:hover {
+  background: color-mix(in srgb, var(--ux-accent) 22%, transparent);
+}
+.ux-today-btn:active {
+  transform: scale(.93);
+}
+
+/* Điểm danh: danh sách buổi, chip trợ giảng, thanh tiến độ & dòng màu ngữ nghĩa */
+.ux-buoi-list.ant-list-bordered {
+  border-color: var(--ux-line) !important;
+  border-radius: 18px !important;
+  background: var(--ux-surface-glass);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 28px -20px var(--ux-shadow-strong);
+  overflow: hidden;
+}
+.ux-buoi-list .ant-list-item {
+  padding: 13px 14px !important;
+  transition: background-color .18s var(--ux-ease);
+}
+.ux-buoi-list .ant-list-item:hover {
+  background: color-mix(in srgb, var(--ux-accent) 5%, transparent);
+}
+.ux-gio-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--ux-accent-soft);
+  color: var(--ux-accent-2);
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.ux-tg-chips .ant-checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ux-tg-chips .ant-checkbox-wrapper {
+  margin-inline-start: 0 !important;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--ux-line-2);
+  background: var(--ux-surface);
+  transition: border-color .2s, background-color .2s, transform .3s var(--ux-spring);
+}
+.ux-tg-chips .ant-checkbox-wrapper:active {
+  transform: scale(.95);
+}
+.ux-tg-chips .ant-checkbox-wrapper-checked {
+  border-color: var(--ux-accent);
+  background: var(--ux-accent-soft);
+  font-weight: 600;
+}
+
+.ux-dd-bar {
+  height: 6px;
+  width: 100%;
+  margin-bottom: 10px;
+  border-radius: 999px;
+  background: var(--ux-line);
+  overflow: hidden;
+}
+.ux-dd-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ux-mint);
+  transition: width .35s var(--ux-ease);
+}
+.ux-dd-row {
+  padding: 11px 12px 11px 14px !important;
+  margin-bottom: 6px;
+  border-radius: 14px !important;
+  border: 1px solid var(--ux-line) !important;
+  border-block-end: 1px solid var(--ux-line) !important;
+  box-shadow: inset 4px 0 0 var(--dd-bar, transparent);
+  transition: background-color .2s, border-color .2s;
+}
+.ux-dd-row:last-child {
+  margin-bottom: 0;
+}
+.ux-dd-row.is-co-mat {
+  --dd-bar: var(--ux-mint);
+  background: color-mix(in srgb, var(--ux-mint) 6%, var(--ux-surface));
+}
+.ux-dd-row.is-hoc-bu {
+  --dd-bar: #2557A6;
+  background: color-mix(in srgb, #2557A6 6%, var(--ux-surface));
+}
+html[data-che-do="toi"] .ux-dd-row.is-hoc-bu {
+  --dd-bar: #96BBEE;
+  background: color-mix(in srgb, #96BBEE 10%, var(--ux-surface));
+}
+.ux-dd-row.is-vang {
+  --dd-bar: var(--ux-danger);
+  background: color-mix(in srgb, var(--ux-danger) 6%, var(--ux-surface));
+}
+.ux-dd-row.is-chua {
+  --dd-bar: var(--ux-warn);
+  background: color-mix(in srgb, var(--ux-warn) 10%, var(--ux-surface));
+}
+.ux-dd-radio .ant-radio-group {
+  border-radius: 10px;
+  overflow: hidden;
+}
+.ux-dd-row.is-co-mat .ux-dd-radio .ant-radio-button-wrapper-checked {
+  background: var(--ux-mint) !important;
+  border-color: var(--ux-mint) !important;
+  color: #FFFFFF !important;
+}
+html[data-che-do="toi"] .ux-dd-row.is-co-mat .ux-dd-radio .ant-radio-button-wrapper-checked {
+  color: #10241A !important;
+}
+.ux-dd-row.is-hoc-bu .ux-dd-radio .ant-radio-button-wrapper-checked {
+  background: #2557A6 !important;
+  border-color: #2557A6 !important;
+  color: #FFFFFF !important;
+}
+html[data-che-do="toi"] .ux-dd-row.is-hoc-bu .ux-dd-radio .ant-radio-button-wrapper-checked {
+  background: #96BBEE !important;
+  border-color: #96BBEE !important;
+  color: #0E1A2B !important;
+}
+.ux-dd-row.is-vang .ux-dd-radio .ant-radio-button-wrapper-checked {
+  background: var(--ux-danger) !important;
+  border-color: var(--ux-danger) !important;
+  color: #FFFFFF !important;
+}
+
+/* Sổ tháng Học phí / Chi phí kính mờ */
+.ux-so-thang {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid var(--ux-line);
+  border-radius: 18px;
+  background: var(--ux-surface-glass);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 28px -20px var(--ux-shadow-strong);
+  overflow: hidden;
+}
+.ux-so-o {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--ux-line);
+}
+.ux-so-o.is-left {
+  border-right: 1px solid var(--ux-line);
+}
+.ux-so-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--ux-ink-2);
+}
+.ux-so-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ux-so-thang-tong {
+  grid-column: span 2;
+  padding: 13px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  background: color-mix(in srgb, var(--ux-accent) 6%, transparent);
+}
+.ux-storage-bar {
+  height: 5px;
+  width: 100%;
+  margin-top: 5px;
+  border-radius: 999px;
+  background: var(--ux-line);
+  overflow: hidden;
+}
+.ux-storage-bar > i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width .4s var(--ux-ease);
+}
+
+.ux-hs-row {
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  transition: background-color .16s var(--ux-ease);
+}
+.ux-hs-row:hover {
+  background: color-mix(in srgb, var(--ux-accent) 6%, transparent);
+}
+.ux-hs-row:active {
+  background: color-mix(in srgb, var(--ux-accent) 11%, transparent);
+}
+.ux-status-pill {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.ux-status-pill.is-ok {
+  background: var(--ux-mint-soft);
+  color: var(--ux-mint);
+}
+.ux-status-pill.is-debt {
+  background: var(--ux-danger-soft);
+  color: var(--ux-danger);
+}
+.ux-status-pill.is-none {
+  background: var(--ux-surface-2);
+  color: var(--ux-ink-2);
+}
+.ux-row-chev {
+  color: var(--ux-ink-3);
+  font-size: 16px;
+  line-height: 1;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+
+/* Hồ sơ học sinh & KPI Grid */
+.ux-profile-card {
+  padding: 14px 16px;
+  border-radius: 20px;
+  background: var(--ux-surface-glass);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--ux-line);
+  box-shadow: 0 12px 28px -20px var(--ux-shadow-strong);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.ux-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (min-width: 640px) {
+  .ux-kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.ux-kpi-card {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--ux-surface-glass);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--ux-line);
+  box-shadow: 0 8px 20px -16px var(--ux-shadow-strong);
+}
+
+/* Thẻ lớp học tách khối & chip sticker */
+.ux-lop-collapse.ant-collapse {
+  background: transparent !important;
+  border: 0 !important;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.ux-lop-collapse > .ant-collapse-item {
+  border-radius: 18px !important;
+  border: 1px solid var(--ux-line) !important;
+  background: var(--ux-surface-glass);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  overflow: hidden;
+  box-shadow: 0 10px 24px -18px var(--ux-shadow-strong);
+}
+.ux-lop-collapse > .ant-collapse-item > .ant-collapse-header {
+  align-items: center !important;
+  padding: 13px 14px !important;
+}
+.ux-sticker-chip {
+  border-radius: 999px !important;
+  background: color-mix(in srgb, var(--ux-warn) 16%, var(--ux-surface)) !important;
+  border-color: color-mix(in srgb, var(--ux-warn) 42%, transparent) !important;
+  font-weight: 600 !important;
+}
+
+/* Phiếu đánh giá: nút chấm điểm lớn dễ chạm trên điện thoại */
+.ux-rating-group .ant-radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.ux-rating-group .ant-radio-button-wrapper {
+  min-width: 48px;
+  height: 44px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 12px !important;
+  border: 1px solid var(--ux-line-2) !important;
+  font-weight: 700;
+}
+.ux-rating-group .ant-radio-button-wrapper::before {
+  display: none !important;
 }

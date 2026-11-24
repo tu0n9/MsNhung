@@ -21,7 +21,7 @@ export default function HuongDan() {
   const nav = useNavigate()
   const toi = laQuanLy(v) ? 'ql' : 'tg'
   return (
-    <Space direction="vertical" style={{ width: '100%' }}>
+    <Space orientation="vertical" style={{ width: '100%' }}>
       <Space><Button onClick={() => nav('/')}>← Quay lại</Button><b style={{ fontSize: 18 }}>Video hướng dẫn</b></Space>
       {VIDEO.filter((x) => x.ai.includes(toi)).map((x) => (
         <Card key={x.file} size="small" title={x.ten}>

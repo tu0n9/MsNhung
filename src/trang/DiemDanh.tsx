@@ -8,6 +8,7 @@ import { cong2Gio, gioBuoi, nhomBuoi } from '../gio-hoc'
 import { homNay, hsDangHoc, q, taiHet, useMotLan, sb, taiAnhLen, taiTongSticker, urlAnh, type BuoiHoc, type DiemDanh as DD, type GhiDanh, type HocSinh, type Lop, type TaiKhoan } from '../supabase'
 import VungTaiFile from '../thanh-phan/VungTaiFile'
 import HopThoaiXoa from '../thanh-phan/HopThoaiXoa'
+import { BoChonNgayNhanh } from '../thanh-phan/ThanhChonThoiGian'
 
 const LOAI = { lich: 'Theo lịch', phu: 'Buổi phụ', bu: 'Buổi bù' }
 
@@ -54,24 +55,31 @@ export default function DiemDanh() {
   if (mo) return <NhomBuoi buois={mo} lops={lops} quayLai={() => { setMo(null); tai() }} />
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }}>
+    <Space orientation="vertical" style={{ width: '100%' }}>
       <Space wrap>
-        <DatePicker value={dayjs(ngay)} onChange={(d) => d && setNgay(d.format('YYYY-MM-DD'))} format="dddd DD/MM/YYYY" allowClear={false} />
+        <BoChonNgayNhanh ngay={ngay} homNay={homNay()} onChange={setNgay}>
+          <DatePicker value={dayjs(ngay)} onChange={(d) => d && setNgay(d.format('YYYY-MM-DD'))} format="dddd DD/MM/YYYY" allowClear={false} />
+        </BoChonNgayNhanh>
         <Button icon={<PlusOutlined />} onClick={() => setThemBuoi({ loai: 'phu', bd: '', kt: '' })}>Thêm buổi phụ / bù</Button>
       </Space>
       {buois.length === 0 ? <Empty description="Hôm nay không có buổi học nào theo lịch" /> : (
         // các buổi cùng giờ bắt đầu là lớp dạy gộp: một dòng, một màn điểm danh
-        <List bordered dataSource={nhomBuoi(buois)} renderItem={(g) => (
+        <List className="ux-buoi-list" bordered dataSource={nhomBuoi(buois)} renderItem={(g) => (
           <List.Item onClick={() => setMo(g)} style={{ cursor: 'pointer' }}
             extra={g.every((b) => b.lop_nghi) ? <Tag color="red">Lớp nghỉ</Tag> : <Button type="primary">Điểm danh</Button>}>
             <List.Item.Meta title={g.map((b) => tenLop(b.lop_id)).join(' + ')}
-              description={[gioBuoi(g[0]), ...new Set(g.map((b) => LOAI[b.loai]))].filter(Boolean).join(' · ')} />
+              description={
+                <Space wrap size={6}>
+                  {gioBuoi(g[0]) && <span className="ux-gio-pill">{gioBuoi(g[0])}</span>}
+                  <span>{[...new Set(g.map((b) => LOAI[b.loai]))].filter(Boolean).join(' · ')}</span>
+                </Space>
+              } />
           </List.Item>
         )} />
       )}
       <Modal open={!!themBuoi} title="Thêm buổi" onCancel={() => setThemBuoi(null)} onOk={() => luuBuoi()} confirmLoading={dangLuuBuoi}
         okButtonProps={{ disabled: !themBuoi?.lop_id || !gioHopLe }}>
-        <Space direction="vertical" style={{ width: '100%' }}>
+        <Space orientation="vertical" style={{ width: '100%' }}>
           <Segmented value={themBuoi?.loai} onChange={(v) => setThemBuoi({ ...themBuoi!, loai: v as 'phu' | 'bu' })}
             options={[{ value: 'phu', label: 'Buổi phụ (bù cho lớp nghỉ)' }, { value: 'bu', label: 'Buổi bù riêng' }]} />
           <Select placeholder="Lớp" style={{ width: '100%' }} value={themBuoi?.lop_id}
@@ -155,7 +163,7 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
   const lopCua = (b: BuoiHoc) => lops.find((l) => l.id === b.lop_id)!
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }}>
+    <Space orientation="vertical" style={{ width: '100%' }}>
       <Space wrap>
         <Button onClick={quayLai}>← Quay lại</Button>
         <b>{buois.map((b) => lopCua(b).ten).join(' + ')} · {dayjs(buois[0].ngay).format('dddd DD/MM/YYYY')}</b>
@@ -163,17 +171,19 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
       </Space>
 
       {dangHoc.length > 0 && <Card size="small" title="Trợ giảng có mặt">
-        <Checkbox.Group value={tgCo} options={tgs.map((t) => ({ value: t.id, label: t.ho_ten }))} onChange={(v) => {
-          // tick nhanh liên tiếp: so với bản mới nhất (ref) chứ không phải state cũ của lần render trước, hiện ngay, rồi
-          // ghi lần lượt qua hàng đợi để "tick rồi bỏ" không bị lệnh xoá chạy trước lệnh thêm
-          const them = v.filter((x) => !tgRef.current.includes(x)), bot = tgRef.current.filter((x) => !v.includes(x))
-          tgRef.current = v; setTgCo(v)
-          hangDoiTg.current = hangDoiTg.current.then(async () => {
-            // ghi cho mọi lớp đang học trong ca; lương tính theo (ngày, giờ bắt đầu) nên lớp gộp vẫn chỉ 1 ca
-            if (them.length) await q(sb.from('tro_giang_buoi').insert(dangHoc.flatMap((b) => them.map((id) => ({ buoi_id: b.id, tro_giang_id: id })))))
-            if (bot.length) await q(sb.from('tro_giang_buoi').delete().in('buoi_id', ids).in('tro_giang_id', bot))
-          }).catch((e) => { message.error((e as Error).message); tai().catch((x) => message.error(x.message)) })
-        }} />
+        <div className="ux-tg-chips">
+          <Checkbox.Group value={tgCo} options={tgs.map((t) => ({ value: t.id, label: t.ho_ten }))} onChange={(v) => {
+            // tick nhanh liên tiếp: so với bản mới nhất (ref) chứ không phải state cũ của lần render trước, hiện ngay, rồi
+            // ghi lần lượt qua hàng đợi để "tick rồi bỏ" không bị lệnh xoá chạy trước lệnh thêm
+            const them = v.filter((x) => !tgRef.current.includes(x)), bot = tgRef.current.filter((x) => !v.includes(x))
+            tgRef.current = v; setTgCo(v)
+            hangDoiTg.current = hangDoiTg.current.then(async () => {
+              // ghi cho mọi lớp đang học trong ca; lương tính theo (ngày, giờ bắt đầu) nên lớp gộp vẫn chỉ 1 ca
+              if (them.length) await q(sb.from('tro_giang_buoi').insert(dangHoc.flatMap((b) => them.map((id) => ({ buoi_id: b.id, tro_giang_id: id })))))
+              if (bot.length) await q(sb.from('tro_giang_buoi').delete().in('buoi_id', ids).in('tro_giang_id', bot))
+            }).catch((e) => { message.error((e as Error).message); tai().catch((x) => message.error(x.message)) })
+          }} />
+        </div>
         {tgs.length === 0 && <i>Chưa có tài khoản trợ giảng</i>}
       </Card>}
 
@@ -297,16 +307,23 @@ function DsHocSinh({ buoi, lop, tatCaHs, ghiDanh, nhieuLop, doiNghi }: {
   if (buoi.lop_nghi) return <Card size="small" title={nhieuLop ? lop.ten : 'Lớp nghỉ'} extra={nghi} />
 
   // không có nút "Tất cả có mặt" (người dùng chốt 2026-11-21): tick từng em, tránh bấm nhầm đánh có mặt cả lớp
-  const dem = `(${Object.values(dd).filter((x) => x.trang_thai !== 'vang').length}/${hs.length} ${buoiBu ? 'học bù' : 'có mặt'})`
+  const soCoMat = Object.values(dd).filter((x) => x.trang_thai !== 'vang').length
+  const dem = `(${soCoMat}/${hs.length} ${buoiBu ? 'học bù' : 'có mặt'})`
+  const tiLeDd = hs.length ? Math.round((soCoMat / hs.length) * 100) : 0
   return (
     <Card size="small" title={nhieuLop ? `${lop.ten} ${dem}` : `Học sinh ${dem}`}
       extra={nghi}>
+      {hs.length > 0 && <div className="ux-dd-bar" aria-hidden="true"><i style={{ width: `${tiLeDd}%` }} /></div>}
       {buoiBu && <p style={{ marginTop: 0, color: MAU.chuPhu, fontSize: 13 }}>Buổi bù riêng: em nào đến thì chọn "Học bù" (trừ 1 buổi chưa bù). Em không đến thì để "Không đến", không bị tính thêm buổi chưa bù.</p>}
-      <List dataSource={hs} renderItem={(h) => {
+      <List dataSource={hs} split={false} renderItem={(h) => {
         const x = dd[h.id]
         const laBu = !cuaLopTatCaIds.has(h.id)
+        const rowState = x?.trang_thai === 'co_mat' ? 'is-co-mat'
+          : x?.trang_thai === 'hoc_bu' ? 'is-hoc-bu'
+            : x?.trang_thai === 'vang' ? 'is-vang'
+              : buoiBu ? '' : 'is-chua'
         return (
-          <List.Item style={{ flexWrap: 'wrap', gap: 8, background: x || buoiBu ? undefined : MAU.vang }}>
+          <List.Item className={`ux-dd-row ${rowState}`.trim()} style={{ flexWrap: 'wrap', gap: 8 }}>
             <Space>
               <Avatar shape="square" size={56} src={h.avatar && url[h.avatar]}>{h.ho_ten.split(' ').pop()?.[0]}</Avatar>
               <div><b>{h.ho_ten}</b><br /><small>⭐ {(stickerKhac[h.id] ?? h.sticker_dau_ky ?? 0) + (x?.sticker ?? 0)} sticker{laBu && ' · học bù'}</small></div>
@@ -320,12 +337,14 @@ function DsHocSinh({ buoi, lop, tatCaHs, ghiDanh, nhieuLop, doiNghi }: {
                 // ô đó không gọi onChange, nên em chưa điểm danh bấm "Có mặt" không được lưu. '' = chưa chọn ô nào.
                 // Ô "–" ở giữa là hành động quay về chưa điểm danh, không bao giờ ở trạng thái được chọn.
                 // Em lớp khác sang học bù không có "–": đã có nút Gỡ.
-                <Radio.Group optionType="button" buttonStyle="solid" value={x?.trang_thai ?? ''}
-                  onChange={(e) => (e.target.value === 'chua' ? veChua(h) : luu(h.id, { trang_thai: e.target.value as DD['trang_thai'] }))}
-                  options={laBu ? [{ value: 'hoc_bu', label: 'Học bù' }, { value: 'vang', label: 'Vắng' }]
-                    : [{ value: 'co_mat', label: 'Có mặt' },
-                      { value: 'chua', label: <span aria-label="Chưa điểm danh" title="Chưa điểm danh">–</span> },
-                      { value: 'vang', label: 'Vắng' }]} />
+                <span className="ux-dd-radio">
+                  <Radio.Group optionType="button" buttonStyle="solid" value={x?.trang_thai ?? ''}
+                    onChange={(e) => (e.target.value === 'chua' ? veChua(h) : luu(h.id, { trang_thai: e.target.value as DD['trang_thai'] }))}
+                    options={laBu ? [{ value: 'hoc_bu', label: 'Học bù' }, { value: 'vang', label: 'Vắng' }]
+                      : [{ value: 'co_mat', label: 'Có mặt' },
+                        { value: 'chua', label: <span aria-label="Chưa điểm danh" title="Chưa điểm danh">–</span> },
+                        { value: 'vang', label: 'Vắng' }]} />
+                </span>
               )}
               <InputNumber addonBefore="⭐" style={{ width: 110 }} precision={0} value={x?.sticker ?? 0}
                 onChange={(v) => v !== null && luu(h.id, { sticker: v })} />

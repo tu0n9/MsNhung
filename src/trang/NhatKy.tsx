@@ -80,7 +80,7 @@ export default function NhatKy() {
   }, [khoang, nguoi, loai, trang])
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }}>
+    <Space orientation="vertical" style={{ width: '100%' }}>
       <Space wrap>
         <Button onClick={() => nav('/tai-khoan')}>← Quay lại</Button>
         <b style={{ fontSize: 16 }}>Nhật ký thao tác</b>

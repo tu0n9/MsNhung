@@ -87,7 +87,9 @@ export default function PhieuDanhGia({ ma }: { ma: string }) {
           <div style={{ fontSize: 12, color: MAU.chuPhu, marginBottom: 8 }}>{THANG_DIEM}</div>
           {TIEU_CHI.map((c) => (
             <Form.Item key={c.key} name={['diem', t.id, c.key]} label={c.cauHoi} rules={[{ required: true, message: 'Em chấm điểm câu này nhé' }]}>
-              <Radio.Group optionType="button" buttonStyle="solid" size="large" options={[1, 2, 3, 4, 5].map((n) => ({ value: n, label: n }))} />
+              <div className="ux-rating-group">
+                <Radio.Group optionType="button" buttonStyle="solid" size="large" options={[1, 2, 3, 4, 5].map((n) => ({ value: n, label: n }))} />
+              </div>
             </Form.Item>
           ))}
           {viet(['diem', t.id, 'nhan_xet'], CAU_VIET.nhan_xet)}

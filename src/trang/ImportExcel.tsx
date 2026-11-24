@@ -74,10 +74,17 @@ export default function ImportExcel() {
   })
 
   const buoc = ketQua ? 4 : tienDo ? 3 : kq ? 2 : daTaiMau ? 1 : 0
-  const chan = { position: 'sticky' as const, bottom: dienThoai ? 60 : 0, background: MAU.nen, padding: '10px 0', borderTop: `1px solid ${MAU.vien}` }
+  const chan = {
+    position: 'sticky' as const,
+    bottom: dienThoai ? 60 : 0,
+    background: MAU.nen,
+    padding: '10px 8px',
+    borderTop: `1px solid ${MAU.vien}`,
+    borderRadius: '14px 14px 0 0',
+  }
 
   return (
-    <Space direction="vertical" style={{ width: '100%', maxWidth: 720 }} size={12}>
+    <Space orientation="vertical" style={{ width: '100%', maxWidth: 720 }} size={12}>
       <a onClick={() => nav('/lop')}>← Lớp và học sinh</a>
       <h2 style={{ margin: 0 }}>Import từ Excel</h2>
       <ThanhBuoc
@@ -96,14 +103,14 @@ export default function ImportExcel() {
             {ketQua.linkMoi > 0 && <>Cập nhật link nhóm Zalo cho {ketQua.linkMoi} học sinh.<br /></>}
             Bỏ qua {dem('da_co')} dòng đã có, {loi.length + ketQua.loi.length} dòng chưa nhập.
           </>}
-          extra={<Space direction="vertical">
+          extra={<Space orientation="vertical">
             {ketQua.loi.map((x) => <Alert key={x.so} type="error" showIcon message={`Dòng ${x.so}, ${x.ten}: ${x.loi}`} />)}
             {loi.length > 0 && <Button icon={<DownloadOutlined />} onClick={() => taiDanhSachLoi(kq!.lops, kq!.hss).catch((e) => message.error((e as Error).message))}>Tải danh sách lỗi để sửa</Button>}
             <Button type="primary" onClick={() => nav('/lop')}>Về trang Lớp</Button>
           </Space>} />
       ) : tienDo ? (
         <Card>
-          <Space direction="vertical" style={{ width: '100%' }}>
+          <Space orientation="vertical" style={{ width: '100%' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Đang nhập</span><b>{tienDo.xong} / {tienDo.tong}</b></div>
             <Progress percent={tienDo.tong ? Math.round((tienDo.xong / tienDo.tong) * 100) : 0} strokeColor={MAU.chinh} />
             <span style={{ color: MAU.chuPhu, fontSize: 13 }}>{tienDo.dang}</span>
@@ -163,11 +170,13 @@ export default function ImportExcel() {
             </div>
           )}
 
-          <Segmented value={loc} onChange={(v) => setLoc(v as Loc)} options={[
-            { value: 'tat_ca', label: `Tất cả ${dong.length}` }, { value: 'loi', label: `Lỗi ${dem('loi')}` },
-            { value: 'them_lop', label: `Thêm lớp ${dem('them_lop')}` },
-            { value: 'da_co', label: `Đã có ${dem('da_co')}` }, { value: 'moi', label: `Mới ${dem('moi')}` },
-          ]} />
+          <div className="ux-scroll-x">
+            <Segmented value={loc} onChange={(v) => setLoc(v as Loc)} options={[
+              { value: 'tat_ca', label: `Tất cả ${dong.length}` }, { value: 'loi', label: `Lỗi ${dem('loi')}` },
+              { value: 'them_lop', label: `Thêm lớp ${dem('them_lop')}` },
+              { value: 'da_co', label: `Đã có ${dem('da_co')}` }, { value: 'moi', label: `Mới ${dem('moi')}` },
+            ]} />
+          </div>
 
           <List bordered style={{ background: MAU.mat }} dataSource={dong.filter((d) => loc === 'tat_ca' || d.trangThai === loc)} renderItem={(d) => (
             <List.Item id={idDong(d)} style={{ alignItems: 'flex-start', background: d.trangThai === 'loi' ? MAU.doNhat : undefined }}>
@@ -189,7 +198,7 @@ export default function ImportExcel() {
           )} />
 
           <div style={chan}>
-            <Space direction="vertical" style={{ width: '100%' }}>
+            <Space orientation="vertical" style={{ width: '100%' }}>
               <Button type="primary" size="large" block loading={dangNhap} disabled={!tongViec} onClick={() => nhap()}>
                 {[dem('moi') && `${dem('moi')} dòng mới`, dem('them_lop') && `${dem('them_lop')} thêm lớp`, soLinkDaCo && `${soLinkDaCo} link Zalo`].filter(Boolean).join(', ') || 'Không có gì để nhập'}
               </Button>

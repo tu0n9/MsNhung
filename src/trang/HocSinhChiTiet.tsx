@@ -14,6 +14,8 @@ import { chuanLinkZalo } from '../import-excel'
 import { phanLoaiHocSinh, thongTinTrangThaiChiTiet } from '../lop-hoc'
 import LichDiemDanhThang from '../thanh-phan/LichDiemDanhThang'
 import HopThoaiXoa from '../thanh-phan/HopThoaiXoa'
+import { BoChonThangNhanh } from '../thanh-phan/ThanhChonThoiGian'
+import NutSaoChep from '../thanh-phan/NutSaoChep'
 
 type Phieu = PhieuThu & { id: string; hinh_thuc: string; ghi_chu: string | null }
 
@@ -111,27 +113,31 @@ export default function HocSinhChiTiet({ hs, lops, ghiDanh, quayLai }: { hs: Hoc
   const ngayNgan = (n?: string) => n ? `${n.slice(8)}/${n.slice(5, 7)}` : ''
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }}>
-      <Space wrap>
-        {quayLai && <Button onClick={quayLai}>← Quay lại</Button>}
-        <Avatar shape="square" size={64} src={avatar}>{hs.ho_ten.split(' ').pop()?.[0]}</Avatar>
-        <div>
-          <Space wrap size={6}>
-            <b style={{ fontSize: 18 }}>{hs.ho_ten}</b>
-            <Tag>{hs.ma_hs}</Tag>
-            {ql && <Tag color="pink">{vnd(hs.don_gia)}/buổi</Tag>}
-            {trangThaiCt.nhanTag && <Tag color={trangThaiCt.mauTag}>{trangThaiCt.nhanTag}</Tag>}
-          </Space>
-          <div style={{ fontSize: 13, color: MAU.chuPhu }}>
-            {(gdDangHoc.length ? gdDangHoc : gdEm).map((g) => {
-              const l = lopMap.get(g.lop_id)
-              if (!l) return null
-              return `${l.ten}${l.lich.length ? ` (${moTaLich(l)})` : ''}${g.don_gia_rieng != null && g.don_gia_rieng !== hs.don_gia ? ` · riêng ${vnd(g.don_gia_rieng)}/buổi` : ''}${g.trang_thai === 'ngung' ? ' [Đã ngừng]' : ''}`
-            }).filter(Boolean).join(' · ')}
+    <Space orientation="vertical" style={{ width: '100%' }}>
+      <div className="ux-profile-card">
+        <Space wrap align="center">
+          {quayLai && <Button onClick={quayLai}>← Quay lại</Button>}
+          <Avatar shape="square" size={64} src={avatar}>{hs.ho_ten.split(' ').pop()?.[0]}</Avatar>
+          <div>
+            <Space wrap size={6}>
+              <b style={{ fontSize: 18 }}>{hs.ho_ten}</b>
+              <Tag>{hs.ma_hs}</Tag>
+              {ql && <Tag color="pink">{vnd(hs.don_gia)}/buổi</Tag>}
+              {trangThaiCt.nhanTag && <Tag color={trangThaiCt.mauTag}>{trangThaiCt.nhanTag}</Tag>}
+            </Space>
+            <div style={{ fontSize: 13, color: MAU.chuPhu }}>
+              {(gdDangHoc.length ? gdDangHoc : gdEm).map((g) => {
+                const l = lopMap.get(g.lop_id)
+                if (!l) return null
+                return `${l.ten}${l.lich.length ? ` (${moTaLich(l)})` : ''}${g.don_gia_rieng != null && g.don_gia_rieng !== hs.don_gia ? ` · riêng ${vnd(g.don_gia_rieng)}/buổi` : ''}${g.trang_thai === 'ngung' ? ' [Đã ngừng]' : ''}`
+              }).filter(Boolean).join(' · ')}
+            </div>
           </div>
-        </div>
-        <DatePicker picker="month" value={dayjs(thang)} onChange={(d) => d && setThang(d.format('YYYY-MM'))} format="MM/YYYY" allowClear={false} />
-      </Space>
+        </Space>
+        <BoChonThangNhanh thang={thang} onChange={setThang}>
+          <DatePicker picker="month" value={dayjs(thang)} onChange={(d) => d && setThang(d.format('YYYY-MM'))} format="MM/YYYY" allowClear={false} />
+        </BoChonThangNhanh>
+      </div>
 
       {ql && <Card size="small" title="Link nhóm Zalo">
         <Space.Compact style={{ width: '100%' }}>
@@ -140,14 +146,12 @@ export default function HocSinhChiTiet({ hs, lops, ghiDanh, quayLai }: { hs: Hoc
         </Space.Compact>
       </Card>}
 
-      <Card size="small">
-        <Space wrap size="large">
-          <Statistic title="Buổi đi học tháng này" value={soCoMat} />
-          <Statistic title="Tổng sticker" value={tongSticker} prefix="⭐" />
-          <Statistic title="Buổi chưa học bù" value={chuaBu} />
-          {ql && <Statistic title="Cần nộp" value={vnd(Math.max(th.conPhaiThu, 0))} />}
-        </Space>
-      </Card>
+      <div className="ux-kpi-grid">
+        <div className="ux-kpi-card"><Statistic title="Buổi đi học tháng này" value={soCoMat} /></div>
+        <div className="ux-kpi-card"><Statistic title="Tổng sticker" value={tongSticker} prefix="⭐" /></div>
+        <div className="ux-kpi-card"><Statistic title="Buổi chưa học bù" value={chuaBu} /></div>
+        {ql && <div className="ux-kpi-card"><Statistic title="Cần nộp" value={vnd(Math.max(th.conPhaiThu, 0))} /></div>}
+      </div>
 
       <Card size="small" title={`Điểm danh tháng ${thang.slice(5)}/${thang.slice(0, 4)}`}>
         <LichDiemDanhThang
@@ -187,7 +191,7 @@ export default function HocSinhChiTiet({ hs, lops, ghiDanh, quayLai }: { hs: Hoc
           { label: 'Còn phải thu', children: <b>{vnd(th.conPhaiThu)}</b> },
         ]} />
         <Space wrap style={{ marginTop: 8 }}>
-          <Button onClick={() => navigator.clipboard.writeText(tinNhan).then(() => message.success('Đã sao chép, dán vào Zalo')).catch(() => message.error('Không sao chép được, hãy chép tay'))}>Sao chép tin nhắn</Button>
+          <NutSaoChep label="Sao chép tin nhắn" text={tinNhan} />
           {hs.sdt_phu_huynh && <Button href={`https://zalo.me/${hs.sdt_phu_huynh}`} target="_blank">Mở Zalo PH</Button>}
           {link && <Button href={link} target="_blank" rel="noreferrer">Mở nhóm Zalo</Button>}
           {hs.sdt_phu_huynh && <Button href={`sms:${hs.sdt_phu_huynh}?body=${encodeURIComponent(tinNhan)}`}>Gửi SMS</Button>}

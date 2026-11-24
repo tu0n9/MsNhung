@@ -1,5 +1,5 @@
 import { useMemo, useState, type FormEvent } from 'react'
-import { Button, Card, Space, Tag } from 'antd'
+import { Button, Card, Checkbox, DatePicker, Radio, Space, Tag } from 'antd'
 import { FileExcelOutlined, HistoryOutlined, KeyOutlined, StarOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { useCheDo, MAU, CHU_SO } from '../giao-dien'
@@ -18,6 +18,8 @@ import KhoaSoThang from '../thanh-phan/KhoaSoThang'
 import PhanTrangTruot from '../thanh-phan/PhanTrangTruot'
 import LichDiemDanhThang from '../thanh-phan/LichDiemDanhThang'
 import { HuyHieuDem, NutChonNhanh, OChiTimKiem } from '../thanh-phan/TimKiemChonNhanh'
+import { BoChonNgayNhanh } from '../thanh-phan/ThanhChonThoiGian'
+import NutSaoChep from '../thanh-phan/NutSaoChep'
 
 const HS_MAU = [
   { id: '1', ten: 'Nguyễn Bảo An', ma: 'HS001', lop: 'Starters 1A', gia: '150.000 đ/buổi' },
@@ -100,6 +102,12 @@ export default function DemoGiaoDien() {
   // #300 Tìm kiếm & chọn nhanh
   const [tuKhoa, setTuKhoa] = useState('')
   const [daChon, setDaChon] = useState<string[]>(['1'])
+
+  // Nâng cấp thao tác hằng ngày
+  const homNayStr = dayjs().format('YYYY-MM-DD')
+  const [ngayMau, setNgayMau] = useState(homNayStr)
+  const [tgMau, setTgMau] = useState<string[]>(['Trợ giảng Lan'])
+  const [ddMau, setDdMau] = useState<'co_mat' | 'hoc_bu' | 'vang' | ''>('co_mat')
 
   const xuLyForm = (e: FormEvent) => {
     e.preventDefault()
@@ -304,6 +312,64 @@ export default function DemoGiaoDien() {
           lopMap={LOP_MAU_MAP}
           lopIdsEm={LOP_IDS_SET}
         />
+      </Card>
+
+      <Card size="small" title="Cải tiến thao tác hằng ngày (Chọn ngày nhanh, Điểm danh màu, Sổ tháng & Sao chép)" style={{ marginTop: 14 }}>
+        <Space orientation="vertical" style={{ width: '100%' }} size={12}>
+          <Space wrap align="center">
+            <BoChonNgayNhanh ngay={ngayMau} homNay={homNayStr} onChange={setNgayMau}>
+              <DatePicker value={dayjs(ngayMau)} onChange={(d) => d && setNgayMau(d.format('YYYY-MM-DD'))} format="DD/MM/YYYY" allowClear={false} />
+            </BoChonNgayNhanh>
+            <NutSaoChep label="Sao chép tin nhắn" text="Thông báo học phí mẫu tháng 11/2026" />
+          </Space>
+
+          <div className="ux-tg-chips">
+            <Checkbox.Group
+              value={tgMau}
+              onChange={(v) => setTgMau(v as string[])}
+              options={['Trợ giảng Lan', 'Trợ giảng Minh', 'Trợ giảng Tuấn'].map((n) => ({ value: n, label: n }))}
+            />
+          </div>
+
+          <div className="ux-dd-bar" aria-hidden="true">
+            <i style={{ width: ddMau === 'co_mat' || ddMau === 'hoc_bu' ? '100%' : '50%' }} />
+          </div>
+          <div className={`ux-dd-row ${ddMau === 'co_mat' ? 'is-co-mat' : ddMau === 'hoc_bu' ? 'is-hoc-bu' : ddMau === 'vang' ? 'is-vang' : 'is-chua'}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+            <div>
+              <b>Nguyễn Bảo An</b>
+              <div style={{ fontSize: 12, color: MAU.chuPhu }}>⭐ 8 sticker</div>
+            </div>
+            <span className="ux-dd-radio">
+              <Radio.Group
+                optionType="button"
+                buttonStyle="solid"
+                value={ddMau}
+                onChange={(e) => setDdMau(e.target.value)}
+                options={[
+                  { value: 'co_mat', label: 'Có mặt' },
+                  { value: 'hoc_bu', label: 'Học bù' },
+                  { value: '', label: 'Chưa' },
+                  { value: 'vang', label: 'Vắng' },
+                ]}
+              />
+            </span>
+          </div>
+
+          <div className="ux-so-thang">
+            <div className="ux-so-o is-left">
+              <div className="ux-so-label"><span className="ux-so-dot" style={{ background: MAU.tot }} aria-hidden="true" />Thực thu trong tháng</div>
+              <b style={{ fontSize: 17, color: MAU.tot }}>4.200.000 đ</b>
+            </div>
+            <div className="ux-so-o">
+              <div className="ux-so-label"><span className="ux-so-dot" style={{ background: MAU.chuMo }} aria-hidden="true" />Tổng chi</div>
+              <b style={{ fontSize: 17 }}>1.100.000 đ</b>
+            </div>
+            <div className="ux-so-thang-tong">
+              <span style={{ color: MAU.chuPhu, fontWeight: 500 }}>Còn phải thu</span>
+              <b style={{ fontSize: 24, fontFamily: CHU_SO, color: MAU.do }}>1.500.000 đ</b>
+            </div>
+          </div>
+        </Space>
       </Card>
 
       <HopThoaiXoa

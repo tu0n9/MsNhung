@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { App, AutoComplete, Button, Card, DatePicker, Form, Input, InputNumber, Modal, Select, Space, Table } from 'antd'
-import { O_TIEN } from '../giao-dien'
+import { CHU_SO, MAU, O_TIEN } from '../giao-dien'
 import { PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { taiDuLieuThang, type ChiPhi as CP, type DuLieuThang } from '../du-lieu'
 import { vnd, type Thang } from '../hoc-phi'
 import { q, sb, useMotLan } from '../supabase'
 import HopThoaiXoa from '../thanh-phan/HopThoaiXoa'
+import { BoChonThangNhanh } from '../thanh-phan/ThanhChonThoiGian'
 
 const HOAN = 'Hoàn học phí'
 const MAC_DINH = ['Thuê phòng', 'Điện nước', 'Tài liệu', 'Sticker / quà', HOAN, 'Khác']
@@ -41,14 +42,31 @@ export default function ChiPhi() {
   })
   if (!d) return null
   const luong = d.luongTg.reduce((s, x) => s + x.thanhTien, 0)
+  const chiKhac = d.chi.reduce((s, x) => s + x.so_tien, 0)
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }}>
+    <Space orientation="vertical" style={{ width: '100%' }}>
       <Space wrap>
-        <DatePicker picker="month" value={dayjs(thang)} onChange={(x) => x && setThang(x.format('YYYY-MM'))} format="MM/YYYY" allowClear={false} />
+        <BoChonThangNhanh thang={thang} onChange={setThang}>
+          <DatePicker picker="month" value={dayjs(thang)} onChange={(x) => x && setThang(x.format('YYYY-MM'))} format="MM/YYYY" allowClear={false} />
+        </BoChonThangNhanh>
         <Button type="primary" icon={<PlusOutlined />} onClick={() => setSua({ ngay: dayjs().format('YYYY-MM-DD') })}>Thêm khoản chi</Button>
-        <b>Tổng chi: {vnd(d.chi.reduce((s, x) => s + x.so_tien, 0) + luong)}</b>
       </Space>
+
+      <div className="ux-so-thang">
+        <div className="ux-so-o is-left">
+          <div className="ux-so-label"><span className="ux-so-dot" style={{ background: MAU.xanh }} aria-hidden="true" />Lương trợ giảng</div>
+          <b style={{ fontSize: 17 }}>{vnd(luong)}</b>
+        </div>
+        <div className="ux-so-o">
+          <div className="ux-so-label"><span className="ux-so-dot" style={{ background: MAU.vangDam }} aria-hidden="true" />Chi phí khác</div>
+          <b style={{ fontSize: 17 }}>{vnd(chiKhac)}</b>
+        </div>
+        <div className="ux-so-thang-tong">
+          <span style={{ color: MAU.chuPhu, fontWeight: 500 }}>Tổng chi</span>
+          <b style={{ fontSize: 24, fontFamily: CHU_SO, color: MAU.chinh }}>{vnd(chiKhac + luong)}</b>
+        </div>
+      </div>
 
       <Card size="small" title={`Lương trợ giảng (tự tính từ điểm danh): ${vnd(luong)}`}>
         <Table size="small" rowKey={(r) => r.tg.id} pagination={false} dataSource={d.luongTg} columns={[

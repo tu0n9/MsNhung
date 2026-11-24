@@ -39,7 +39,7 @@ export default function TaiKhoan() {
   const sua = (id: string, ban: Partial<TK>) => q(sb.from('tai_khoan').update(ban).eq('id', id)).then(tai).catch((e) => { message.error(e.message); tai() })
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }}>
+    <Space orientation="vertical" style={{ width: '100%' }}>
       <Space wrap>
         {laQuanLy(toi.vai_tro) && <Button type="primary" icon={<PlusOutlined />} onClick={() => setTao(true)}>Tạo tài khoản</Button>}
         <Button onClick={() => nav('/doi-mat-khau')}>Đổi mật khẩu của tôi</Button>

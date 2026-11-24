@@ -329,7 +329,7 @@ export default function LopHoc() {
   const quayLaiChon = () => { setMan('chon'); setTim('') }
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }} size={12}>
+    <Space orientation="vertical" style={{ width: '100%' }} size={12}>
       {man === 'chon' && (
         <>
           <div>
@@ -392,7 +392,7 @@ export default function LopHoc() {
               {ql && <Button type="primary" icon={<PlusOutlined />} onClick={() => setSuaLop({ lich: [], hoat_dong: true })}>Tạo lớp đầu tiên</Button>}
             </Empty>
           ) : (
-            <Collapse activeKey={timKhong ? lopTimThay.map((l) => l.id) : mo} onChange={(k) => { if (timKhong) return; setMo(k as string[]) }}
+            <Collapse className="ux-lop-collapse" activeKey={timKhong ? lopTimThay.map((l) => l.id) : mo} onChange={(k) => { if (timKhong) return; setMo(k as string[]) }}
               items={(timKhong ? lopTimThay : lops).map((l) => {
                 const ds = dsCuaLop(l)
                 return {
@@ -418,7 +418,7 @@ export default function LopHoc() {
                             <span>{h.ho_ten}</span> <Tag>{h.ma_hs}</Tag>
                             {soLopKhac > 0 && <Tag color="blue">+{soLopKhac} lớp</Tag>}
                             {gd.trang_thai === 'ngung' && <Tag>Ngừng lớp này</Tag>}
-                            <Button size="small" style={{ marginLeft: 4 }} aria-label={`Sticker của ${h.ho_ten}`}
+                            <Button size="small" className="ux-sticker-chip" style={{ marginLeft: 4 }} aria-label={`Sticker của ${h.ho_ten}`}
                               onClick={(e) => { e.stopPropagation(); setHsSticker(h) }}>⭐ {tong[h.id] ?? 0}</Button>
                           </>}
                           description={[ql && `${vnd(giaGhiDanh(h, gd))}/buổi${gd.don_gia_rieng != null && gd.don_gia_rieng !== h.don_gia ? ' (giá riêng lớp)' : ''}`,
@@ -446,7 +446,7 @@ export default function LopHoc() {
               </Space>
             )}
           </div>
-          <div style={{ overflowX: 'auto', maxWidth: '100%', paddingBottom: 2 }}>
+          <div className="ux-scroll-x">
             <Segmented value={locHs} onChange={(v) => setLocHs(v as LocHs)} options={[
               { value: 'tat_ca', label: `Tất cả (${hs.length})` },
               { value: 'dang_hoc', label: `Đang học (${demDangHoc})` },
@@ -473,7 +473,7 @@ export default function LopHoc() {
                       {loai === 'chua_xep' && <Tag color="orange">Chưa xếp lớp</Tag>}
                       {loai === 'ngung' && <Tag>Đã ngừng{dsLopNgung.length ? ` (${dsLopNgung.join(', ')})` : ''}</Tag>}
                       {dsLopDangHoc.map((ten) => <Tag key={ten} color="blue">{ten}</Tag>)}
-                      <Button size="small" aria-label={`Sticker của ${h.ho_ten}`}
+                      <Button size="small" className="ux-sticker-chip" aria-label={`Sticker của ${h.ho_ten}`}
                         onClick={(e) => { e.stopPropagation(); setHsSticker(h) }}>⭐ {tong[h.id] ?? 0}</Button>
                     </Space>}
                     description={[ql && `${vnd(h.don_gia)}/buổi`, h.ten_phu_huynh, h.sdt_phu_huynh].filter(Boolean).join(' · ')} />
@@ -805,7 +805,7 @@ function ThemHsVaoLopModal({ lop, hs, gds, url, tenCacLop, onCancel, onDone, onD
           </Space>
         </div>
       }>
-      <Space direction="vertical" style={{ width: '100%' }} size={10}>
+      <Space orientation="vertical" style={{ width: '100%' }} size={10}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <Segmented value={loc} onChange={(v) => setLoc(v as 'tat_ca' | 'chua_xep')} options={[
             { value: 'tat_ca', label: `Tất cả (${ungVien.length})` },
@@ -932,7 +932,7 @@ function GopHocSinhModal({ hs, gds, lops, tong, onCancel, onDone }: {
     <Modal open title="Gộp 2 hồ sơ học sinh trùng thành 1" onCancel={onCancel}
       okText="Xác nhận gộp" okButtonProps={{ danger: true, disabled: !giuId || !boId || giuId === boId }}
       confirmLoading={dangGop} onOk={() => gop()}>
-      <Space direction="vertical" style={{ width: '100%' }}>
+      <Space orientation="vertical" style={{ width: '100%' }}>
         {nhomTrung.length > 0 && (
           <Alert type="info" showIcon title={`Phát hiện ${nhomTrung.length} tên có từ 2 hồ sơ trở lên (bấm để chọn nhanh)`}
             description={<div style={{ maxHeight: 160, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>

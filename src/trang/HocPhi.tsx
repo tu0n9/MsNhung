@@ -9,6 +9,8 @@ import { CHU_SO, MAU } from '../giao-dien'
 import KhoaSoThang from '../thanh-phan/KhoaSoThang'
 import NutTaiXuong from '../thanh-phan/NutTaiXuong'
 import { OChiTimKiem } from '../thanh-phan/TimKiemChonNhanh'
+import { BoChonThangNhanh } from '../thanh-phan/ThanhChonThoiGian'
+import NutSaoChep from '../thanh-phan/NutSaoChep'
 
 const khongDau = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase()
 
@@ -127,34 +129,52 @@ export default function HocPhi() {
   const dsDong = d.dong.filter(loc1)
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }}>
+    <Space orientation="vertical" style={{ width: '100%' }}>
       <Space wrap>
-        <DatePicker picker="month" value={dayjs(thang)} onChange={(x) => x && setThang(x.format('YYYY-MM'))} format="MM/YYYY" allowClear={false} />
+        <BoChonThangNhanh thang={thang} onChange={setThang}>
+          <DatePicker picker="month" value={dayjs(thang)} onChange={(x) => x && setThang(x.format('YYYY-MM'))} format="MM/YYYY" allowClear={false} />
+        </BoChonThangNhanh>
         <NutTaiXuong label="Xuất Excel" loading={dangXuat} onDownload={() => xuat()} />
         <NutTaiXuong label="Sao lưu toàn bộ" variant="secondary" loading={dangSaoLuu} onDownload={() => saoLuu()} />
       </Space>
       <KhoaSoThang daChot={daChot} thang={thang} onChot={chot} onMoKhoa={moKhoa} />
-      {dungLuong !== undefined && <div style={{ fontSize: 13, color: dungLuong > 800 * 2 ** 20 ? MAU.do : MAU.chuPhu }} data-dung-luong-anh>
-        Ảnh đang dùng: {(dungLuong / 2 ** 20).toFixed(1)} MB / 1 GB. Ảnh lớp cũ hơn 3 tháng tự cất lên GitHub và xoá khỏi đây mỗi tháng.
-      </div>}
+      {dungLuong !== undefined && (
+        <div style={{ fontSize: 13, color: dungLuong > 800 * 2 ** 20 ? MAU.do : MAU.chuPhu }} data-dung-luong-anh>
+          Ảnh đang dùng: {(dungLuong / 2 ** 20).toFixed(1)} MB / 1 GB. Ảnh lớp cũ hơn 3 tháng tự cất lên GitHub và xoá khỏi đây mỗi tháng.
+          <div className="ux-storage-bar" aria-hidden="true">
+            <i style={{ width: `${Math.min(100, Math.round((dungLuong / 2 ** 30) * 100))}%`, background: dungLuong > 800 * 2 ** 20 ? MAU.do : MAU.chinh }} />
+          </div>
+        </div>
+      )}
 
       {/* một khối kẻ ô như trang sổ, không tách thành nhiều thẻ */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', border: `1px solid ${MAU.vien}`, borderRadius: 14, background: MAU.mat }}>
-        {([['Phải thu', t.phaiThu], ['Nợ kỳ trước', t.noKyTruoc], ['Đã thu', t.daThu], ['Thực thu trong tháng', t.thucThu, MAU.tot],
-          ['Tổng chi', t.tongChi], ['Chênh lệch thu chi', t.chenhLech, t.chenhLech < 0 ? MAU.do : MAU.tot]] as const).map(([ten, v, mau], i) => (
-          <div key={ten} style={{ padding: '10px 12px', borderBottom: `1px solid ${MAU.vien}`, borderRight: i % 2 === 0 ? `1px solid ${MAU.vien}` : undefined }}>
-            <div style={{ fontSize: 12, color: MAU.chuPhu }}>{ten}</div>
+      <div className="ux-so-thang">
+        {([
+          ['Phải thu', t.phaiThu, undefined, MAU.chinh],
+          ['Nợ kỳ trước', t.noKyTruoc, undefined, MAU.vangDam],
+          ['Đã thu', t.daThu, undefined, MAU.xanh],
+          ['Thực thu trong tháng', t.thucThu, MAU.tot, MAU.tot],
+          ['Tổng chi', t.tongChi, undefined, MAU.chuMo],
+          ['Chênh lệch thu chi', t.chenhLech, t.chenhLech < 0 ? MAU.do : MAU.tot, t.chenhLech < 0 ? MAU.do : MAU.tot],
+        ] as const).map(([ten, v, mau, dot], i) => (
+          <div key={ten} className={`ux-so-o ${i % 2 === 0 ? 'is-left' : ''}`.trim()}>
+            <div className="ux-so-label">
+              <span className="ux-so-dot" style={{ background: dot }} aria-hidden="true" />
+              <span>{ten}</span>
+            </div>
             <b style={{ fontSize: 17, color: mau }}>{vnd(v)}</b>
           </div>
         ))}
-        <div style={{ gridColumn: 'span 2', padding: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <span style={{ color: MAU.chuPhu }}>Còn phải thu</span>
+        <div className="ux-so-thang-tong">
+          <span style={{ color: MAU.chuPhu, fontWeight: 500 }}>Còn phải thu</span>
           <b style={{ fontSize: 28, fontFamily: CHU_SO, color: t.conPhaiThu > 0 ? MAU.do : MAU.tot }}>{vnd(t.conPhaiThu)}</b>
         </div>
       </div>
 
-      <Segmented value={loc} onChange={(v) => setLoc(v as typeof loc)} options={[
-        { value: 'tat_ca', label: 'Tất cả' }, { value: 'no', label: `Còn nợ ${d.dong.filter((r) => r.conPhaiThu > 0).length}` }, { value: 'du', label: 'Đã đủ' }, { value: 'gia_han', label: `Sắp hết gói ${giaHan.length}` }]} />
+      <div className="ux-scroll-x">
+        <Segmented value={loc} onChange={(v) => setLoc(v as typeof loc)} options={[
+          { value: 'tat_ca', label: 'Tất cả' }, { value: 'no', label: `Còn nợ ${d.dong.filter((r) => r.conPhaiThu > 0).length}` }, { value: 'du', label: 'Đã đủ' }, { value: 'gia_han', label: `Sắp hết gói ${giaHan.length}` }]} />
+      </div>
 
       <Space wrap style={{ width: '100%' }}>
         <OChiTimKiem value={tim} onChange={setTim} placeholder="Tìm tên hoặc mã HS" ariaLabel="Tìm học sinh" style={{ width: 240, maxWidth: '100%' }} />
@@ -174,7 +194,7 @@ export default function HocPhi() {
                 {[r.tenLops, moTaGia(r), r.hs.ten_phu_huynh, r.hs.sdt_phu_huynh].filter(Boolean).join(' · ')}
               </div>
               <Space wrap size="small" style={{ marginTop: 6 }}>
-                <Button size="small" onClick={() => navigator.clipboard.writeText(tinNhan).then(() => message.success('Đã sao chép, dán vào Zalo')).catch(() => message.error('Không sao chép được, hãy chép tay'))}>Sao chép tin nhắn</Button>
+                <NutSaoChep size="small" label="Sao chép tin nhắn" text={tinNhan} />
                 {r.hs.sdt_phu_huynh && <Button size="small" href={`https://zalo.me/${r.hs.sdt_phu_huynh}`} target="_blank">Mở Zalo PH</Button>}
                 {r.hs.link_zalo && <Button size="small" href={r.hs.link_zalo} target="_blank" rel="noreferrer">Mở nhóm Zalo</Button>}
               </Space>
@@ -185,9 +205,8 @@ export default function HocPhi() {
       {loc !== 'gia_han' && (dsDong.length === 0 ? <Empty description="Không có học sinh nào" /> : (
         <Card size="small" styles={{ body: { padding: 0 } }}>
           {dsDong.map((r, idx) => (
-            <button key={r.hs.id} type="button" onClick={() => setXem(r.hs)} style={{
-              all: 'unset', boxSizing: 'border-box', width: '100%', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10,
-              padding: '10px 12px', borderTop: idx ? `1px solid ${MAU.vien}` : undefined,
+            <button key={r.hs.id} type="button" className="ux-hs-row" onClick={() => setXem(r.hs)} style={{
+              borderTop: idx ? `1px solid ${MAU.vien}` : undefined,
             }}>
               <Avatar shape="square" src={r.hs.avatar && url[r.hs.avatar]}>{r.hs.ho_ten.split(' ').pop()?.[0]}</Avatar>
               <div style={{ flexGrow: 1, minWidth: 0 }}>
@@ -197,11 +216,12 @@ export default function HocPhi() {
                 </div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <b style={{ color: r.conPhaiThu > 0 ? MAU.do : chuaGoi(r) ? MAU.chuPhu : MAU.tot }}>
+                <span className={`ux-status-pill ${r.conPhaiThu > 0 ? 'is-debt' : chuaGoi(r) ? 'is-none' : 'is-ok'}`}>
                   {r.conPhaiThu > 0 ? vnd(r.conPhaiThu) : chuaGoi(r) ? 'Chưa có gói' : trangThaiThang(r) === 'dong_truoc' ? 'Đã đủ (đóng trước)' : 'Đã đủ'}
-                </b>
-                {r.conPhaiThu > 0 && <div style={{ fontSize: 12, color: MAU.chuPhu }}>còn nợ</div>}
+                </span>
+                {r.conPhaiThu > 0 && <div style={{ fontSize: 11.5, color: MAU.chuPhu, marginTop: 2 }}>còn nợ</div>}
               </div>
+              <span className="ux-row-chev" aria-hidden="true">›</span>
             </button>
           ))}
         </Card>

@@ -93,10 +93,10 @@ export default function App() {
     <NguoiDung.Provider value={toi}>
       <Layout style={{ minHeight: '100vh' }}>
         <Layout.Header className="ux-header" style={{ borderBottom: `1px solid ${MAU.vien}` }}>
-          <div className="ux-header-brand">
+          <button type="button" className="ux-header-brand" onClick={() => nav('/')} title="Về trang chủ">
             <img src="/logo-hinh.png" alt="" height={34} style={{ width: 'auto' }} />
             <b style={{ color: MAU.chinh, whiteSpace: 'nowrap', fontFamily: CHU_SO, fontSize: 18 }}>Ms.Nhung</b>
-          </div>
+          </button>
           {dienThoai ? <span style={{ flex: 1 }} /> : <Menu theme={cheDo === 'toi' ? 'dark' : 'light'} mode="horizontal" selectedKeys={[loc.pathname === '/import' ? '/lop' : loc.pathname]} items={menu}
             onClick={(e) => nav(e.key)} style={{ flex: 1, minWidth: 0 }} />}
           <div className="ux-header-actions">
@@ -107,19 +107,21 @@ export default function App() {
           </div>
         </Layout.Header>
         <Layout.Content style={{ padding: 12, paddingBottom: dienThoai ? 76 : 12, maxWidth: 1200, width: '100%', margin: '0 auto' }}>
-          <Routes>
-            <Route path="/" element={<DiemDanh />} />
-            <Route path="/lop" element={<LopHoc />} />
-            {ql && <Route path="/hoc-phi" element={<HocPhi />} />}
-            {ql && <Route path="/chi-phi" element={<ChiPhi />} />}
-            {ql && <Route path="/import" element={<ImportExcel />} />}
-            {ql && <Route path="/danh-gia" element={<DanhGia />} />}
-            {ql && <Route path="/nhat-ky" element={<NhatKy />} />}
-            <Route path="/tai-khoan" element={<TaiKhoanTrang />} />
-            <Route path="/doi-mat-khau" element={<DoiMatKhau xong={() => nav('/')} />} />
-            <Route path="/huong-dan" element={<HuongDan />} />
-            <Route path="*" element={<Navigate to="/" />} />
-          </Routes>
+          <div key={loc.pathname} className="ux-page-in">
+            <Routes>
+              <Route path="/" element={<DiemDanh />} />
+              <Route path="/lop" element={<LopHoc />} />
+              {ql && <Route path="/hoc-phi" element={<HocPhi />} />}
+              {ql && <Route path="/chi-phi" element={<ChiPhi />} />}
+              {ql && <Route path="/import" element={<ImportExcel />} />}
+              {ql && <Route path="/danh-gia" element={<DanhGia />} />}
+              {ql && <Route path="/nhat-ky" element={<NhatKy />} />}
+              <Route path="/tai-khoan" element={<TaiKhoanTrang />} />
+              <Route path="/doi-mat-khau" element={<DoiMatKhau xong={() => nav('/')} />} />
+              <Route path="/huong-dan" element={<HuongDan />} />
+              <Route path="*" element={<Navigate to="/" />} />
+            </Routes>
+          </div>
         </Layout.Content>
         {/* Đánh giá không vào thanh dưới (đã đủ 5 mục); trên điện thoại vào từ nút ở trang Học phí */}
         {dienThoai && menu.length > 1 && (

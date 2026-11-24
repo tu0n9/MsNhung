@@ -7,6 +7,8 @@ import { congThang, type Thang } from '../hoc-phi'
 import { goiHam, q, sb, taiHet, useMotLan, type GhiDanh, type HocSinh, type Lop } from '../supabase'
 import { MAU } from '../giao-dien'
 import HopThoaiXoa from '../thanh-phan/HopThoaiXoa'
+import { BoChonThangNhanh } from '../thanh-phan/ThanhChonThoiGian'
+import NutSaoChep from '../thanh-phan/NutSaoChep'
 
 const TEN_NGAN: Record<keyof typeof CAU_VIET, string> = {
   khoa_hoc: 'Nhận xét khoá học', kho_khan: 'Khó khăn khi học', nhan_xet: 'Nhận xét gửi trợ giảng', chua_bai: 'Chữa bài tập về nhà',
@@ -90,22 +92,24 @@ export default function DanhGia() {
   const dsPhieu = lopId ? phieus.filter((p) => p.lop_id === lopId) : phieus
 
   return (
-    <Space direction="vertical" style={{ width: '100%' }}>
+    <Space orientation="vertical" style={{ width: '100%' }}>
       <Space wrap>
-        <DatePicker picker="month" value={dayjs(thang)} onChange={(x) => x && setThang(x.format('YYYY-MM'))} format="MM/YYYY" allowClear={false} />
+        <BoChonThangNhanh thang={thang} onChange={setThang}>
+          <DatePicker picker="month" value={dayjs(thang)} onChange={(x) => x && setThang(x.format('YYYY-MM'))} format="MM/YYYY" allowClear={false} />
+        </BoChonThangNhanh>
         <Select style={{ minWidth: 160 }} value={lopId ?? ''} onChange={(v) => setLopId(v || undefined)}
           options={[{ value: '', label: 'Tất cả lớp' }, ...lops.map((l) => ({ value: l.id, label: l.ten }))]} />
       </Space>
 
       <Card size="small" title="Link phiếu đánh giá">
         {ma === undefined ? null : ma ? (
-          <Space direction="vertical" style={{ width: '100%' }}>
+          <Space orientation="vertical" style={{ width: '100%' }}>
             <code style={{ wordBreak: 'break-all' }} data-link-danh-gia>{urlPhieu(ma)}</code>
             <div style={{ fontSize: 13, color: conNhan ? MAU.chuPhu : MAU.do }}>
               {conNhan ? `Nhận phiếu tới hết ngày ${han.slice(8)}/${han.slice(5, 7)}` : 'Link đã hết hạn nhận phiếu'}
             </div>
             <Space wrap>
-              <Button type="primary" onClick={() => navigator.clipboard.writeText(urlPhieu(ma)).then(() => message.success('Đã sao chép, dán vào Zalo')).catch(() => message.error('Không sao chép được, hãy chép tay'))}>Sao chép link</Button>
+              <NutSaoChep type="primary" label="Sao chép link" text={urlPhieu(ma)} />
               <Button onClick={doiLink}>Đổi link</Button>
             </Space>
           </Space>
