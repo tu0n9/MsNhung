@@ -11,7 +11,9 @@ import '@fontsource/be-vietnam-pro/600.css'
 import '@fontsource/be-vietnam-pro/700.css'
 import '@fontsource/playfair-display/700.css'
 import './giao-dien.css'
-import { useEffect, useState } from 'react'
+import './ux-giao-dien.css'
+import { useEffect, useState, type MouseEvent } from 'react'
+import { flushSync } from 'react-dom'
 import { BANG_MAU, CheDoCtx, cssBienMau, theme, type CheDo } from './giao-dien'
 import App from './App'
 
@@ -32,8 +34,36 @@ function Goc() {
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', BANG_MAU[cheDo].trinhDuyet)
     try { localStorage.setItem(KHOA, cheDo) } catch { /* không lưu được thì lần sau về mặc định */ }
   }, [cheDo])
+
+  // #219: hiệu ứng lan tròn từ tâm nút chuyển sáng / tối (View Transition API)
+  const doi = (e?: MouseEvent) => {
+    const tiep: CheDo = cheDo === 'toi' ? 'sang' : 'toi'
+    const giamDong = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const startVT = (document as unknown as {
+      startViewTransition?: (cb: () => void) => { ready: Promise<void> }
+    }).startViewTransition
+    if (giamDong || typeof startVT !== 'function') {
+      setCheDo(tiep)
+      return
+    }
+    const rect = (e?.currentTarget as HTMLElement | undefined)?.getBoundingClientRect?.()
+    const cx = rect ? rect.left + rect.width / 2 : window.innerWidth - 36
+    const cy = rect ? rect.top + rect.height / 2 : 28
+    const banKinh = Math.hypot(Math.max(cx, window.innerWidth - cx), Math.max(cy, window.innerHeight - cy))
+    const vt = startVT.call(document, () => {
+      document.documentElement.dataset.cheDo = tiep
+      flushSync(() => setCheDo(tiep))
+    })
+    vt.ready.then(() => {
+      document.documentElement.animate(
+        { clipPath: [`circle(0px at ${cx}px ${cy}px)`, `circle(${banKinh}px at ${cx}px ${cy}px)`] },
+        { duration: 640, easing: 'cubic-bezier(.65,0,.35,1)', pseudoElement: '::view-transition-new(root)' },
+      )
+    }).catch(() => {})
+  }
+
   return (
-    <CheDoCtx.Provider value={{ cheDo, doi: () => setCheDo((c) => (c === 'toi' ? 'sang' : 'toi')) }}>
+    <CheDoCtx.Provider value={{ cheDo, doi }}>
       <ConfigProvider locale={viVN} theme={theme(cheDo)}>
         <AntApp>
           {/* HashRouter: host tĩnh nào cũng chạy, không cần cấu hình rewrite */}

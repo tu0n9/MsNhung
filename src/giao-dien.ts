@@ -1,6 +1,6 @@
 // Giao diện "Sổ vàng" (docs/YEU-CAU.md, mẫu docs/ban-mau/giao-dien.html), nay hồng kim theo logo, có bản sáng (mặc định)
 // và bản tối. Màu dùng ngoài theme của Ant Design (nền dòng, chữ số tiền) lấy từ MAU để đổi một chỗ là đổi cả app.
-import { createContext, useContext } from 'react'
+import { createContext, useContext, type MouseEvent } from 'react'
 import { theme as antTheme, type ThemeConfig } from 'antd'
 
 export type CheDo = 'sang' | 'toi'
@@ -70,7 +70,7 @@ export function theme(cheDo: CheDo): ThemeConfig {
   }
 }
 
-export const CheDoCtx = createContext<{ cheDo: CheDo; doi: () => void }>({ cheDo: 'sang', doi: () => {} })
+export const CheDoCtx = createContext<{ cheDo: CheDo; doi: (e?: MouseEvent) => void }>({ cheDo: 'sang', doi: () => {} })
 export const useCheDo = () => useContext(CheDoCtx)
 
 /** Ô nhập tiền: số nguyên VND (precision 0), tự thêm dấu phẩy mỗi 3 chữ số. Dùng `{...O_TIEN}` cho mọi InputNumber tiền. */
