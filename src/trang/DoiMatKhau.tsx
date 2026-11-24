@@ -1,5 +1,7 @@
-import { App, Button, Card, Form, Input } from 'antd'
+import { App, Button, Card, Form } from 'antd'
 import { q, sb, useMotLan } from '../supabase'
+import ONhapNoi from '../thanh-phan/ONhapNoi'
+import NutGuiBienHinh from '../thanh-phan/NutGuiBienHinh'
 
 export default function DoiMatKhau({ batBuoc, xong }: { batBuoc?: boolean; xong: () => void }) {
   const { message } = App.useApp()
@@ -14,20 +16,20 @@ export default function DoiMatKhau({ batBuoc, xong }: { batBuoc?: boolean; xong:
   })
 
   return (
-    <div style={{ display: 'grid', placeItems: 'center', padding: 16, minHeight: batBuoc ? '100vh' : undefined }}>
-      <Card title={batBuoc ? 'Lần đầu đăng nhập: hãy đặt mật khẩu mới' : 'Đổi mật khẩu'} style={{ width: '100%', maxWidth: 360 }}>
+    <div className="ux" style={{ display: 'grid', placeItems: 'center', padding: 16, minHeight: batBuoc ? '100vh' : undefined }}>
+      <Card title={batBuoc ? 'Lần đầu đăng nhập: hãy đặt mật khẩu mới' : 'Đổi mật khẩu'} style={{ width: '100%', maxWidth: 380 }}>
         <Form layout="vertical" onFinish={doi}>
-          <Form.Item name="mat_khau" label="Mật khẩu mới" rules={[{ required: true, min: 6, message: 'Tối thiểu 6 ký tự' }]}>
-            <Input.Password autoComplete="new-password" />
+          <Form.Item name="mat_khau" rules={[{ required: true, min: 6, message: 'Tối thiểu 6 ký tự' }]}>
+            <ONhapNoi label="Mật khẩu mới" type="password" autoComplete="new-password" />
           </Form.Item>
-          <Form.Item name="nhap_lai" label="Nhập lại" dependencies={['mat_khau']} rules={[
-            { required: true },
+          <Form.Item name="nhap_lai" dependencies={['mat_khau']} rules={[
+            { required: true, message: 'Vui lòng nhập lại mật khẩu' },
             ({ getFieldValue }) => ({ validator: (_, v) => v === getFieldValue('mat_khau') ? Promise.resolve() : Promise.reject(new Error('Không khớp')) }),
           ]}>
-            <Input.Password autoComplete="new-password" />
+            <ONhapNoi label="Nhập lại" type="password" autoComplete="new-password" />
           </Form.Item>
-          <Button type="primary" htmlType="submit" block loading={dangDoi}>Lưu</Button>
-          {batBuoc && <Button type="link" block onClick={() => sb.auth.signOut()}>Thoát</Button>}
+          <NutGuiBienHinh label="Lưu" state={dangDoi ? 'busy' : 'idle'} />
+          {batBuoc && <Button type="link" block style={{ marginTop: 6 }} onClick={() => sb.auth.signOut()}>Thoát</Button>}
         </Form>
       </Card>
     </div>

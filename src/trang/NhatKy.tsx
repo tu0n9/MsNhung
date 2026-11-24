@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { App, Button, DatePicker, Select, Space, Table, Tag } from 'antd'
 import dayjs, { type Dayjs } from 'dayjs'
 import { q, sb } from '../supabase'
+import PhanTrangTruot from '../thanh-phan/PhanTrangTruot'
 
 interface Dong {
   id: number; luc: string; nguoi: string | null; ten_nguoi: string | null; bang: string; hanh_dong: string
@@ -93,7 +94,7 @@ export default function NhatKy() {
           options={Object.entries(LOAI).map(([value, label]) => ({ value, label }))} />
       </Space>
       <Table size="small" rowKey="id" loading={dang} dataSource={ds} scroll={{ x: true }}
-        pagination={{ current: trang, pageSize: MOI_TRANG, total: tong, showSizeChanger: false, onChange: setTrang }} columns={[
+        pagination={false} columns={[
           { title: 'Lúc', render: (_, d) => dayjs(d.luc).format('DD/MM HH:mm') },
           { title: 'Người', render: (_, d) => d.ten_nguoi ?? (d.nguoi ? '(tài khoản đã xoá)' : 'Hệ thống') },
           { title: 'Thao tác', render: (_, d) => <><Tag color={HANH_DONG[d.hanh_dong]?.mau}>{HANH_DONG[d.hanh_dong]?.ten ?? d.hanh_dong}</Tag>
@@ -101,6 +102,7 @@ export default function NhatKy() {
           { title: 'Đối tượng', dataIndex: 'doi_tuong' },
           { title: 'Chi tiết', render: (_, d) => <span style={{ fontSize: 12 }}>{chiTiet(d)}</span> },
         ]} />
+      <PhanTrangTruot current={trang} pageSize={MOI_TRANG} total={tong} onChange={setTrang} ariaLabel="Phân trang nhật ký" />
     </Space>
   )
 }

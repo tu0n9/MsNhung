@@ -6,6 +6,9 @@ import { useToi } from '../App'
 import { goiTaiKhoan, laQuanLy, q, sb, useMotLan, type TaiKhoan as TK, type VaiTro } from '../supabase'
 import { vnd } from '../hoc-phi'
 import { O_TIEN } from '../giao-dien'
+import PhanTrangTruot from '../thanh-phan/PhanTrangTruot'
+
+const MOI_TRANG_TK = 10
 
 const TEN_VAI: Record<VaiTro, string> = { admin: 'Quản trị', giao_vien: 'Giáo viên', tro_giang: 'Trợ giảng', phu_huynh: 'Phụ huynh' }
 const VAI_HIEN: VaiTro[] = ['admin', 'giao_vien', 'tro_giang']
@@ -19,6 +22,7 @@ export default function TaiKhoan() {
   const [ds, setDs] = useState<TK[]>([])
   const [tao, setTao] = useState(false)
   const [loc, setLoc] = useState<VaiTro | 'tat_ca'>('tat_ca')
+  const [trang, setTrang] = useState(1)
   const quanLy = DUOC_QUAN_LY[toi.vai_tro]
 
   // tăng sau mỗi lần tải để ô đơn giá (không kiểm soát) dựng lại theo số trong database, kể cả khi lưu lỗi hay bị xoá trắng
@@ -40,9 +44,12 @@ export default function TaiKhoan() {
         {laQuanLy(toi.vai_tro) && <Button type="primary" icon={<PlusOutlined />} onClick={() => setTao(true)}>Tạo tài khoản</Button>}
         <Button onClick={() => nav('/doi-mat-khau')}>Đổi mật khẩu của tôi</Button>
         {laQuanLy(toi.vai_tro) && <Button onClick={() => nav('/nhat-ky')}>Nhật ký thao tác</Button>}
-        <Select value={loc} onChange={setLoc} style={{ width: 150 }} options={[{ value: 'tat_ca', label: 'Tất cả' }, ...VAI_HIEN.map((v) => ({ value: v, label: TEN_VAI[v] }))]} />
+        <Select value={loc} onChange={(v) => { setLoc(v); setTrang(1) }} style={{ width: 150 }} options={[{ value: 'tat_ca', label: 'Tất cả' }, ...VAI_HIEN.map((v) => ({ value: v, label: TEN_VAI[v] }))]} />
       </Space>
-      <Table size="small" rowKey="id" dataSource={ds.filter((x) => x.vai_tro !== 'phu_huynh' && (loc === 'tat_ca' || x.vai_tro === loc))} scroll={{ x: true }} columns={[
+      {(() => {
+        const dsLoc = ds.filter((x) => x.vai_tro !== 'phu_huynh' && (loc === 'tat_ca' || x.vai_tro === loc))
+        return <>
+          <Table size="small" rowKey="id" pagination={false} dataSource={dsLoc.slice((trang - 1) * MOI_TRANG_TK, trang * MOI_TRANG_TK)} scroll={{ x: true }} columns={[
         { title: 'Họ tên', dataIndex: 'ho_ten' },
         { title: 'Đăng nhập', render: (_, r) => [r.ten_dang_nhap, r.so_dien_thoai].filter(Boolean).join(' / ') },
         { title: 'Vai trò', render: (_, r) => <Tag>{TEN_VAI[r.vai_tro]}</Tag> },
@@ -58,7 +65,10 @@ export default function TaiKhoan() {
           onChange={(v) => sua(r.id, { hoat_dong: v })} /> },
         { title: '', render: (_, r) => quanLy.includes(r.vai_tro) && r.id !== toi.id &&
           <Popconfirm title="Đặt lại mật khẩu về số điện thoại?" onConfirm={() => datLai(r.id)}><a>Đặt lại mật khẩu</a></Popconfirm> },
-      ]} />
+          ]} />
+          <PhanTrangTruot current={trang} pageSize={MOI_TRANG_TK} total={dsLoc.length} onChange={setTrang} ariaLabel="Phân trang tài khoản" />
+        </>
+      })()}
 
       <Modal open={tao} title="Tạo tài khoản" onCancel={() => setTao(false)} footer={null} destroyOnHidden>
         <Form layout="vertical" onFinish={taoMoi} initialValues={{ vai_tro: 'tro_giang' }}>

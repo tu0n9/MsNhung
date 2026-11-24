@@ -6,6 +6,7 @@ import { CAU_VIET, hanNhan, taoMa, thongKeDaGui, TIEU_CHI, tongHop, urlPhieu, ty
 import { congThang, type Thang } from '../hoc-phi'
 import { goiHam, q, sb, taiHet, useMotLan, type GhiDanh, type HocSinh, type Lop } from '../supabase'
 import { MAU } from '../giao-dien'
+import HopThoaiXoa from '../thanh-phan/HopThoaiXoa'
 
 const TEN_NGAN: Record<keyof typeof CAU_VIET, string> = {
   khoa_hoc: 'Nhận xét khoá học', kho_khan: 'Khó khăn khi học', nhan_xet: 'Nhận xét gửi trợ giảng', chua_bai: 'Chữa bài tập về nhà',
@@ -34,6 +35,7 @@ export default function DanhGia() {
   const [gds, setGds] = useState<GhiDanh[]>([])
   const [lopId, setLopId] = useState<string>()
   const [tomTat, setTomTat] = useState<TomTat | null>(null)
+  const [phieuXoa, setPhieuXoa] = useState<PhieuDanhGia | null>(null)
 
   const tai = async () => {
     const thangTruoc = `${congThang(thang, -1)}-01`
@@ -74,10 +76,7 @@ export default function DanhGia() {
   const doiLink = () => modal.confirm({
     title: 'Đổi link?', content: 'Link cũ sẽ không mở được nữa. Phiếu đã gửi vẫn giữ nguyên.', okText: 'Đổi link', onOk: () => ghiMa(),
   })
-  const xoa = (p: PhieuDanhGia) => modal.confirm({
-    title: `Xoá phiếu của ${p.ten_hoc_sinh}?`, content: 'Xoá rồi em đó gửi lại được.', okText: 'Xoá', okButtonProps: { danger: true },
-    onOk: () => q(sb.from('danh_gia').delete().eq('id', p.id)).then(tai).catch((e) => message.error(e.message)),
-  })
+  const xoa = (p: PhieuDanhGia) => setPhieuXoa(p)
 
   const k = tongHop(phieus, lopId)
   const kTruoc = tongHop(truoc, lopId)
@@ -214,6 +213,16 @@ export default function DanhGia() {
           </div>
         )),
       }]} />}
+
+      <HopThoaiXoa
+        open={!!phieuXoa}
+        title={`Xoá phiếu của ${phieuXoa?.ten_hoc_sinh ?? ''}?`}
+        description="Xoá rồi em đó gửi lại được."
+        okText="Xoá"
+        cancelText="Thôi"
+        onCancel={() => setPhieuXoa(null)}
+        onConfirm={() => q(sb.from('danh_gia').delete().eq('id', phieuXoa!.id)).then(tai).catch((e) => message.error(e.message))}
+      />
     </Space>
   )
 }

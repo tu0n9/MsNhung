@@ -6,6 +6,9 @@ import { chuaCoGoiThang, demBuoiDuKienNhieuLop, goiCuaThang, moTaGiaThang, tinhT
 import { giaGhiDanh, homNay, hsDangHoc, q, sb, taiHet, urlAnh, useMotLan, type HocSinh } from '../supabase'
 import HocSinhChiTiet from './HocSinhChiTiet'
 import { CHU_SO, MAU } from '../giao-dien'
+import KhoaSoThang from '../thanh-phan/KhoaSoThang'
+import NutTaiXuong from '../thanh-phan/NutTaiXuong'
+import { OChiTimKiem } from '../thanh-phan/TimKiemChonNhanh'
 
 const khongDau = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/gi, 'd').toLowerCase()
 
@@ -127,10 +130,10 @@ export default function HocPhi() {
     <Space direction="vertical" style={{ width: '100%' }}>
       <Space wrap>
         <DatePicker picker="month" value={dayjs(thang)} onChange={(x) => x && setThang(x.format('YYYY-MM'))} format="MM/YYYY" allowClear={false} />
-        {daChot ? <><Tag color="green">Đã chốt sổ</Tag><Button onClick={moKhoa}>Mở khoá</Button></> : <Button onClick={chot}>Chốt sổ tháng</Button>}
-        <Button type="primary" loading={dangXuat} onClick={() => xuat()}>Xuất Excel</Button>
-        <Button loading={dangSaoLuu} onClick={() => saoLuu()}>Sao lưu toàn bộ</Button>
+        <NutTaiXuong label="Xuất Excel" loading={dangXuat} onDownload={() => xuat()} />
+        <NutTaiXuong label="Sao lưu toàn bộ" variant="secondary" loading={dangSaoLuu} onDownload={() => saoLuu()} />
       </Space>
+      <KhoaSoThang daChot={daChot} thang={thang} onChot={chot} onMoKhoa={moKhoa} />
       {dungLuong !== undefined && <div style={{ fontSize: 13, color: dungLuong > 800 * 2 ** 20 ? MAU.do : MAU.chuPhu }} data-dung-luong-anh>
         Ảnh đang dùng: {(dungLuong / 2 ** 20).toFixed(1)} MB / 1 GB. Ảnh lớp cũ hơn 3 tháng tự cất lên GitHub và xoá khỏi đây mỗi tháng.
       </div>}
@@ -154,7 +157,7 @@ export default function HocPhi() {
         { value: 'tat_ca', label: 'Tất cả' }, { value: 'no', label: `Còn nợ ${d.dong.filter((r) => r.conPhaiThu > 0).length}` }, { value: 'du', label: 'Đã đủ' }, { value: 'gia_han', label: `Sắp hết gói ${giaHan.length}` }]} />
 
       <Space wrap style={{ width: '100%' }}>
-        <Input.Search allowClear placeholder="Tìm tên hoặc mã HS" aria-label="Tìm học sinh" value={tim} onChange={(e) => setTim(e.target.value)} style={{ width: 220 }} />
+        <OChiTimKiem value={tim} onChange={setTim} placeholder="Tìm tên hoặc mã HS" ariaLabel="Tìm học sinh" style={{ width: 240, maxWidth: '100%' }} />
         <Select value={lopId} onChange={setLopId} style={{ minWidth: 160 }}
           options={[{ value: '', label: 'Tất cả lớp' }, ...d.lops.map((l) => ({ value: l.id, label: l.ten }))]} />
       </Space>

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
-import { App, AutoComplete, Button, Card, DatePicker, Form, Input, InputNumber, Modal, Popconfirm, Select, Space, Table } from 'antd'
+import { App, AutoComplete, Button, Card, DatePicker, Form, Input, InputNumber, Modal, Select, Space, Table } from 'antd'
 import { O_TIEN } from '../giao-dien'
 import { PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { taiDuLieuThang, type ChiPhi as CP, type DuLieuThang } from '../du-lieu'
 import { vnd, type Thang } from '../hoc-phi'
 import { q, sb, useMotLan } from '../supabase'
+import HopThoaiXoa from '../thanh-phan/HopThoaiXoa'
 
 const HOAN = 'Hoàn học phí'
 const MAC_DINH = ['Thuê phòng', 'Điện nước', 'Tài liệu', 'Sticker / quà', HOAN, 'Khác']
@@ -16,6 +17,7 @@ export default function ChiPhi() {
   const [d, setD] = useState<DuLieuThang>()
   const [danhMuc, setDanhMuc] = useState<string[]>(MAC_DINH)
   const [sua, setSua] = useState<Partial<CP> | null>(null)
+  const [xoaChi, setXoaChi] = useState<CP | null>(null)
 
   const tai = async () => {
     const [x, dm] = await Promise.all([taiDuLieuThang(thang), q(sb.from('chi_phi').select('danh_muc'))])
@@ -62,10 +64,23 @@ export default function ChiPhi() {
           { title: 'Mục', dataIndex: 'danh_muc' },
           { title: 'Số tiền', render: (_, r) => vnd(r.so_tien) },
           { title: 'Ghi chú', dataIndex: 'ghi_chu' },
-          { title: '', render: (_, r) => <Popconfirm title="Xoá khoản chi?" onPopupClick={(e) => e.stopPropagation()} onConfirm={async () => {
-            const { error } = await sb.from('chi_phi').delete().eq('id', r.id); if (error) message.error(error.message); else tai().catch((e) => message.error(e.message))
-          }}><a style={{ color: 'red' }} onClick={(e) => e.stopPropagation()}>Xoá</a></Popconfirm> },
+          { title: '', render: (_, r) => <a style={{ color: 'red' }} onClick={(e) => { e.stopPropagation(); setXoaChi(r) }}>Xoá</a> },
         ]} />
+
+      <HopThoaiXoa
+        open={!!xoaChi}
+        title={`Xoá khoản chi "${xoaChi?.danh_muc ?? ''}"?`}
+        description={xoaChi ? `Số tiền ${vnd(xoaChi.so_tien)} ngày ${dayjs(xoaChi.ngay).format('DD/MM/YYYY')}.` : undefined}
+        okText="Xoá"
+        cancelText="Thôi"
+        onCancel={() => setXoaChi(null)}
+        onConfirm={async () => {
+          if (!xoaChi) return
+          const { error } = await sb.from('chi_phi').delete().eq('id', xoaChi.id)
+          if (error) message.error(error.message)
+          else tai().catch((e) => message.error(e.message))
+        }}
+      />
 
       <Modal open={!!sua} title={sua?.id ? 'Sửa khoản chi' : 'Thêm khoản chi'} onCancel={() => setSua(null)} footer={null} destroyOnHidden>
         <Form layout="vertical" onFinish={luu} initialValues={{ ...sua, ngay_d: dayjs(sua?.ngay) }}>

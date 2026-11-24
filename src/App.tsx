@@ -1,11 +1,13 @@
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, lazy, Suspense, useContext, useEffect, useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import { Button, Grid, Layout, Menu, Result, Spin } from 'antd'
-import { BankOutlined, CheckSquareOutlined, DollarOutlined, MoonOutlined, StarOutlined, SunOutlined, TeamOutlined, WalletOutlined } from '@ant-design/icons'
+import { BankOutlined, CheckSquareOutlined, DollarOutlined, FileExcelOutlined, HistoryOutlined, KeyOutlined, StarOutlined, TeamOutlined, WalletOutlined } from '@ant-design/icons'
 import type { Session } from '@supabase/supabase-js'
 import { laQuanLy, q, sb, type TaiKhoan } from './supabase'
 import { trangThaiTruyCap } from './truy-cap'
 import { CHU_SO, MAU, useCheDo } from './giao-dien'
+import NutDoiGiaoDien from './thanh-phan/NutDoiGiaoDien'
+import MenuNhanh, { type MucMenuNhanh } from './thanh-phan/MenuNhanh'
 import DangNhap from './trang/DangNhap'
 import DoiMatKhau from './trang/DoiMatKhau'
 import DiemDanh from './trang/DiemDanh'
@@ -21,6 +23,7 @@ import NhatKy from './trang/NhatKy'
 
 const NguoiDung = createContext<TaiKhoan>(null!)
 export const useToi = () => useContext(NguoiDung)
+const DemoGiaoDien = import.meta.env.DEV ? lazy(() => import('./trang/DemoGiaoDien')) : null
 
 export default function App() {
   const [phien, setPhien] = useState<Session | null | undefined>(undefined)
@@ -46,6 +49,10 @@ export default function App() {
   }
   useEffect(() => { setToi(null); taiToi() }, [phien?.user.id])
 
+  // trang demo UI nội bộ khi chạy local dev, không đưa vào bản build thật
+  if (import.meta.env.DEV && DemoGiaoDien && loc.pathname === '/demo-ui') {
+    return <Suspense fallback={<Spin fullscreen />}><DemoGiaoDien /></Suspense>
+  }
   // phiếu đánh giá: học sinh mở link từ Zalo, không đăng nhập
   if (loc.pathname.startsWith('/danh-gia/')) return <PhieuDanhGia ma={loc.pathname.slice('/danh-gia/'.length)} />
   if (phien && loiToi) return <Result status="warning" title="Không tải được tài khoản" subTitle={`Kiểm tra mạng rồi thử lại. (${loiToi})`}
@@ -73,19 +80,31 @@ export default function App() {
   // điện thoại: thanh điều hướng dưới đáy, vì menu ngang bị gom vào nút "..." khó bấm
   const dienThoai = !manHinh.md
   const dangO = (k: string) => loc.pathname === k || (k === '/lop' && loc.pathname === '/import')
+  const tienIch: MucMenuNhanh[] = [
+    ...(ql ? [
+      { key: '/danh-gia', label: 'Đánh giá học sinh', moTa: 'Link phiếu & kết quả', icon: <StarOutlined />, mau: 'c3' as const, onClick: () => nav('/danh-gia') },
+      { key: '/import', label: 'Import Excel', moTa: 'Nhập lớp & học sinh', icon: <FileExcelOutlined />, mau: 'c4' as const, onClick: () => nav('/import') },
+      { key: '/nhat-ky', label: 'Nhật ký', moTa: 'Lịch sử thay đổi dữ liệu', icon: <HistoryOutlined />, mau: 'c2' as const, onClick: () => nav('/nhat-ky') },
+    ] : []),
+    { key: '/doi-mat-khau', label: 'Đổi mật khẩu', moTa: 'Cập nhật mật khẩu cá nhân', icon: <KeyOutlined />, mau: 'c1', onClick: () => nav('/doi-mat-khau') },
+  ]
 
   return (
     <NguoiDung.Provider value={toi}>
       <Layout style={{ minHeight: '100vh' }}>
-        <Layout.Header style={{ display: 'flex', alignItems: 'center', padding: '0 12px', gap: 8, borderBottom: `1px solid ${MAU.vien}` }}>
-          <img src="/logo-hinh.png" alt="" height={34} style={{ width: 'auto' }} />
-          <b style={{ color: MAU.chinh, whiteSpace: 'nowrap', fontFamily: CHU_SO, fontSize: 18 }}>Ms.Nhung</b>
+        <Layout.Header className="ux-header" style={{ borderBottom: `1px solid ${MAU.vien}` }}>
+          <div className="ux-header-brand">
+            <img src="/logo-hinh.png" alt="" height={34} style={{ width: 'auto' }} />
+            <b style={{ color: MAU.chinh, whiteSpace: 'nowrap', fontFamily: CHU_SO, fontSize: 18 }}>Ms.Nhung</b>
+          </div>
           {dienThoai ? <span style={{ flex: 1 }} /> : <Menu theme={cheDo === 'toi' ? 'dark' : 'light'} mode="horizontal" selectedKeys={[loc.pathname === '/import' ? '/lop' : loc.pathname]} items={menu}
             onClick={(e) => nav(e.key)} style={{ flex: 1, minWidth: 0 }} />}
-          <Button shape="circle" icon={cheDo === 'toi' ? <SunOutlined /> : <MoonOutlined />} onClick={doi}
-            aria-label={cheDo === 'toi' ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối'} />
-          <Button size="small" onClick={() => nav('/huong-dan')}>Hướng dẫn</Button>
-          <Button size="small" onClick={() => sb.auth.signOut()}>Thoát</Button>
+          <div className="ux-header-actions">
+            <MenuNhanh label="Tiện ích" ariaLabel="Menu tiện ích" items={tienIch} />
+            <NutDoiGiaoDien cheDo={cheDo} onClick={doi} />
+            <Button size="small" onClick={() => nav('/huong-dan')}>Hướng dẫn</Button>
+            <Button size="small" onClick={() => sb.auth.signOut()}>Thoát</Button>
+          </div>
         </Layout.Header>
         <Layout.Content style={{ padding: 12, paddingBottom: dienThoai ? 76 : 12, maxWidth: 1200, width: '100%', margin: '0 auto' }}>
           <Routes>
@@ -106,10 +125,19 @@ export default function App() {
         {dienThoai && menu.length > 1 && (
           <nav className="thanh-duoi" style={{ position: 'fixed', bottom: 0, left: 0, right: 0, display: 'flex', background: MAU.dau, borderTop: `1px solid ${MAU.vien}`, zIndex: 10 }}>
             {menu.map((m) => (
-              <button key={m.key} onClick={() => nav(m.key)} style={{
-                flex: 1, border: 0, background: 'none', padding: '8px 0 10px', fontSize: 11,
-                color: dangO(m.key) ? MAU.chinh : MAU.chuMo, fontWeight: dangO(m.key) ? 600 : 400, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-              }}><span style={{ fontSize: 20 }}>{m.icon}</span>{m.label}</button>
+              <button
+                key={m.key}
+                type="button"
+                onClick={() => nav(m.key)}
+                className={`thanh-duoi-btn ${dangO(m.key) ? 'is-active' : ''}`.trim()}
+                style={{
+                  color: dangO(m.key) ? MAU.chinh : MAU.chuMo,
+                  fontWeight: dangO(m.key) ? 600 : 400,
+                }}
+              >
+                <span className="thanh-duoi-icon">{m.icon}</span>
+                {m.label}
+              </button>
             ))}
           </nav>
         )}

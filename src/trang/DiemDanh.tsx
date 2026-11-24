@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { App, Avatar, Button, Card, Checkbox, DatePicker, Empty, Image, Input, InputNumber, List, Modal, Popconfirm, Radio, Segmented, Select, Space, Switch, Tag, Upload } from 'antd'
-import { CameraOutlined, PlusOutlined } from '@ant-design/icons'
+import { App, Avatar, Button, Card, Checkbox, DatePicker, Empty, Image, Input, InputNumber, List, Modal, Popconfirm, Radio, Segmented, Select, Space, Switch, Tag } from 'antd'
+import { PlusOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { CHU_SO, MAU } from '../giao-dien'
 import { dsHocSinhBuoi } from '../diem-danh-thang'
 import { cong2Gio, gioBuoi, nhomBuoi } from '../gio-hoc'
 import { homNay, hsDangHoc, q, taiHet, useMotLan, sb, taiAnhLen, taiTongSticker, urlAnh, type BuoiHoc, type DiemDanh as DD, type GhiDanh, type HocSinh, type Lop, type TaiKhoan } from '../supabase'
+import VungTaiFile from '../thanh-phan/VungTaiFile'
+import HopThoaiXoa from '../thanh-phan/HopThoaiXoa'
 
 const LOAI = { lich: 'Theo lịch', phu: 'Buổi phụ', bu: 'Buổi bù' }
 
@@ -95,10 +97,11 @@ const tenFile = (duong: string) => duong.split('/').pop()!
  * học sinh và "Lớp nghỉ" vẫn tách theo lớp vì học phí, tiền dư tính theo lớp.
  */
 function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[]; quayLai: () => void }) {
-  const { message, modal } = App.useApp()
+  const { message } = App.useApp()
   const [buois, setBuois] = useState(b0)
   const [tgs, setTgs] = useState<TaiKhoan[]>([])
   const [tgCo, setTgCo] = useState<string[]>([])
+  const [xacNhanNghi, setXacNhanNghi] = useState<{ buoi: BuoiHoc; soEm: number; soTg: number } | null>(null)
   const tgRef = useRef(tgCo)
   tgRef.current = tgCo
   const hangDoiTg = useRef<Promise<void>>(Promise.resolve())
@@ -146,12 +149,7 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
         sb.from('tro_giang_buoi').select('tro_giang_id', { count: 'exact', head: true }).eq('buoi_id', b.id),
       ])
       if (!soEm && !soTg) return ghiNghi(b, v)
-      modal.confirm({
-        title: `Đánh lớp nghỉ cho ${lopCua(b).ten}?`,
-        content: `Buổi này đã điểm danh ${soEm ?? 0} em, ${soTg ?? 0} trợ giảng. Đánh lớp nghỉ sẽ xoá điểm danh, sticker và trợ giảng của buổi.`,
-        okText: 'Đánh lớp nghỉ', okButtonProps: { danger: true }, cancelText: 'Thôi',
-        onOk: () => ghiNghi(b, v),
-      })
+      setXacNhanNghi({ buoi: b, soEm: soEm ?? 0, soTg: soTg ?? 0 })
     } catch (e) { message.error((e as Error).message) }
   }
   const lopCua = (b: BuoiHoc) => lops.find((l) => l.id === b.lop_id)!
@@ -186,26 +184,50 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
       <Card size="small" title="Ảnh lớp (minh chứng)">
         <Image.PreviewGroup>
           {/* ảnh đã được workflow don-anh cất lên GitHub thì không còn file, không ký được link: ẩn thay vì hiện ảnh vỡ */}
-          <Space wrap>{anh.filter((a) => url[a.duong_dan]).map((a) => <Image key={a.id} width={100} height={100} style={{ objectFit: 'cover' }} src={url[a.duong_dan]} />)}</Space>
+          <Space wrap style={{ marginBottom: anh.some((a) => url[a.duong_dan]) ? 10 : 0 }}>
+            {anh.filter((a) => url[a.duong_dan]).map((a) => <Image key={a.id} width={100} height={100} style={{ objectFit: 'cover', borderRadius: 10 }} src={url[a.duong_dan]} />)}
+          </Space>
         </Image.PreviewGroup>
-        <Upload accept="image/*" multiple showUploadList={false} customRequest={async ({ file, onSuccess, onError }) => {
-          try {
-            const ten = `${crypto.randomUUID()}.jpg`
-            const duong = await taiAnhLen(`buoi/${buois[0].id}/${ten}`, file as File)
-            await q(sb.from('anh_buoi').insert({ buoi_id: buois[0].id, duong_dan: duong }))
-            // ponytail: chép file sang từng buổi khác của ca thay vì cho nhiều dòng dùng chung một file: tốn gấp đôi
-            // dung lượng cho ảnh lớp gộp, nhưng giữ nguyên anh_buoi.duong_dan unique, quyền xem ảnh của phụ huynh,
-            // xoa_lop và workflow don-anh. Đổi sang dùng chung file nếu ảnh gộp làm đầy bộ nhớ.
-            for (const b of buois.slice(1)) {
-              await q(sb.storage.from('anh').copy(duong, `buoi/${b.id}/${ten}`))
-              await q(sb.from('anh_buoi').insert({ buoi_id: b.id, duong_dan: `buoi/${b.id}/${ten}` }))
+        <VungTaiFile
+          compact
+          accept="image/*"
+          multiple
+          title="Chụp / chọn ảnh lớp"
+          browseLabel="tải ảnh lên"
+          subtitle="JPG, PNG"
+          ariaLabel="Chụp hoặc chọn ảnh lớp"
+          onChonFile={async (files) => {
+            for (const file of files) {
+              try {
+                const ten = `${crypto.randomUUID()}.jpg`
+                const duong = await taiAnhLen(`buoi/${buois[0].id}/${ten}`, file)
+                await q(sb.from('anh_buoi').insert({ buoi_id: buois[0].id, duong_dan: duong }))
+                // chép file sang từng buổi khác của ca thay vì cho nhiều dòng dùng chung một file: tốn gấp đôi
+                // dung lượng cho ảnh lớp gộp, nhưng giữ nguyên anh_buoi.duong_dan unique, quyền xem ảnh của phụ huynh,
+                // xoa_lop và workflow don-anh. Đổi sang dùng chung file nếu ảnh gộp làm đầy bộ nhớ.
+                for (const b of buois.slice(1)) {
+                  await q(sb.storage.from('anh').copy(duong, `buoi/${b.id}/${ten}`))
+                  await q(sb.from('anh_buoi').insert({ buoi_id: b.id, duong_dan: `buoi/${b.id}/${ten}` }))
+                }
+              } catch (e) {
+                message.error((e as Error).message)
+                throw e
+              }
             }
-            onSuccess?.(null); tai()
-          } catch (e) { message.error((e as Error).message); onError?.(e as Error) }
-        }}>
-          <Button icon={<CameraOutlined />} style={{ marginTop: 8 }}>Chụp / chọn ảnh</Button>
-        </Upload>
+            await tai()
+          }}
+        />
       </Card>
+
+      <HopThoaiXoa
+        open={!!xacNhanNghi}
+        title={xacNhanNghi ? `Đánh lớp nghỉ cho ${lopCua(xacNhanNghi.buoi).ten}?` : ''}
+        description={xacNhanNghi ? `Buổi này đã điểm danh ${xacNhanNghi.soEm} em, ${xacNhanNghi.soTg} trợ giảng. Đánh lớp nghỉ sẽ xoá điểm danh, sticker và trợ giảng của buổi.` : undefined}
+        okText="Đánh lớp nghỉ"
+        cancelText="Thôi"
+        onCancel={() => setXacNhanNghi(null)}
+        onConfirm={() => ghiNghi(xacNhanNghi!.buoi, true)}
+      />
     </Space>
   )
 }
@@ -213,9 +235,10 @@ function NhomBuoi({ buois: b0, lops, quayLai }: { buois: BuoiHoc[]; lops: Lop[];
 function DsHocSinh({ buoi, lop, tatCaHs, ghiDanh, nhieuLop, doiNghi }: {
   buoi: BuoiHoc; lop: Lop; tatCaHs: HocSinh[]; ghiDanh: GhiDanh[]; nhieuLop: boolean; doiNghi: (v: boolean) => void
 }) {
-  const { message, modal } = App.useApp()
+  const { message } = App.useApp()
   const [hs, setHs] = useState<HocSinh[]>([])
   const [dd, setDd] = useState<Record<string, DD>>({})
+  const [boDdHs, setBoDdHs] = useState<{ h: HocSinh; sticker: number } | null>(null)
   // sticker đã có + các buổi KHÁC + cộng/trừ ngoài buổi; tổng hiện = số này + sticker buổi đang chấm. Không cộng dồn từng lần chấm vì
   // chấm trước khi số này tải xong sẽ cộng vào số 0 tạm thời (tổng sai).
   const [stickerKhac, setStickerKhac] = useState<Record<string, number>>({})
@@ -267,10 +290,7 @@ function DsHocSinh({ buoi, lop, tatCaHs, ghiDanh, nhieuLop, doiNghi }: {
     const x = ddRef.current[h.id]
     if (!x) return
     if (!x.sticker) return boDiemDanh(h.id)
-    modal.confirm({
-      title: `Bỏ điểm danh ${h.ho_ten}?`, content: `Sẽ xoá ${x.sticker} sticker của em ở buổi này.`,
-      okText: 'Bỏ điểm danh', cancelText: 'Thôi', onOk: () => boDiemDanh(h.id),
-    })
+    setBoDdHs({ h, sticker: x.sticker })
   }
 
   const nghi = <span style={{ fontWeight: 'normal' }}>Lớp nghỉ <Switch size="small" checked={buoi.lop_nghi} onChange={doiNghi} /></span>
@@ -329,6 +349,15 @@ function DsHocSinh({ buoi, lop, tatCaHs, ghiDanh, nhieuLop, doiNghi }: {
           try { await q(sb.from('diem_danh').insert({ buoi_id: buoi.id, hoc_sinh_id: id, trang_thai: 'hoc_bu' })); tai() }
           catch (e) { message.error((e as Error).message) }
         }} />
+      <HopThoaiXoa
+        open={!!boDdHs}
+        title={boDdHs ? `Bỏ điểm danh ${boDdHs.h.ho_ten}?` : ''}
+        description={boDdHs ? `Sẽ xoá ${boDdHs.sticker} sticker của em ở buổi này.` : undefined}
+        okText="Bỏ điểm danh"
+        cancelText="Thôi"
+        onCancel={() => setBoDdHs(null)}
+        onConfirm={() => boDiemDanh(boDdHs!.h.id)}
+      />
     </Card>
   )
 }

@@ -1,7 +1,7 @@
 // Màn import kiểu A (docs/mau-giao-dien/import-excel.html): trang riêng 3 bước, lỗi gom ở đầu, lọc theo kết quả.
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Alert, App, Button, Card, Grid, List, Progress, Result, Segmented, Space, Tag, Upload } from 'antd'
+import { Alert, App, Button, Card, Grid, List, Progress, Result, Segmented, Space, Tag } from 'antd'
 import { DownloadOutlined, FileExcelOutlined } from '@ant-design/icons'
 import { demCongViecImport, docFile, kiemTra, taiDanhSachLoi, taiFileMau, type KqHs, type KqLop } from '../import-excel'
 import { nhapDuLieu, type KetQuaNhap, type TienDo } from '../nhap-du-lieu'
@@ -9,6 +9,9 @@ import { homNay, q, sb, taiHet, useMotLan, type GhiDanh, type HocSinh, type Lop 
 import { moTaLich } from '../gio-hoc'
 import { vnd } from '../hoc-phi'
 import { MAU } from '../giao-dien'
+import ThanhBuoc from '../thanh-phan/ThanhBuoc'
+import VungTaiFile from '../thanh-phan/VungTaiFile'
+import NutTaiXuong from '../thanh-phan/NutTaiXuong'
 
 type Dong = KqLop | KqHs
 type Loc = 'tat_ca' | 'loi' | 'da_co' | 'them_lop' | 'moi'
@@ -23,6 +26,7 @@ export default function ImportExcel() {
   const [hsCo, setHsCo] = useState<HocSinh[]>([])
   const [gdCo, setGdCo] = useState<GhiDanh[]>([])
   const [tenFile, setTenFile] = useState<string>()
+  const [daTaiMau, setDaTaiMau] = useState(false)
   const [kq, setKq] = useState<{ lops: KqLop[]; hss: KqHs[] }>()
   const [loc, setLoc] = useState<Loc>('tat_ca')
   const [tienDo, setTienDo] = useState<TienDo>()
@@ -69,21 +73,21 @@ export default function ImportExcel() {
     catch (e) { message.error((e as Error).message); setTienDo(undefined) }
   })
 
-  const buoc = ketQua || tienDo ? 4 : kq ? 3 : 2
+  const buoc = ketQua ? 4 : tienDo ? 3 : kq ? 2 : daTaiMau ? 1 : 0
   const chan = { position: 'sticky' as const, bottom: dienThoai ? 60 : 0, background: MAU.nen, padding: '10px 0', borderTop: `1px solid ${MAU.vien}` }
 
   return (
     <Space direction="vertical" style={{ width: '100%', maxWidth: 720 }} size={12}>
       <a onClick={() => nav('/lop')}>← Lớp và học sinh</a>
       <h2 style={{ margin: 0 }}>Import từ Excel</h2>
-      <ol aria-label="Các bước" style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-        {['1. Tải mẫu', '2. Chọn file', '3. Kiểm tra'].map((t, i) => (
-          <li key={t} aria-current={buoc === i + 1 ? 'step' : undefined} style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12,
-            color: buoc >= i + 1 ? MAU.chu : MAU.chuMo, fontWeight: buoc === i + 1 ? 600 : 400 }}>
-            <span style={{ height: 4, borderRadius: 2, background: buoc >= i + 1 ? MAU.chinh : MAU.vien }} />{t}
-          </li>
-        ))}
-      </ol>
+      <ThanhBuoc
+        steps={['Tải mẫu', 'Chọn file', 'Kiểm tra', 'Hoàn tất']}
+        current={buoc}
+        ariaLabel="Các bước"
+        onStepClick={(idx) => {
+          if (idx === 1 && kq && !tienDo && !ketQua) setKq(undefined)
+        }}
+      />
 
       {ketQua ? (
         <Result status={ketQua.loi.length ? 'warning' : 'success'}
@@ -110,13 +114,28 @@ export default function ImportExcel() {
         <>
           <Card size="small" title="1. Tải file mẫu">
             <p style={{ marginTop: 0, color: MAU.chuPhu }}>File có 3 trang: Hướng dẫn, Lớp (đã điền sẵn các lớp đang có), Học sinh (đã điền sẵn Mã HS, các lượt ghi danh và học sinh chưa xếp lớp). Cột <b>Lớp</b> có thể để trống để nhập vào danh sách <i>Chưa xếp lớp</i> (nhớ điền Đơn giá/buổi). Khi trùng tên, app phân biệt hoặc gộp lớp theo <b>Mã HS</b>, <b>SĐT phụ huynh</b> hoặc <b>Link nhóm Zalo</b> (thiếu cả 3 sẽ báo lỗi để tránh gộp nhầm).</p>
-            <Button icon={<DownloadOutlined />} onClick={() => taiFileMau(lopCo, hsCo, gdCo).catch((e) => message.error(e.message))}>Tải file mẫu</Button>
+            <NutTaiXuong
+              label="Tải file mẫu"
+              variant="secondary"
+              onDownload={async () => {
+                try {
+                  await taiFileMau(lopCo, hsCo, gdCo)
+                  setDaTaiMau(true)
+                } catch (e) {
+                  message.error((e as Error).message)
+                }
+              }}
+            />
           </Card>
           <Card size="small" title="2. Chọn file đã điền">
-            <Upload.Dragger accept=".xlsx" showUploadList={false} beforeUpload={(f) => { chonFile(f); return false }}>
-              <FileExcelOutlined style={{ fontSize: 32, color: MAU.chinh }} />
-              <p style={{ margin: '8px 0 0' }}>Chạm để chọn file .xlsx</p>
-            </Upload.Dragger>
+            <VungTaiFile
+              accept=".xlsx"
+              title="Kéo thả file Excel (.xlsx) vào đây"
+              browseLabel="chọn file từ máy"
+              subtitle="Định dạng .xlsx"
+              ariaLabel="Chọn file Excel để kiểm tra"
+              onChonFile={async ([f]) => { if (f) await chonFile(f) }}
+            />
           </Card>
         </>
       ) : (
