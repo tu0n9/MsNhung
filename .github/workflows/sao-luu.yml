@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 3.4.0  # ghim bản: "latest" phải gọi GitHub API không token, bị rate limit (26/11)
       - name: Lấy nhánh sao-luu (tạo mới nếu chưa có)
         run: |
           git init -q sl && cd sl
