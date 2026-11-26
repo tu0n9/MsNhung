@@ -4,7 +4,7 @@ SET session_replication_role = replica;
 -- PostgreSQL database dump
 --
 
--- \restrict D7Q5mp07UkpWcyfd9xGOAl63NWyL0S9BFvDWSDS1JM66YvaXy0FXpxhnekX0Nxd
+-- \restrict YNsDQfLRdrzh3bD2kiJ0PXlslWjwIBmvobt7m9nXXSqftO0dMiVWdRydCxXd70a
 
 -- Dumped from database version 17.11
 -- Dumped by pg_dump version 17.12
@@ -33,7 +33,7 @@ COPY "auth"."audit_log_entries" ("instance_id", "id", "payload", "created_at", "
 -- Data for Name: custom_oauth_providers; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 
-COPY "auth"."custom_oauth_providers" ("id", "provider_type", "identifier", "name", "client_id", "client_secret", "acceptable_client_ids", "scopes", "pkce_enabled", "attribute_mapping", "authorization_params", "enabled", "email_optional", "issuer", "discovery_url", "skip_nonce_check", "cached_discovery", "discovery_cached_at", "authorization_url", "token_url", "userinfo_url", "jwks_uri", "created_at", "updated_at", "custom_claims_allowlist") FROM stdin;
+COPY "auth"."custom_oauth_providers" ("id", "provider_type", "identifier", "name", "client_id", "client_secret", "acceptable_client_ids", "scopes", "pkce_enabled", "attribute_mapping", "authorization_params", "enabled", "email_optional", "issuer", "discovery_url", "skip_nonce_check", "cached_discovery", "discovery_cached_at", "authorization_url", "token_url", "userinfo_url", "jwks_uri", "created_at", "updated_at", "custom_claims_allowlist", "client_auth_method", "client_assertion_audience") FROM stdin;
 \.
 
 
@@ -50,7 +50,7 @@ COPY "auth"."flow_state" ("id", "user_id", "auth_code", "code_challenge_method",
 --
 
 COPY "auth"."users" ("instance_id", "id", "aud", "role", "email", "encrypted_password", "email_confirmed_at", "invited_at", "confirmation_token", "confirmation_sent_at", "recovery_token", "recovery_sent_at", "email_change_token_new", "email_change", "email_change_sent_at", "last_sign_in_at", "raw_app_meta_data", "raw_user_meta_data", "is_super_admin", "created_at", "updated_at", "phone", "phone_confirmed_at", "phone_change", "phone_change_token", "phone_change_sent_at", "email_change_token_current", "email_change_confirm_status", "banned_until", "reauthentication_token", "reauthentication_sent_at", "is_sso_user", "deleted_at", "is_anonymous") FROM stdin;
-00000000-0000-0000-0000-000000000000	43d2ab0d-e902-49d7-9e81-a3696d296ad2	authenticated	authenticated	admin@msnhung.local	$2a$10$BCdkciwG3PPPv4yCMa50oefbpbFKmU9xlXou.UTQCXONcdSKZxnAO	2026-11-15 10:27:58.76274+00	\N		\N		\N			\N	2026-11-24 13:30:31.323543+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-15 10:27:58.741954+00	2026-11-24 14:34:38.16159+00	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	43d2ab0d-e902-49d7-9e81-a3696d296ad2	authenticated	authenticated	admin@msnhung.local	$2a$10$BCdkciwG3PPPv4yCMa50oefbpbFKmU9xlXou.UTQCXONcdSKZxnAO	2026-11-15 10:27:58.76274+00	\N		\N		\N			\N	2026-11-25 15:00:52.242106+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-15 10:27:58.741954+00	2026-11-25 16:32:19.249549+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	877e2be5-c648-4abe-b7a6-8ceff0df9d68	authenticated	authenticated	b3a2e022-4ac8-4e39-bf92-8eb8929f8818@msnhung.local	$2a$10$Qs1dEePeo9NfuXobIUwD5uPgQYkTbuNobiZr9KdEJUN45D6hgYzWS	2026-11-18 10:51:52.198234+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:51:52.194016+00	2026-11-18 10:51:52.202419+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	d45793f2-33af-41bf-91e4-410cf31087cc	authenticated	authenticated	f11afff5-2031-4c08-8ed1-1fb7a6e992b6@msnhung.local	$2a$10$3qL3UVR8xbLh.LD.BgmOu.BiYDs0rU2kNfqFwIP/yHVfeAnRyMBp6	2026-11-18 10:49:48.026277+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:49:48.022325+00	2026-11-18 10:49:48.027809+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	7925dcdb-7311-4634-896a-b4b6386b2df2	authenticated	authenticated	8ebb1955-2bf2-40c6-98fd-94c9104c1119@msnhung.local	$2a$10$.qKVyn44KDMq/QbVRuTwdO3arECmyPF2h0itwWyd/CfXAhMtW0bIq	2026-11-18 10:51:11.090954+00	\N		\N		\N			\N	2026-11-19 15:33:10.474457+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:51:11.085776+00	2026-11-19 15:33:19.891315+00	\N	\N			\N		0	\N		\N	f	\N	f
@@ -103,15 +103,16 @@ COPY "auth"."oauth_clients" ("id", "client_secret_hash", "registration_type", "r
 
 COPY "auth"."sessions" ("id", "user_id", "created_at", "updated_at", "factor_id", "aal", "not_after", "refreshed_at", "user_agent", "ip", "tag", "oauth_client_id", "refresh_token_hmac_key", "refresh_token_counter", "scopes") FROM stdin;
 138b0991-bade-4ac1-99f0-d5b4e29bfcce	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	2026-11-18 11:15:04.570018+00	2026-11-19 09:28:18.636381+00	\N	aal1	\N	2026-11-19 09:28:18.636189	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Mobile/15E148 Safari/604.1	171.251.153.178	\N	\N	\N	\N	\N
+67172279-b1b1-4f95-a2c0-034c8b76e19b	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-23 14:17:18.498688+00	2026-11-25 13:42:07.179844+00	\N	aal1	\N	2026-11-25 13:42:07.179721	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Mobile/15E148 Safari/604.1	116.106.99.207	\N	\N	\N	\N	\N
 eeb51907-2ea4-4b83-ac18-4d4d82e61ad1	7925dcdb-7311-4634-896a-b4b6386b2df2	2026-11-19 15:33:10.47744+00	2026-11-19 15:33:10.47744+00	\N	aal1	\N	\N	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0	183.80.74.68	\N	\N	\N	\N	\N
-3d0177fd-b2ed-422f-9811-5f8032ad5fac	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-23 13:23:32.976327+00	2026-11-23 13:23:32.976327+00	\N	aal1	\N	\N	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6.1 Mobile/15E148 Safari/604.1	171.244.123.254	\N	\N	\N	\N	\N
 98d9f79f-0ff0-4861-aa57-09ae20073ef4	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	2026-11-20 09:39:16.892389+00	2026-11-23 20:18:50.056325+00	\N	aal1	\N	2026-11-23 20:18:50.056192	Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Mobile Safari/537.36	117.0.94.101	\N	\N	\N	\N	\N
-67172279-b1b1-4f95-a2c0-034c8b76e19b	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-23 14:17:18.498688+00	2026-11-24 01:17:42.201681+00	\N	aal1	\N	2026-11-24 01:17:42.201399	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Mobile/15E148 Safari/604.1	14.226.20.201	\N	\N	\N	\N	\N
-91e47d3a-53bd-4429-a0f2-dc4534030f14	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-24 05:00:06.048452+00	2026-11-24 05:00:06.048452+00	\N	aal1	\N	\N	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Zalo iOS/261101802 ZaloTheme/dark ZaloLanguage/vn	113.185.46.102	\N	\N	\N	\N	\N
+d40337c9-7ace-4e7c-9156-892f185cfddd	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-25 15:00:52.244087+00	2026-11-25 15:00:52.244087+00	\N	aal1	\N	\N	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36 Edg/158.0.0.0	116.96.46.150	\N	\N	\N	\N	\N
 8e6a1d94-8892-4b24-b5bd-4cad592d6538	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-23 13:32:50.022516+00	2026-11-24 08:23:09.659108+00	\N	aal1	\N	2026-11-24 08:23:09.65898	Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1	104.28.84.125	\N	\N	\N	\N	\N
+3d0177fd-b2ed-422f-9811-5f8032ad5fac	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-23 13:23:32.976327+00	2026-11-25 15:06:04.730437+00	\N	aal1	\N	2026-11-25 15:06:04.730319	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6.1 Mobile/15E148 Safari/604.1	171.255.57.153	\N	\N	\N	\N	\N
 c0d0a073-5f8e-45d2-b701-61fb6aee22fd	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	2026-11-19 13:09:30.604521+00	2026-11-20 06:20:35.345899+00	\N	aal1	\N	2026-11-20 06:20:35.345772	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Mobile/15E148 Safari/604.1	118.68.111.181	\N	\N	\N	\N	\N
 fe85c6d8-5568-466a-820f-1825a509392b	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-23 13:26:54.228971+00	2026-11-24 12:24:17.294219+00	\N	aal1	\N	2026-11-24 12:24:17.294056	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36 Edg/158.0.0.0	42.113.16.7	\N	\N	\N	\N	\N
-2c82d461-3acd-4170-a5ec-b2ae40a1acb7	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-24 13:30:31.326893+00	2026-11-24 14:34:38.189461+00	\N	aal1	\N	2026-11-24 14:34:38.189111	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36 Edg/158.0.0.0	183.80.97.88	\N	\N	\N	\N	\N
+2c82d461-3acd-4170-a5ec-b2ae40a1acb7	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-24 13:30:31.326893+00	2026-11-25 16:32:19.274058+00	\N	aal1	\N	2026-11-25 16:32:19.27389	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36 Edg/158.0.0.0	183.80.97.88	\N	\N	\N	\N	\N
+91e47d3a-53bd-4429-a0f2-dc4534030f14	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-24 05:00:06.048452+00	2026-11-25 13:13:54.712797+00	\N	aal1	\N	2026-11-25 13:13:54.711039	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Zalo iOS/261101802 ZaloTheme/dark ZaloLanguage/vn	42.118.51.176	\N	\N	\N	\N	\N
 \.
 
 
@@ -126,6 +127,7 @@ fe85c6d8-5568-466a-820f-1825a509392b	2026-11-23 13:26:54.240047+00	2026-11-23 13
 67172279-b1b1-4f95-a2c0-034c8b76e19b	2026-11-23 14:17:18.583067+00	2026-11-23 14:17:18.583067+00	password	2e94c93a-2ae5-4879-b3fb-cbf1ac6bb6b5
 91e47d3a-53bd-4429-a0f2-dc4534030f14	2026-11-24 05:00:06.133358+00	2026-11-24 05:00:06.133358+00	password	3d7c0cf6-706f-4710-9fb1-e51ec4091e0f
 2c82d461-3acd-4170-a5ec-b2ae40a1acb7	2026-11-24 13:30:31.378601+00	2026-11-24 13:30:31.378601+00	password	216ab173-79d2-445c-a4e0-6d221a0b5394
+d40337c9-7ace-4e7c-9156-892f185cfddd	2026-11-25 15:00:52.298577+00	2026-11-25 15:00:52.298577+00	password	1314207e-8154-47be-accd-24e5d71ad8d4
 138b0991-bade-4ac1-99f0-d5b4e29bfcce	2026-11-18 11:15:04.66948+00	2026-11-18 11:15:04.66948+00	password	0e8bcbd4-b605-4f8d-92ef-a09f44104bec
 c0d0a073-5f8e-45d2-b701-61fb6aee22fd	2026-11-19 13:09:30.662961+00	2026-11-19 13:09:30.662961+00	password	af8deb5d-c21a-41f3-832b-e2efa8a9f085
 eeb51907-2ea4-4b83-ac18-4d4d82e61ad1	2026-11-19 15:33:10.569478+00	2026-11-19 15:33:10.569478+00	password	f9153c04-47e8-4095-9108-0105f4f831fa
@@ -203,7 +205,6 @@ COPY "auth"."one_time_tokens" ("id", "user_id", "token_type", "token_hash", "rel
 
 COPY "auth"."refresh_tokens" ("instance_id", "id", "token", "user_id", "revoked", "created_at", "updated_at", "parent", "session_id") FROM stdin;
 00000000-0000-0000-0000-000000000000	730	fb66bcnm4y6s	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	t	2026-11-21 10:06:35.983043+00	2026-11-21 12:01:34.47202+00	4hswtw7g2mpu	98d9f79f-0ff0-4861-aa57-09ae20073ef4
-00000000-0000-0000-0000-000000000000	770	h4icwc74mfh2	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-23 13:23:32.981884+00	2026-11-23 13:23:32.981884+00	\N	3d0177fd-b2ed-422f-9811-5f8032ad5fac
 00000000-0000-0000-0000-000000000000	517	5aimmp2svbp6	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-19 16:31:49.525176+00	2026-11-20 06:20:35.280109+00	uqzjyb2jzeez	c0d0a073-5f8e-45d2-b701-61fb6aee22fd
 00000000-0000-0000-0000-000000000000	528	6hom4mlbwosb	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	f	2026-11-20 06:20:35.301906+00	2026-11-20 06:20:35.301906+00	5aimmp2svbp6	c0d0a073-5f8e-45d2-b701-61fb6aee22fd
 00000000-0000-0000-0000-000000000000	771	cyxp33prnu5n	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-23 13:26:54.235951+00	2026-11-23 15:13:03.439605+00	\N	fe85c6d8-5568-466a-820f-1825a509392b
@@ -211,8 +212,6 @@ COPY "auth"."refresh_tokens" ("instance_id", "id", "token", "user_id", "revoked"
 00000000-0000-0000-0000-000000000000	734	cohzw6uh3o6y	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	t	2026-11-21 12:01:34.491139+00	2026-11-23 20:18:50.001746+00	fb66bcnm4y6s	98d9f79f-0ff0-4861-aa57-09ae20073ef4
 00000000-0000-0000-0000-000000000000	775	3j3s4wqkpwhq	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	f	2026-11-23 20:18:50.022918+00	2026-11-23 20:18:50.022918+00	cohzw6uh3o6y	98d9f79f-0ff0-4861-aa57-09ae20073ef4
 00000000-0000-0000-0000-000000000000	773	cj36at7kpnzf	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-23 14:17:18.547192+00	2026-11-24 01:17:42.151762+00	\N	67172279-b1b1-4f95-a2c0-034c8b76e19b
-00000000-0000-0000-0000-000000000000	776	hhfysgx5bp7d	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-24 01:17:42.166294+00	2026-11-24 01:17:42.166294+00	cj36at7kpnzf	67172279-b1b1-4f95-a2c0-034c8b76e19b
-00000000-0000-0000-0000-000000000000	777	ctvgqquosaut	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-24 05:00:06.088971+00	2026-11-24 05:00:06.088971+00	\N	91e47d3a-53bd-4429-a0f2-dc4534030f14
 00000000-0000-0000-0000-000000000000	772	pfuibytawvgm	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-23 13:32:50.038984+00	2026-11-24 07:06:15.839325+00	\N	8e6a1d94-8892-4b24-b5bd-4cad592d6538
 00000000-0000-0000-0000-000000000000	774	6w46xecyrjb2	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-23 15:13:03.460045+00	2026-11-24 07:31:16.898535+00	cyxp33prnu5n	fe85c6d8-5568-466a-820f-1825a509392b
 00000000-0000-0000-0000-000000000000	778	4okxji2ju5y7	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-24 07:06:15.862001+00	2026-11-24 08:23:09.603782+00	pfuibytawvgm	8e6a1d94-8892-4b24-b5bd-4cad592d6538
@@ -223,9 +222,21 @@ COPY "auth"."refresh_tokens" ("instance_id", "id", "token", "user_id", "revoked"
 00000000-0000-0000-0000-000000000000	782	7ywwv35yje6w	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-24 12:24:17.259981+00	2026-11-24 12:24:17.259981+00	v6jf67hdpyv3	fe85c6d8-5568-466a-820f-1825a509392b
 00000000-0000-0000-0000-000000000000	492	4ar5dq6mxsrv	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-18 11:15:04.612498+00	2026-11-18 12:20:21.000342+00	\N	138b0991-bade-4ac1-99f0-d5b4e29bfcce
 00000000-0000-0000-0000-000000000000	783	yzabqihb3bit	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-24 13:30:31.353041+00	2026-11-24 14:34:38.123659+00	\N	2c82d461-3acd-4170-a5ec-b2ae40a1acb7
-00000000-0000-0000-0000-000000000000	784	x6xsnz5jujak	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-24 14:34:38.146601+00	2026-11-24 14:34:38.146601+00	yzabqihb3bit	2c82d461-3acd-4170-a5ec-b2ae40a1acb7
+00000000-0000-0000-0000-000000000000	770	h4icwc74mfh2	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-23 13:23:32.981884+00	2026-11-25 03:09:29.534271+00	\N	3d0177fd-b2ed-422f-9811-5f8032ad5fac
 00000000-0000-0000-0000-000000000000	497	oiucqvgppb62	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-18 12:20:21.012121+00	2026-11-18 13:22:21.165498+00	4ar5dq6mxsrv	138b0991-bade-4ac1-99f0-d5b4e29bfcce
+00000000-0000-0000-0000-000000000000	784	x6xsnz5jujak	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-24 14:34:38.146601+00	2026-11-25 10:03:05.4346+00	yzabqihb3bit	2c82d461-3acd-4170-a5ec-b2ae40a1acb7
+00000000-0000-0000-0000-000000000000	777	ctvgqquosaut	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-24 05:00:06.088971+00	2026-11-25 13:13:54.65545+00	\N	91e47d3a-53bd-4429-a0f2-dc4534030f14
 00000000-0000-0000-0000-000000000000	499	he4pscw7nv4q	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-18 13:22:21.175637+00	2026-11-18 16:34:59.646129+00	oiucqvgppb62	138b0991-bade-4ac1-99f0-d5b4e29bfcce
+00000000-0000-0000-0000-000000000000	787	tsthrkv2eynv	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-25 13:13:54.676344+00	2026-11-25 13:13:54.676344+00	ctvgqquosaut	91e47d3a-53bd-4429-a0f2-dc4534030f14
+00000000-0000-0000-0000-000000000000	776	hhfysgx5bp7d	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-24 01:17:42.166294+00	2026-11-25 13:42:07.138613+00	cj36at7kpnzf	67172279-b1b1-4f95-a2c0-034c8b76e19b
+00000000-0000-0000-0000-000000000000	788	k6kx4wfjf7k2	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-25 13:42:07.147164+00	2026-11-25 13:42:07.147164+00	hhfysgx5bp7d	67172279-b1b1-4f95-a2c0-034c8b76e19b
+00000000-0000-0000-0000-000000000000	785	qg2lfblhay7g	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-25 03:09:29.560455+00	2026-11-25 14:03:34.428818+00	h4icwc74mfh2	3d0177fd-b2ed-422f-9811-5f8032ad5fac
+00000000-0000-0000-0000-000000000000	790	hsotyow23exc	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-25 15:00:52.27218+00	2026-11-25 15:00:52.27218+00	\N	d40337c9-7ace-4e7c-9156-892f185cfddd
+00000000-0000-0000-0000-000000000000	786	riewycxz7jve	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-25 10:03:05.453308+00	2026-11-25 15:05:57.165842+00	x6xsnz5jujak	2c82d461-3acd-4170-a5ec-b2ae40a1acb7
+00000000-0000-0000-0000-000000000000	789	a3eplq6sctoz	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-25 14:03:34.442292+00	2026-11-25 15:06:04.726361+00	qg2lfblhay7g	3d0177fd-b2ed-422f-9811-5f8032ad5fac
+00000000-0000-0000-0000-000000000000	792	o5ammvn4525u	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-25 15:06:04.72725+00	2026-11-25 15:06:04.72725+00	a3eplq6sctoz	3d0177fd-b2ed-422f-9811-5f8032ad5fac
+00000000-0000-0000-0000-000000000000	791	cs22g7esjn4u	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-25 15:05:57.173405+00	2026-11-25 16:32:19.213526+00	riewycxz7jve	2c82d461-3acd-4170-a5ec-b2ae40a1acb7
+00000000-0000-0000-0000-000000000000	793	4qx33b3j3dze	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-25 16:32:19.236427+00	2026-11-25 16:32:19.236427+00	cs22g7esjn4u	2c82d461-3acd-4170-a5ec-b2ae40a1acb7
 00000000-0000-0000-0000-000000000000	502	hk4ftmgehg54	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-18 16:34:59.669286+00	2026-11-19 09:28:18.584226+00	he4pscw7nv4q	138b0991-bade-4ac1-99f0-d5b4e29bfcce
 00000000-0000-0000-0000-000000000000	511	4b3s52br5fd3	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	f	2026-11-19 09:28:18.60024+00	2026-11-19 09:28:18.60024+00	hk4ftmgehg54	138b0991-bade-4ac1-99f0-d5b4e29bfcce
 00000000-0000-0000-0000-000000000000	515	tez5ezxmlo7a	7925dcdb-7311-4634-896a-b4b6386b2df2	f	2026-11-19 15:33:10.535556+00	2026-11-19 15:33:10.535556+00	\N	eeb51907-2ea4-4b83-ac18-4d4d82e61ad1
@@ -371,6 +382,7 @@ dd8801a9-5732-4854-bd3a-733bb042357f	4df112a4-8db9-4c78-a747-5ab93c497a19	2026-1
 b5d93120-96a2-4b6a-8ed4-3042aa4624cf	4e49d265-ef05-4457-8c75-ff435e266182	2026-11-04	lich	f	\N	\N	\N
 a1c02c20-6317-4d61-ba6b-656c1156c884	4e49d265-ef05-4457-8c75-ff435e266182	2026-11-11	lich	f	\N	\N	\N
 92b3cab2-5ac5-48d8-a4a8-9b189028353a	4e49d265-ef05-4457-8c75-ff435e266182	2026-11-18	lich	f	\N	\N	\N
+8ac83685-f5d9-4b1f-8dd4-d7bc387ad24f	4df112a4-8db9-4c78-a747-5ab93c497a19	2026-11-16	bu	f	\N	09:00:00	11:00:00
 eea2018b-766f-4172-aefc-f89454e11876	1d80e3bc-dfb1-4398-b242-bf46211e8e80	2026-11-05	lich	f	\N	18:00:00	20:00:00
 99c06620-cdb1-41cc-b9b6-cc2cadb351dc	1d80e3bc-dfb1-4398-b242-bf46211e8e80	2026-11-12	lich	f	\N	18:00:00	20:00:00
 71e54043-f25e-48e8-873d-9f249bd6150c	1d80e3bc-dfb1-4398-b242-bf46211e8e80	2026-11-19	lich	f	\N	18:00:00	20:00:00
@@ -410,6 +422,11 @@ b7761556-cb3c-4fd4-961e-61b735250d1a	92b3cab2-5ac5-48d8-a4a8-9b189028353a	buoi/9
 c8cd1910-9af1-45e6-8e3c-684680078a79	81a08445-8690-4ba5-9fc5-2331ede97bb5	buoi/81a08445-8690-4ba5-9fc5-2331ede97bb5/36ed64de-d62b-47f1-b3d6-f48e23b3a534.jpg	2026-11-21 13:09:28.245786+00
 08d0c3bc-36a9-45d6-9d44-9113b8281844	f2baa976-58d4-4609-9331-5947c40c4df7	buoi/f2baa976-58d4-4609-9331-5947c40c4df7/63caa467-acdf-4480-af0b-0ad9c8463d98.jpg	2026-11-23 13:24:05.187597+00
 97da4e06-2ed2-43b5-853e-e70ef67a0de4	c1bd29b8-3283-4974-804c-48118046b64f	buoi/c1bd29b8-3283-4974-804c-48118046b64f/708c9599-0f0c-4e7f-b221-2dcbc27b4d32.jpg	2026-11-23 14:18:13.620384+00
+7fb6fbf7-532a-493e-913d-47886949f06c	804fbd08-2178-4c1a-9c0a-293b1ca0462a	buoi/804fbd08-2178-4c1a-9c0a-293b1ca0462a/febd7102-68da-47bb-8408-7436b9bcd9cb.jpg	2026-11-25 13:15:23.153103+00
+1707b397-1447-4b57-9e99-359ee58bb868	997fe90e-6a07-4050-a18e-2c2e251643cd	buoi/997fe90e-6a07-4050-a18e-2c2e251643cd/e3b51695-d754-4a97-a83b-bd76ef994726.jpg	2026-11-25 14:39:26.83147+00
+8d25eefd-72b9-451e-9870-4e4108dbe1e6	896a645c-e7c4-4117-940f-d49b23298936	buoi/896a645c-e7c4-4117-940f-d49b23298936/e83f827a-e74b-4cac-960b-e484948b3cab.jpg	2026-11-25 14:50:31.973069+00
+9525a1da-ae6c-4cdd-a67a-7062f0d1b0cc	7e26a780-214a-4c13-8a28-7f897936eec2	buoi/7e26a780-214a-4c13-8a28-7f897936eec2/0dfced6d-88ed-448f-95a1-10a8282b5b43.jpg	2026-11-25 14:54:23.767908+00
+9b2e34bd-90c0-46c8-80cb-2c0407e31bd7	7e26a780-214a-4c13-8a28-7f897936eec2	buoi/7e26a780-214a-4c13-8a28-7f897936eec2/2b7f49a9-15ec-4d5f-964e-0869d1c13a88.jpg	2026-11-25 14:54:47.172102+00
 \.
 
 
@@ -436,6 +453,7 @@ d45793f2-33af-41bf-91e4-410cf31087cc	f11afff5-2031-4c08-8ed1-1fb7a6e992b6@msnhun
 --
 
 COPY "public"."hoc_sinh" ("id", "ho_ten", "avatar", "ten_phu_huynh", "sdt_phu_huynh", "phu_huynh_id", "ngay_vao", "don_gia_rieng", "trang_thai", "ghi_chu", "tao_luc", "sticker_dau_ky", "link_zalo", "ma_hs", "don_gia") FROM stdin;
+9706bbdf-ef70-4ea9-950c-f8062c4ac033	Lê Ngọc Vy	\N	Bích	\N	\N	2026-11-22	\N	dang_hoc	\N	2026-11-25 13:48:55.225174+00	0	\N	HS130	150000
 09426ac0-e7af-47bc-a029-195fcee72b46	Bùi Bách	avatar/09426ac0-e7af-47bc-a029-195fcee72b46-1794921820760.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-17 13:23:40.619385+00	0	\N	HS001	400000
 2a71aebf-2868-4496-8c0d-26a9c5fdac6d	Gia Khánh	avatar/2a71aebf-2868-4496-8c0d-26a9c5fdac6d-1794921883142.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-17 13:24:43.072064+00	0	\N	HS002	400000
 6125884c-53f0-45ee-a303-3d03bc111254	Gia Minh	avatar/6125884c-53f0-45ee-a303-3d03bc111254-1794921934570.jpg	\N	\N	\N	2026-11-01	\N	dang_hoc	\N	2026-11-17 13:25:34.500012+00	20	\N	HS003	400000
@@ -687,7 +705,6 @@ a572b44b-9082-49d3-b823-1b64a2e2139e	e561c6d5-6fbc-462a-ab2e-e1423f3b692f	co_mat
 8779134c-3ec1-43b0-9894-355f8396c452	d96f705a-caed-4aed-8c5a-2f729630dd64	co_mat	3
 8779134c-3ec1-43b0-9894-355f8396c452	10e6b491-c559-4087-bbc6-d6520f6d21f5	co_mat	3
 8779134c-3ec1-43b0-9894-355f8396c452	64a37c23-5108-4025-bcb3-e7ea6b1fe979	co_mat	3
-8779134c-3ec1-43b0-9894-355f8396c452	94c6acd3-4c22-405e-a976-d9cd63a72345	co_mat	3
 8779134c-3ec1-43b0-9894-355f8396c452	e6af6149-70f4-4687-8390-4f3886b7a42e	co_mat	3
 8779134c-3ec1-43b0-9894-355f8396c452	ecfde36a-3d8b-458a-88bd-3dee5c89cdd4	co_mat	3
 8779134c-3ec1-43b0-9894-355f8396c452	b218ff29-82e7-4386-8eae-0dd472b1894b	co_mat	3
@@ -958,8 +975,11 @@ d5358c27-17ab-4613-937d-1e122c6dd555	8a601d2f-4322-4983-9e47-f964e910e10f	co_mat
 f2baa976-58d4-4609-9331-5947c40c4df7	a6071b67-2130-479d-9960-be9b713e379d	vang	0
 81a08445-8690-4ba5-9fc5-2331ede97bb5	58ccd9fc-cb17-4e09-afc1-0989f0636f6f	vang	0
 f2baa976-58d4-4609-9331-5947c40c4df7	78e11889-7937-481d-8234-98df5fc25ddc	vang	0
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	dab1cbd9-52d2-4fe6-a8a5-fe25b56ad8b4	hoc_bu	8
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	0151b50f-11df-493c-a959-2b143ffec470	hoc_bu	8
 f2baa976-58d4-4609-9331-5947c40c4df7	f85931d6-9ede-45a1-acde-ba4789c6e853	co_mat	4
 f2baa976-58d4-4609-9331-5947c40c4df7	e3906889-be7a-483c-a548-52c80afb47e7	co_mat	4
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	5f872515-0a7e-4cd7-8a63-01c8c51d8b04	hoc_bu	0
 f2baa976-58d4-4609-9331-5947c40c4df7	ecfde36a-3d8b-458a-88bd-3dee5c89cdd4	co_mat	5
 f2baa976-58d4-4609-9331-5947c40c4df7	6ef103a4-fc2b-4fc6-bb1a-e113033e7f91	co_mat	4
 f2baa976-58d4-4609-9331-5947c40c4df7	dab1cbd9-52d2-4fe6-a8a5-fe25b56ad8b4	hoc_bu	10
@@ -968,6 +988,70 @@ f2baa976-58d4-4609-9331-5947c40c4df7	ff386fd8-15b5-42a0-b103-536c60684008	co_mat
 f2baa976-58d4-4609-9331-5947c40c4df7	552de5e9-d599-4a8e-ace8-d80518dfe059	co_mat	4
 f2baa976-58d4-4609-9331-5947c40c4df7	1555600c-8358-42eb-b9f3-611dbeab3641	co_mat	4
 c1bd29b8-3283-4974-804c-48118046b64f	b64ca36c-4f68-4afd-ac90-9f3a5fbe6381	co_mat	10
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	04c0644a-6490-4551-9b84-2b3e606b2f11	vang	0
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	d2c38a11-b7b8-41da-9cf9-9f5808755c9b	co_mat	0
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	a6071b67-2130-479d-9960-be9b713e379d	co_mat	4
+896a645c-e7c4-4117-940f-d49b23298936	3d45bd85-eba9-426b-93b3-37f7de37970f	co_mat	8
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	0377768d-cc45-49f5-a96d-8d170c3bf41f	co_mat	3
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	7c7fc404-3d84-4d6b-8972-3926976216f4	co_mat	8
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	a409e2ce-01c6-49e8-bbdf-5caf4477db1e	co_mat	2
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	eaff414d-ac8c-44a0-9ed3-483992927fb9	co_mat	3
+7e26a780-214a-4c13-8a28-7f897936eec2	d96f705a-caed-4aed-8c5a-2f729630dd64	vang	0
+997fe90e-6a07-4050-a18e-2c2e251643cd	b64ca36c-4f68-4afd-ac90-9f3a5fbe6381	co_mat	10
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	bc4166c1-2a49-43d1-9769-f752dcc2d91c	co_mat	14
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	47286437-2fcd-451e-b01f-c19e8cbbcbef	co_mat	8
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	892394ca-8163-4263-9b19-957de160996b	co_mat	8
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	e3906889-be7a-483c-a548-52c80afb47e7	co_mat	5
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	94c6acd3-4c22-405e-a976-d9cd63a72345	co_mat	5
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	33a3cfe1-6ebb-46fb-b851-4282d579a315	co_mat	8
+896a645c-e7c4-4117-940f-d49b23298936	dab1cbd9-52d2-4fe6-a8a5-fe25b56ad8b4	vang	0
+896a645c-e7c4-4117-940f-d49b23298936	5f872515-0a7e-4cd7-8a63-01c8c51d8b04	vang	0
+896a645c-e7c4-4117-940f-d49b23298936	58ccd9fc-cb17-4e09-afc1-0989f0636f6f	vang	0
+896a645c-e7c4-4117-940f-d49b23298936	8605edcb-76d1-4391-9739-fcbf0bc389a1	vang	0
+896a645c-e7c4-4117-940f-d49b23298936	33a3cfe1-6ebb-46fb-b851-4282d579a315	vang	0
+896a645c-e7c4-4117-940f-d49b23298936	9706bbdf-ef70-4ea9-950c-f8062c4ac033	hoc_bu	8
+896a645c-e7c4-4117-940f-d49b23298936	46e4a30d-fdb2-46de-ae44-f50c91b96020	co_mat	10
+896a645c-e7c4-4117-940f-d49b23298936	7c7fc404-3d84-4d6b-8972-3926976216f4	co_mat	8
+896a645c-e7c4-4117-940f-d49b23298936	04c0644a-6490-4551-9b84-2b3e606b2f11	co_mat	8
+896a645c-e7c4-4117-940f-d49b23298936	94c6acd3-4c22-405e-a976-d9cd63a72345	co_mat	7
+896a645c-e7c4-4117-940f-d49b23298936	cc1d85c9-4423-4157-9953-74dfc16e5b00	co_mat	6
+896a645c-e7c4-4117-940f-d49b23298936	8a601d2f-4322-4983-9e47-f964e910e10f	co_mat	10
+896a645c-e7c4-4117-940f-d49b23298936	a5ca77b4-627d-4092-ad49-3a8afe6bc16d	co_mat	8
+7e26a780-214a-4c13-8a28-7f897936eec2	10e6b491-c559-4087-bbc6-d6520f6d21f5	vang	0
+896a645c-e7c4-4117-940f-d49b23298936	2c2939ba-5703-41d5-b941-ea4a2ef4ce7d	co_mat	10
+7e26a780-214a-4c13-8a28-7f897936eec2	127cf384-4ac0-4a57-8d3e-7f3755cf5e76	vang	0
+7e26a780-214a-4c13-8a28-7f897936eec2	e5d63dee-19fe-4ae1-a741-08a03111eb1d	vang	0
+7e26a780-214a-4c13-8a28-7f897936eec2	e1d9c6da-9520-433a-9485-201be17d736d	vang	0
+7e26a780-214a-4c13-8a28-7f897936eec2	eaff414d-ac8c-44a0-9ed3-483992927fb9	co_mat	5
+7e26a780-214a-4c13-8a28-7f897936eec2	8449f57a-28fa-40e2-b016-52d8fdfb1a1a	co_mat	5
+7e26a780-214a-4c13-8a28-7f897936eec2	a409e2ce-01c6-49e8-bbdf-5caf4477db1e	co_mat	5
+7e26a780-214a-4c13-8a28-7f897936eec2	47286437-2fcd-451e-b01f-c19e8cbbcbef	co_mat	5
+7e26a780-214a-4c13-8a28-7f897936eec2	47de7f3c-c311-44a9-b8e9-d535f63909c5	co_mat	5
+7e26a780-214a-4c13-8a28-7f897936eec2	55328067-088a-4f1b-ae66-507f6d56aa15	co_mat	5
+7e26a780-214a-4c13-8a28-7f897936eec2	4d36c077-ad54-4671-8a64-3c7d297faca3	co_mat	5
+7e26a780-214a-4c13-8a28-7f897936eec2	9649475f-b209-4855-8e4f-f991a3ccce82	co_mat	5
+7e26a780-214a-4c13-8a28-7f897936eec2	242f8971-c4c0-44d1-8f4e-c26d77efd8ef	co_mat	5
+7e26a780-214a-4c13-8a28-7f897936eec2	e3906889-be7a-483c-a548-52c80afb47e7	co_mat	5
+7e26a780-214a-4c13-8a28-7f897936eec2	64a37c23-5108-4025-bcb3-e7ea6b1fe979	co_mat	5
+7e26a780-214a-4c13-8a28-7f897936eec2	e6af6149-70f4-4687-8390-4f3886b7a42e	co_mat	5
+7e26a780-214a-4c13-8a28-7f897936eec2	ecfde36a-3d8b-458a-88bd-3dee5c89cdd4	co_mat	5
+7e26a780-214a-4c13-8a28-7f897936eec2	b218ff29-82e7-4386-8eae-0dd472b1894b	co_mat	5
+7e26a780-214a-4c13-8a28-7f897936eec2	3e45fe76-7884-4e40-8f60-d54cb47ea033	co_mat	5
+7e26a780-214a-4c13-8a28-7f897936eec2	da8f3b69-bcb6-46d7-b324-e5f61183d270	co_mat	5
+7e26a780-214a-4c13-8a28-7f897936eec2	0377768d-cc45-49f5-a96d-8d170c3bf41f	co_mat	5
+62dbfa7c-dc48-49a3-b20b-1fee55d37758	94c6acd3-4c22-405e-a976-d9cd63a72345	co_mat	3
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	9706bbdf-ef70-4ea9-950c-f8062c4ac033	hoc_bu	5
+7e26a780-214a-4c13-8a28-7f897936eec2	60cdb4a9-3025-44d3-8086-b14612242c76	co_mat	5
+7e26a780-214a-4c13-8a28-7f897936eec2	97016524-445e-48cb-ad25-91aae2e0369b	hoc_bu	5
+b5d93120-96a2-4b6a-8ed4-3042aa4624cf	a6071b67-2130-479d-9960-be9b713e379d	vang	0
+8779134c-3ec1-43b0-9894-355f8396c452	2c2939ba-5703-41d5-b941-ea4a2ef4ce7d	hoc_bu	0
+8779134c-3ec1-43b0-9894-355f8396c452	a6071b67-2130-479d-9960-be9b713e379d	hoc_bu	0
+fe2e618b-207f-4e12-85a5-869a5a678c89	a6071b67-2130-479d-9960-be9b713e379d	hoc_bu	0
+eea2018b-766f-4172-aefc-f89454e11876	bc4166c1-2a49-43d1-9769-f752dcc2d91c	hoc_bu	5
+8ac83685-f5d9-4b1f-8dd4-d7bc387ad24f	7dd34d24-cee2-4506-98f3-90bc27e293a9	hoc_bu	0
+92b3cab2-5ac5-48d8-a4a8-9b189028353a	8605edcb-76d1-4391-9739-fcbf0bc389a1	hoc_bu	0
+92b3cab2-5ac5-48d8-a4a8-9b189028353a	58ccd9fc-cb17-4e09-afc1-0989f0636f6f	hoc_bu	0
+92b3cab2-5ac5-48d8-a4a8-9b189028353a	0151b50f-11df-493c-a959-2b143ffec470	hoc_bu	0
 \.
 
 
@@ -999,6 +1083,7 @@ daab69d8-e874-4e34-ba1e-76e1692e7a87	0151b50f-11df-493c-a959-2b143ffec470	929bc9
 a163edb3-ff76-498f-ae1c-8614a952efc0	58ccd9fc-cb17-4e09-afc1-0989f0636f6f	929bc9ea-dc44-4f17-8473-edf75de7d63b	2026-11-01	dang_hoc	2026-11-20 12:04:29.160242+00	\N
 145d3137-cc13-4e08-ba1d-e709df973b7d	2c2939ba-5703-41d5-b941-ea4a2ef4ce7d	0a6a5510-3d31-4b1c-96ca-09889eef3bc1	2026-11-01	dang_hoc	2026-11-20 12:04:29.454866+00	\N
 dd0bf11d-57b1-4534-b976-471416ecfdc3	dab1cbd9-52d2-4fe6-a8a5-fe25b56ad8b4	0a6a5510-3d31-4b1c-96ca-09889eef3bc1	2026-11-01	dang_hoc	2026-11-20 12:05:47.029677+00	\N
+a324e024-84e5-453a-b973-bf76ad1fc2f1	9706bbdf-ef70-4ea9-950c-f8062c4ac033	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	2026-11-25	dang_hoc	2026-11-25 14:43:50.028096+00	\N
 c7dd8025-745e-46ac-bb8c-3280151def93	9649475f-b209-4855-8e4f-f991a3ccce82	3aec8da8-00ec-454d-bfb1-d63fb936e5f9	2026-11-01	dang_hoc	2026-11-20 12:05:50.629082+00	\N
 5d1eff36-b668-4af0-a442-45560f020e54	ecfde36a-3d8b-458a-88bd-3dee5c89cdd4	3aec8da8-00ec-454d-bfb1-d63fb936e5f9	2026-11-01	dang_hoc	2026-11-20 12:05:51.717019+00	\N
 9be7f12a-553f-4a6f-b06a-b5121bf0ab36	b64ca36c-4f68-4afd-ac90-9f3a5fbe6381	76d237de-b44c-46bf-ba95-e3233ccf528c	2026-11-01	dang_hoc	2026-11-20 12:05:51.968385+00	\N
@@ -1027,6 +1112,7 @@ fbdd439e-100f-481d-bcd4-98550b59607a	892394ca-8163-4263-9b19-957de160996b	04be4e
 9312aabd-571f-4f75-af16-56cd628b733a	f85931d6-9ede-45a1-acde-ba4789c6e853	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	2026-11-01	dang_hoc	2026-11-19 13:10:15.639752+00	\N
 fddfef87-531e-4924-ab63-bd0bd7b69564	78e11889-7937-481d-8234-98df5fc25ddc	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	2026-11-01	dang_hoc	2026-11-19 13:10:55.593686+00	\N
 620d2f4a-a0f6-4c4f-8fce-151760d806cc	58ccd9fc-cb17-4e09-afc1-0989f0636f6f	0a6a5510-3d31-4b1c-96ca-09889eef3bc1	2026-11-23	dang_hoc	2026-11-23 10:32:40.740025+00	\N
+b4901f2f-7705-4f3e-a748-69d616b8ea68	9706bbdf-ef70-4ea9-950c-f8062c4ac033	c4a9644d-37b9-42f9-9466-a36f0b4af57c	2026-11-25	dang_hoc	2026-11-25 14:44:02.868044+00	\N
 f76e7452-dbf0-4af9-832e-beaad5b64da4	6ef103a4-fc2b-4fc6-bb1a-e113033e7f91	04be4e4f-b69a-4443-b1a1-61ff6eee57cb	2026-11-01	dang_hoc	2026-11-19 13:13:57.036645+00	\N
 bf4bc70b-32b9-4fa4-b8cc-5aa7965b0613	68f0e7bf-636d-460a-a1e9-c2c0f10c86d1	929bc9ea-dc44-4f17-8473-edf75de7d63b	2026-11-01	dang_hoc	2026-11-20 12:03:41.012923+00	\N
 5fa6c70b-6777-423c-be07-272279b97a6d	d7a4616d-10a2-4dc3-a6a9-78c86c71e5f8	929bc9ea-dc44-4f17-8473-edf75de7d63b	2026-11-01	dang_hoc	2026-11-20 12:03:46.314453+00	\N
@@ -1163,6 +1249,9 @@ COPY "public"."nhat_ky" ("id", "luc", "nguoi", "ten_nguoi", "bang", "hanh_dong",
 1490	2026-11-23 12:09:36.70274+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	xoa	tuan	{"id": "2989caff-fdc5-4bae-83f9-6fc5cdf40ef2", "ma_hs": "HS129", "avatar": null, "ho_ten": "tuan", "don_gia": 300000, "ghi_chu": null, "tao_luc": "2026-11-23T08:13:55.579378+00:00", "ngay_vao": "2026-11-23", "link_zalo": null, "trang_thai": "dang_hoc", "phu_huynh_id": null, "don_gia_rieng": null, "sdt_phu_huynh": null, "ten_phu_huynh": null, "sticker_dau_ky": 0}
 1499	2026-11-23 13:29:03.860981+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	sticker_cong_tru	them	Nguyễn Tự Huy	{"id": "d4749940-5fb2-4e3f-bdde-2bbf84b6d8e8", "so": -56, "ngay": "2026-11-23", "ly_do": "Đổi quà", "nguoi": "43d2ab0d-e902-49d7-9e81-a3696d296ad2", "tao_luc": "2026-11-23T13:29:03.860981+00:00", "ten_nguoi": "Quản trị", "hoc_sinh_id": "e3906889-be7a-483c-a548-52c80afb47e7"}
 1500	2026-11-23 13:29:22.847383+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	sticker_cong_tru	them	Nguyễn Gia Bảo	{"id": "df522537-3680-42c6-8106-c13cc2099e95", "so": -60, "ngay": "2026-11-23", "ly_do": "Đổi quà", "nguoi": "43d2ab0d-e902-49d7-9e81-a3696d296ad2", "tao_luc": "2026-11-23T13:29:22.847383+00:00", "ten_nguoi": "Quản trị", "hoc_sinh_id": "9649475f-b209-4855-8e4f-f991a3ccce82"}
+1513	2026-11-25 13:14:02.62017+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	Thành · Ca 18-20 T4 · 25/11/2026	{"buoi_id": "804fbd08-2178-4c1a-9c0a-293b1ca0462a", "don_gia": 100000, "tro_giang_id": "d45793f2-33af-41bf-91e4-410cf31087cc"}
+1523	2026-11-25 14:50:49.8562+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	Ngân · Lớp mix chiều cn · 22/11/2026	{"buoi_id": "7e26a780-214a-4c13-8a28-7f897936eec2", "don_gia": 100000, "tro_giang_id": "77ffcb33-c53a-41b3-a728-f1fdb13cc37b"}
+1532	2026-11-25 15:49:54.749189+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	buoi_hoc	them	1-1 Trung Dũng  · 16/11/2026	{"id": "8ac83685-f5d9-4b1f-8dd4-d7bc387ad24f", "loai": "bu", "ngay": "2026-11-16", "lop_id": "4df112a4-8db9-4c78-a747-5ab93c497a19", "bat_dau": "09:00:00", "ghi_chu": null, "ket_thuc": "11:00:00", "lop_nghi": false}
 1258	2026-11-21 08:57:13.183957+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
 1288	2026-11-21 11:18:48.717537+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Khuất Hoàng An 	{"link_zalo": [null, "https://zalo.me/g/rd741dryczmk29nfhvgw"]}
 1300	2026-11-22 15:03:34.523597+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
@@ -1187,6 +1276,8 @@ COPY "public"."nhat_ky" ("id", "luc", "nguoi", "ten_nguoi", "bang", "hanh_dong",
 1503	2026-11-23 13:30:04.01465+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	sticker_cong_tru	them	Khuất Hoàng An	{"id": "0f3fa630-7c6c-49ed-8ec5-e99a02a37c1e", "so": -60, "ngay": "2026-11-23", "ly_do": "Đổi quà", "nguoi": "43d2ab0d-e902-49d7-9e81-a3696d296ad2", "tao_luc": "2026-11-23T13:30:04.01465+00:00", "ten_nguoi": "Quản trị", "hoc_sinh_id": "1555600c-8358-42eb-b9f3-611dbeab3641"}
 1505	2026-11-23 13:30:29.858335+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	sticker_cong_tru	them	Hà Đoàn Nhật Hoàng	{"id": "e020e6eb-34af-4b85-9cf8-559b6c5adb74", "so": -70, "ngay": "2026-11-23", "ly_do": "Đổi quà", "nguoi": "43d2ab0d-e902-49d7-9e81-a3696d296ad2", "tao_luc": "2026-11-23T13:30:29.858335+00:00", "ten_nguoi": "Quản trị", "hoc_sinh_id": "552de5e9-d599-4a8e-ace8-d80518dfe059"}
 1506	2026-11-23 13:30:42.643418+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	sticker_cong_tru	them	Lê Minh Huy	{"id": "80e5836b-54bb-414c-a858-3ceaf28cc933", "so": -70, "ngay": "2026-11-23", "ly_do": "Đổi quà", "nguoi": "43d2ab0d-e902-49d7-9e81-a3696d296ad2", "tao_luc": "2026-11-23T13:30:42.643418+00:00", "ten_nguoi": "Quản trị", "hoc_sinh_id": "ff386fd8-15b5-42a0-b103-536c60684008"}
+1514	2026-11-25 13:14:04.099554+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	Anh Tuấn · Ca 18-20 T4 · 25/11/2026	{"buoi_id": "804fbd08-2178-4c1a-9c0a-293b1ca0462a", "don_gia": 100000, "tro_giang_id": "69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed"}
+1524	2026-11-25 14:55:38.711783+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	Tuấn lớp ielts nâng cao  · Lớp Ielts nâng cao · 19/11/2026	{"buoi_id": "7546fba6-4be9-440e-9ab2-c379d4c471e9", "don_gia": 50000, "tro_giang_id": "9b8a626d-c10d-443e-adcf-8b152a9b6c90"}
 1259	2026-11-21 08:59:13.384652+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	xoa	Chu Bảo Ngân	{"id": "ad4eb7e3-ef7e-442e-9e18-766284275ff7", "avatar": "avatar/ad4eb7e3-ef7e-442e-9e18-766284275ff7-1794999976075.jpg", "ho_ten": "Chu Bảo Ngân", "lop_id": "0d76975d-4f18-47de-adb8-3992850432eb", "ghi_chu": null, "tao_luc": "2026-11-18T11:06:16.031289+00:00", "ngay_vao": "2026-11-01", "link_zalo": null, "trang_thai": "dang_hoc", "phu_huynh_id": null, "don_gia_rieng": null, "sdt_phu_huynh": null, "ten_phu_huynh": null, "sticker_dau_ky": 0}
 1260	2026-11-21 08:59:13.384652+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	xoa	Hoàng Diệu Linh	{"id": "e57f5ae7-1615-43da-89c0-af87f74cdc97", "avatar": "avatar/e57f5ae7-1615-43da-89c0-af87f74cdc97-1795000028815.jpg", "ho_ten": "Hoàng Diệu Linh", "lop_id": "0d76975d-4f18-47de-adb8-3992850432eb", "ghi_chu": null, "tao_luc": "2026-11-18T11:07:08.678948+00:00", "ngay_vao": "2026-11-01", "link_zalo": null, "trang_thai": "dang_hoc", "phu_huynh_id": null, "don_gia_rieng": null, "sdt_phu_huynh": null, "ten_phu_huynh": null, "sticker_dau_ky": 0}
 1261	2026-11-21 08:59:13.384652+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	xoa	Lê Thị Anh Thư	{"id": "e83a1cf4-c38e-4ddc-acd0-ff0fb166c6af", "avatar": "avatar/e83a1cf4-c38e-4ddc-acd0-ff0fb166c6af-1795003669718.jpg", "ho_ten": "Lê Thị Anh Thư", "lop_id": "0d76975d-4f18-47de-adb8-3992850432eb", "ghi_chu": null, "tao_luc": "2026-11-18T11:08:14.94948+00:00", "ngay_vao": "2026-11-01", "link_zalo": null, "trang_thai": "dang_hoc", "phu_huynh_id": null, "don_gia_rieng": null, "sdt_phu_huynh": null, "ten_phu_huynh": null, "sticker_dau_ky": 0}
@@ -1235,6 +1326,8 @@ COPY "public"."nhat_ky" ("id", "luc", "nguoi", "ten_nguoi", "bang", "hanh_dong",
 1492	2026-11-23 12:11:59.727526+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
 1502	2026-11-23 13:29:52.229865+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	sticker_cong_tru	them	Vũ Quốc Tùng	{"id": "e259e0ef-bf4b-4bfe-8ade-6d1c1722a888", "so": -80, "ngay": "2026-11-23", "ly_do": "Đổi quà", "nguoi": "43d2ab0d-e902-49d7-9e81-a3696d296ad2", "tao_luc": "2026-11-23T13:29:52.229865+00:00", "ten_nguoi": "Quản trị", "hoc_sinh_id": "6ef103a4-fc2b-4fc6-bb1a-e113033e7f91"}
 1504	2026-11-23 13:30:18.889108+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	sticker_cong_tru	them	Phạm Thị Vân Anh	{"id": "bbf86199-1e17-4ad4-a10f-e2523c3d6824", "so": -70, "ngay": "2026-11-23", "ly_do": "Đổi quà", "nguoi": "43d2ab0d-e902-49d7-9e81-a3696d296ad2", "tao_luc": "2026-11-23T13:30:18.889108+00:00", "ten_nguoi": "Quản trị", "hoc_sinh_id": "dab1cbd9-52d2-4fe6-a8a5-fe25b56ad8b4"}
+1515	2026-11-25 13:48:55.225174+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	them	Lê Ngọc Vy	{"id": "9706bbdf-ef70-4ea9-950c-f8062c4ac033", "ma_hs": "HS130", "avatar": null, "ho_ten": "Lê Ngọc Vy", "don_gia": 150000, "ghi_chu": null, "tao_luc": "2026-11-25T13:48:55.225174+00:00", "ngay_vao": "2026-11-01", "link_zalo": null, "trang_thai": "dang_hoc", "phu_huynh_id": null, "don_gia_rieng": null, "sdt_phu_huynh": null, "ten_phu_huynh": "Bích", "sticker_dau_ky": 0}
+1525	2026-11-25 14:55:40.511233+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	xoa	Anh Tuấn · Lớp Ielts nâng cao · 19/11/2026	{"buoi_id": "7546fba6-4be9-440e-9ab2-c379d4c471e9", "don_gia": 100000, "tro_giang_id": "69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed"}
 1276	2026-11-21 09:05:06.825661+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	them	Lê Thị Anh Thư	{"id": "340f69e5-e301-4c40-9266-536922a91eb1", "avatar": null, "ho_ten": "Lê Thị Anh Thư", "lop_id": "0a6a5510-3d31-4b1c-96ca-09889eef3bc1", "ghi_chu": null, "tao_luc": "2026-11-21T09:05:06.825661+00:00", "ngay_vao": "2026-11-01", "link_zalo": null, "trang_thai": "dang_hoc", "phu_huynh_id": null, "don_gia_rieng": null, "sdt_phu_huynh": null, "ten_phu_huynh": null, "sticker_dau_ky": 0}
 1279	2026-11-21 09:06:04.928146+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	them	Nguyễn Thế Hiếu	{"id": "1bd2c8f1-632a-405b-b076-7095b1b0eac1", "avatar": null, "ho_ten": "Nguyễn Thế Hiếu", "lop_id": "0a6a5510-3d31-4b1c-96ca-09889eef3bc1", "ghi_chu": null, "tao_luc": "2026-11-21T09:06:04.928146+00:00", "ngay_vao": "2026-11-01", "link_zalo": null, "trang_thai": "dang_hoc", "phu_huynh_id": null, "don_gia_rieng": null, "sdt_phu_huynh": null, "ten_phu_huynh": null, "sticker_dau_ky": 0}
 1291	2026-11-21 11:23:07.930421+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Nguyễn Hà Giang 	{"link_zalo": [null, "https://zalo.me/g/jfamzj191"]}
@@ -1293,6 +1386,8 @@ COPY "public"."nhat_ky" ("id", "luc", "nguoi", "ten_nguoi", "bang", "hanh_dong",
 1479	2026-11-23 10:52:28.424313+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	buoi_hoc	sua	Lớp Ielts nâng cao · 07/11/2026	{"lop_nghi": [true, false]}
 1493	2026-11-23 12:22:36.424685+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
 1507	2026-11-23 13:31:49.666462+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	sticker_cong_tru	them	Nguyễn Ngọc Quân	{"id": "0252b598-f1ef-446a-8da0-d432d6ba5ed8", "so": -66, "ngay": "2026-11-23", "ly_do": "Đổi quà", "nguoi": "43d2ab0d-e902-49d7-9e81-a3696d296ad2", "tao_luc": "2026-11-23T13:31:49.666462+00:00", "ten_nguoi": "Quản trị", "hoc_sinh_id": "f85931d6-9ede-45a1-acde-ba4789c6e853"}
+1516	2026-11-25 13:51:04.36655+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	ghi_danh	them	Lê Ngọc Vy · Ca 18-20 T4	{"id": "a092e517-0097-42da-8ef4-5cee324bf971", "lop_id": "4e49d265-ef05-4457-8c75-ff435e266182", "tao_luc": "2026-11-25T13:51:04.36655+00:00", "ngay_vao": "2026-11-25", "trang_thai": "dang_hoc", "hoc_sinh_id": "9706bbdf-ef70-4ea9-950c-f8062c4ac033", "don_gia_rieng": null}
+1526	2026-11-25 15:00:52.600981+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
 1282	2026-11-21 10:06:59.212955+00	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	Ngân	tro_giang_buoi	them	Ngân · Pre-A1+Ielts bổ trợ · 21/11/2026	{"buoi_id": "2a9b49fe-888a-4327-9b2b-92cf74c0ffad", "don_gia": 100000, "tro_giang_id": "77ffcb33-c53a-41b3-a728-f1fdb13cc37b"}
 1294	2026-11-21 11:24:12.994089+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Phạm Minh Khôi 	{"link_zalo": [null, "https://zalo.me/g/xpgehs363"]}
 1306	2026-11-23 06:24:11.830836+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	test · 1-1 Trung Dũng  · 23/11/2026	{"buoi_id": "01d029a9-b0f8-47b3-867a-008624e4ed9d", "don_gia": 1000000, "tro_giang_id": "8f2ca2fa-e36b-4f1c-89a0-aade2484f779"}
@@ -1313,6 +1408,8 @@ COPY "public"."nhat_ky" ("id", "luc", "nguoi", "ten_nguoi", "bang", "hanh_dong",
 1480	2026-11-23 10:52:30.749044+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	buoi_hoc	sua	Lớp Ielts nâng cao · 07/11/2026	{"lop_nghi": [false, true]}
 1494	2026-11-23 13:18:41.625263+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
 1508	2026-11-23 13:32:50.41741+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
+1517	2026-11-25 14:43:50.028096+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	ghi_danh	them	Lê Ngọc Vy · Ca 1 tối t6	{"id": "a324e024-84e5-453a-b973-bf76ad1fc2f1", "lop_id": "04be4e4f-b69a-4443-b1a1-61ff6eee57cb", "tao_luc": "2026-11-25T14:43:50.028096+00:00", "ngay_vao": "2026-11-25", "trang_thai": "dang_hoc", "hoc_sinh_id": "9706bbdf-ef70-4ea9-950c-f8062c4ac033", "don_gia_rieng": null}
+1527	2026-11-25 15:21:27.591842+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	Anh Tuấn · Ca 18-20 T4 · 04/11/2026	{"buoi_id": "b5d93120-96a2-4b6a-8ed4-3042aa4624cf", "don_gia": 100000, "tro_giang_id": "69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed"}
 1283	2026-11-21 11:08:45.79064+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
 1295	2026-11-21 11:26:05.481909+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Vũ Hải Hà 	{"link_zalo": [null, "https://zalo.me/g/l3uhkuophq7uzcn8qqrj"]}
 1307	2026-11-23 06:24:58.291083+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	test · Lớp ielts cơ bản cn · 22/11/2026	{"buoi_id": "896a645c-e7c4-4117-940f-d49b23298936", "don_gia": 1000000, "tro_giang_id": "8f2ca2fa-e36b-4f1c-89a0-aade2484f779"}
@@ -1332,6 +1429,8 @@ COPY "public"."nhat_ky" ("id", "luc", "nguoi", "ten_nguoi", "bang", "hanh_dong",
 1481	2026-11-23 10:57:35.548197+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	buoi_hoc	sua	Lớp Ielts nâng cao · 07/11/2026	{"lop_nghi": [true, false]}
 1495	2026-11-23 13:20:15.803682+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	Thiên Nga · Ca tối t2: 18-20 · 23/11/2026	{"buoi_id": "f2baa976-58d4-4609-9331-5947c40c4df7", "don_gia": 100000, "tro_giang_id": "906a5d63-7289-4b55-a279-ff8db9b1a5c4"}
 1509	2026-11-23 14:17:19.867774+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
+1518	2026-11-25 14:44:02.868044+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	ghi_danh	them	Lê Ngọc Vy · Lớp ielts cơ bản cn	{"id": "b4901f2f-7705-4f3e-a748-69d616b8ea68", "lop_id": "c4a9644d-37b9-42f9-9466-a36f0b4af57c", "tao_luc": "2026-11-25T14:44:02.868044+00:00", "ngay_vao": "2026-11-25", "trang_thai": "dang_hoc", "hoc_sinh_id": "9706bbdf-ef70-4ea9-950c-f8062c4ac033", "don_gia_rieng": null}
+1528	2026-11-25 15:42:53.080477+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	Thành · Ca 18-20 T4 · 04/11/2026	{"buoi_id": "b5d93120-96a2-4b6a-8ed4-3042aa4624cf", "don_gia": 100000, "tro_giang_id": "d45793f2-33af-41bf-91e4-410cf31087cc"}
 1284	2026-11-21 11:16:08.188659+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Trung Dũng 	{"link_zalo": [null, "https://zalo.me/g/fydjarn7zof4nifq8y4z"]}
 1296	2026-11-21 11:26:35.297459+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Vũ Quốc Tùng 	{"link_zalo": [null, "https://zalo.me/g/aowhik487"]}
 792	2026-11-21 04:30:20.901861+00	\N	\N	tai_khoan	sua	Chị Hoa	{"phai_doi_mat_khau": [false, true]}
@@ -1354,6 +1453,8 @@ COPY "public"."nhat_ky" ("id", "luc", "nguoi", "ten_nguoi", "bang", "hanh_dong",
 1482	2026-11-23 11:26:46.062795+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	sua	Trần Mạnh	{"hoat_dong": [true, false]}
 1496	2026-11-23 13:20:16.609853+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	Ngân · Ca tối t2: 18-20 · 23/11/2026	{"buoi_id": "f2baa976-58d4-4609-9331-5947c40c4df7", "don_gia": 100000, "tro_giang_id": "77ffcb33-c53a-41b3-a728-f1fdb13cc37b"}
 1510	2026-11-23 14:17:52.395061+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	buoi_hoc	them	1-1 Minh Trang · 23/11/2026	{"id": "c1bd29b8-3283-4974-804c-48118046b64f", "loai": "phu", "ngay": "2026-11-23", "lop_id": "76d237de-b44c-46bf-ba95-e3233ccf528c", "bat_dau": "20:30:00", "ghi_chu": null, "ket_thuc": "21:30:00", "lop_nghi": false}
+1519	2026-11-25 14:44:51.355801+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Lê Ngọc Vy	{"ngay_vao": ["2026-11-01", "2026-11-22"]}
+1529	2026-11-25 15:44:53.223288+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	Anh Tuấn · Ca 18-20 T4 · 11/11/2026	{"buoi_id": "a1c02c20-6317-4d61-ba6b-656c1156c884", "don_gia": 100000, "tro_giang_id": "69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed"}
 1285	2026-11-21 11:17:14.221795+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Bùi Ngọc Hà	{"link_zalo": [null, "https://zalo.me/g/uvqw50szeba9aqcj2yuy"]}
 1297	2026-11-21 11:28:01.543748+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Ánh Long	{"link_zalo": [null, "https://zalo.me/g/c4nefj98lxkx9coet0jh"]}
 1309	2026-11-23 06:25:31.01733+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	xoa	test · Lớp ielts cơ bản cn · 22/11/2026	{"buoi_id": "896a645c-e7c4-4117-940f-d49b23298936", "don_gia": 1000000, "tro_giang_id": "8f2ca2fa-e36b-4f1c-89a0-aade2484f779"}
@@ -1374,6 +1475,9 @@ COPY "public"."nhat_ky" ("id", "luc", "nguoi", "ten_nguoi", "bang", "hanh_dong",
 1483	2026-11-23 11:59:43.277749+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
 1497	2026-11-23 13:23:33.803857+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
 1511	2026-11-24 05:00:06.606744+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
+1520	2026-11-25 14:44:51.550541+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	ghi_danh	xoa	Lê Ngọc Vy · Ca 18-20 T4	{"id": "a092e517-0097-42da-8ef4-5cee324bf971", "lop_id": "4e49d265-ef05-4457-8c75-ff435e266182", "tao_luc": "2026-11-25T13:51:04.36655+00:00", "ngay_vao": "2026-11-25", "trang_thai": "dang_hoc", "hoc_sinh_id": "9706bbdf-ef70-4ea9-950c-f8062c4ac033", "don_gia_rieng": null}
+1521	2026-11-25 14:46:58.231663+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	Minh Dương · Lớp ielts cơ bản cn · 22/11/2026	{"buoi_id": "896a645c-e7c4-4117-940f-d49b23298936", "don_gia": 100000, "tro_giang_id": "877e2be5-c648-4abe-b7a6-8ceff0df9d68"}
+1530	2026-11-25 15:44:54.605113+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	Thành · Ca 18-20 T4 · 11/11/2026	{"buoi_id": "a1c02c20-6317-4d61-ba6b-656c1156c884", "don_gia": 100000, "tro_giang_id": "d45793f2-33af-41bf-91e4-410cf31087cc"}
 1286	2026-11-21 11:17:41.714828+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Hà Đoàn Nhật Hoàng 	{"link_zalo": [null, "https://zalo.me/g/ndhnrkrskkjgirptjbd8"]}
 1298	2026-11-21 12:41:15.190206+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
 1310	2026-11-23 06:25:44.904906+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	test · Ca tối t2: 18-20 · 23/11/2026	{"buoi_id": "f2baa976-58d4-4609-9331-5947c40c4df7", "don_gia": 1000000, "tro_giang_id": "8f2ca2fa-e36b-4f1c-89a0-aade2484f779"}
@@ -1400,6 +1504,8 @@ COPY "public"."nhat_ky" ("id", "luc", "nguoi", "ten_nguoi", "bang", "hanh_dong",
 1489	2026-11-23 12:08:55.261398+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	lop	xoa	test	{"id": "83fb20a4-7e02-491c-84a1-5958f3fd9f55", "gio": null, "ten": "test", "lich": [6], "don_gia": 0, "gio_thu": {"6": {"bd": "17:55", "kt": "19:55"}}, "tao_luc": "2026-11-23T08:13:11.974913+00:00", "hoat_dong": true}
 1498	2026-11-23 13:26:54.578754+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
 1512	2026-11-24 13:30:31.769019+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
+1522	2026-11-25 14:50:48.15274+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	Thiên Nga · Lớp mix chiều cn · 22/11/2026	{"buoi_id": "7e26a780-214a-4c13-8a28-7f897936eec2", "don_gia": 100000, "tro_giang_id": "906a5d63-7289-4b55-a279-ff8db9b1a5c4"}
+1531	2026-11-25 15:47:58.302151+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	Thành · Cấp 1 Ca 18-20 t5 · 05/11/2026	{"buoi_id": "eea2018b-766f-4172-aefc-f89454e11876", "don_gia": 100000, "tro_giang_id": "d45793f2-33af-41bf-91e4-410cf31087cc"}
 \.
 
 
@@ -1478,12 +1584,22 @@ e06f0275-a6f0-42f0-9f1d-963713a5120a	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	100000
 6b2d9128-7127-45f0-8f82-081aa3ff0759	906a5d63-7289-4b55-a279-ff8db9b1a5c4	100000
 f2baa976-58d4-4609-9331-5947c40c4df7	906a5d63-7289-4b55-a279-ff8db9b1a5c4	100000
 f2baa976-58d4-4609-9331-5947c40c4df7	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	100000
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	d45793f2-33af-41bf-91e4-410cf31087cc	100000
+804fbd08-2178-4c1a-9c0a-293b1ca0462a	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	100000
+896a645c-e7c4-4117-940f-d49b23298936	877e2be5-c648-4abe-b7a6-8ceff0df9d68	100000
+7e26a780-214a-4c13-8a28-7f897936eec2	906a5d63-7289-4b55-a279-ff8db9b1a5c4	100000
+7e26a780-214a-4c13-8a28-7f897936eec2	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	100000
+7546fba6-4be9-440e-9ab2-c379d4c471e9	9b8a626d-c10d-443e-adcf-8b152a9b6c90	50000
+b5d93120-96a2-4b6a-8ed4-3042aa4624cf	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	100000
+b5d93120-96a2-4b6a-8ed4-3042aa4624cf	d45793f2-33af-41bf-91e4-410cf31087cc	100000
+a1c02c20-6317-4d61-ba6b-656c1156c884	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	100000
 f6e57378-f553-452e-9d0c-3cd5920181c2	8b0b82af-8eee-477b-bc50-b5c72837c2f7	50000
 92b3cab2-5ac5-48d8-a4a8-9b189028353a	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	100000
 92b3cab2-5ac5-48d8-a4a8-9b189028353a	906a5d63-7289-4b55-a279-ff8db9b1a5c4	100000
 71e54043-f25e-48e8-873d-9f249bd6150c	d45793f2-33af-41bf-91e4-410cf31087cc	100000
 71e54043-f25e-48e8-873d-9f249bd6150c	906a5d63-7289-4b55-a279-ff8db9b1a5c4	100000
-7546fba6-4be9-440e-9ab2-c379d4c471e9	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	100000
+a1c02c20-6317-4d61-ba6b-656c1156c884	d45793f2-33af-41bf-91e4-410cf31087cc	100000
+eea2018b-766f-4172-aefc-f89454e11876	d45793f2-33af-41bf-91e4-410cf31087cc	100000
 c0f883fc-0857-4b2b-bc18-2e057ddde6a7	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	100000
 c0f883fc-0857-4b2b-bc18-2e057ddde6a7	877e2be5-c648-4abe-b7a6-8ceff0df9d68	100000
 \.
@@ -1565,6 +1681,11 @@ c8732a09-8bc1-4f71-ad97-a026db691dc3	anh	avatar/04c0644a-6490-4551-9b84-2b3e606b
 d54dce0e-1875-40bb-9bdb-fb68b066c3a5	anh	buoi/5953209e-2472-4fb7-916a-b242ad4fa5d3/59939fac-07da-4db6-8bc2-d3ee2e1a66b2.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-21 04:50:23.573755+00	2026-11-21 04:50:23.573755+00	2026-11-21 04:50:23.573755+00	{"eTag": "\\"8d3f5d6ca3e5c44b0ead49f327ed2837\\"", "size": 14639, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-21T04:50:24.000Z", "contentLength": 14639, "httpStatusCode": 200}	77c00817-f2d7-413a-8f20-f3310a8643f1	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
 8e1e902a-05e2-4c6c-a0ab-d2dc34092112	anh	avatar/7c7fc404-3d84-4d6b-8972-3926976216f4-1794998800089.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-18 10:46:40.592421+00	2026-11-18 10:46:40.592421+00	2026-11-18 10:46:40.592421+00	{"eTag": "\\"f68352affe7f8ba939aa54cf61c33e20\\"", "size": 39961, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-18T10:46:41.000Z", "contentLength": 39961, "httpStatusCode": 200}	49eca5f8-f981-4665-88ef-c63be0b5d763	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
 7c848c94-738a-483f-8e86-91378a983cbc	anh	buoi/c1bd29b8-3283-4974-804c-48118046b64f/708c9599-0f0c-4e7f-b221-2dcbc27b4d32.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-23 14:18:13.450618+00	2026-11-23 14:18:13.450618+00	2026-11-23 14:18:13.450618+00	{"eTag": "\\"e91a46859b0f1a1433d07ca22121aaf7\\"", "size": 438381, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-23T14:18:14.000Z", "contentLength": 438381, "httpStatusCode": 200}	25e98186-8253-4cc9-8861-314320ece8dd	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
+65f70535-cba0-4890-8638-3c29eb469942	anh	buoi/804fbd08-2178-4c1a-9c0a-293b1ca0462a/febd7102-68da-47bb-8408-7436b9bcd9cb.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-25 13:15:22.458238+00	2026-11-25 13:15:22.458238+00	2026-11-25 13:15:22.458238+00	{"eTag": "\\"2bbc4b1da96d9d468ff49fddf10f9ec8\\"", "size": 666885, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-25T13:15:23.000Z", "contentLength": 666885, "httpStatusCode": 200}	bf5ec457-dc3e-4449-9b5b-52ada33e62df	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
+6362f617-2bd0-4e9e-a5b4-0185ac57b79b	anh	buoi/997fe90e-6a07-4050-a18e-2c2e251643cd/e3b51695-d754-4a97-a83b-bd76ef994726.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-25 14:39:26.379469+00	2026-11-25 14:39:26.379469+00	2026-11-25 14:39:26.379469+00	{"eTag": "\\"a096577aa1ddab5de54340c27373839f\\"", "size": 359218, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-25T14:39:27.000Z", "contentLength": 359218, "httpStatusCode": 200}	21f139c0-2349-4f52-a272-92705395041b	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
+00efaf16-7b0f-4282-8c63-b263f2a804c2	anh	buoi/896a645c-e7c4-4117-940f-d49b23298936/e83f827a-e74b-4cac-960b-e484948b3cab.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-25 14:50:31.652197+00	2026-11-25 14:50:31.652197+00	2026-11-25 14:50:31.652197+00	{"eTag": "\\"afd043e430dbe86ea186f94401c976b8\\"", "size": 409013, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-25T14:50:32.000Z", "contentLength": 409013, "httpStatusCode": 200}	9676a961-ca35-4959-8568-246ad55db87e	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
+25fb50f0-9271-46b8-9fd6-a11be5cd9867	anh	buoi/7e26a780-214a-4c13-8a28-7f897936eec2/0dfced6d-88ed-448f-95a1-10a8282b5b43.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-25 14:54:23.250355+00	2026-11-25 14:54:23.250355+00	2026-11-25 14:54:23.250355+00	{"eTag": "\\"06b5847e9386b983e7bebf736c41f201\\"", "size": 334148, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-25T14:54:24.000Z", "contentLength": 334148, "httpStatusCode": 200}	ed272ce4-4daf-4cf9-a77d-145263688b5d	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
+23e4eb0d-c6e0-44a5-876e-6336466c1308	anh	buoi/7e26a780-214a-4c13-8a28-7f897936eec2/2b7f49a9-15ec-4d5f-964e-0869d1c13a88.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-25 14:54:46.777481+00	2026-11-25 14:54:46.777481+00	2026-11-25 14:54:46.777481+00	{"eTag": "\\"efe15fd662eea5c1fdd004e750355876\\"", "size": 439948, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-25T14:54:47.000Z", "contentLength": 439948, "httpStatusCode": 200}	da6c542a-e3c9-4339-9cc9-17aef3c95ec4	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
 a9971b81-8c50-4a67-9657-eb125038e646	anh	buoi/92b3cab2-5ac5-48d8-a4a8-9b189028353a/2c9ad16e-8d97-4db5-9b10-a08643e38e86.jpg	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	2026-11-18 12:20:49.658409+00	2026-11-18 12:20:49.658409+00	2026-11-18 12:20:49.658409+00	{"eTag": "\\"1bbc5df55c60290e44ba41c8bae027aa\\"", "size": 576396, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-18T12:20:50.000Z", "contentLength": 576396, "httpStatusCode": 200}	3b343f0a-95ce-46e1-9da4-9b961203b945	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	{}	\N	f	f
 cf860e4a-ec2f-4bbb-8626-4e4ab0c6c188	anh	buoi/b58e02fa-a696-449e-bdab-8586041d5620/141820af-28e8-457a-b1e4-a411095c240a.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-20 14:42:39.737219+00	2026-11-20 14:42:39.737219+00	2026-11-20 14:42:39.737219+00	{"eTag": "\\"6ab6be1db0dd386ca407f58aa2e40b2c\\"", "size": 415997, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-20T14:42:40.000Z", "contentLength": 415997, "httpStatusCode": 200}	62f09cd5-3828-4b16-97fa-d1a491089bca	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
 8037db5f-1bc1-4b80-a216-5765d99fffc7	anh	buoi/71e54043-f25e-48e8-873d-9f249bd6150c/d65e8130-864b-4a59-b33b-326b36931b00.jpg	906a5d63-7289-4b55-a279-ff8db9b1a5c4	2026-11-19 13:05:41.780632+00	2026-11-19 13:05:41.780632+00	2026-11-19 13:05:41.780632+00	{"eTag": "\\"da22bb5c3c352d42b461d6032ba44f6e\\"", "size": 523990, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-19T13:05:42.000Z", "contentLength": 523990, "httpStatusCode": 200}	b3f0992c-eec2-42df-90b9-f4ada59945d1	906a5d63-7289-4b55-a279-ff8db9b1a5c4	{}	\N	f	f
@@ -1600,14 +1721,14 @@ COPY "storage"."vector_indexes" ("id", "name", "bucket_id", "data_type", "dimens
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: supabase_auth_admin
 --
 
-SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 784, true);
+SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 793, true);
 
 
 --
 -- Name: hoc_sinh_ma_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."hoc_sinh_ma_seq"', 129, true);
+SELECT pg_catalog.setval('"public"."hoc_sinh_ma_seq"', 130, true);
 
 
 --
@@ -1621,13 +1742,13 @@ SELECT pg_catalog.setval('"public"."nhat_ky_chot_so_id_seq"', 173, true);
 -- Name: nhat_ky_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."nhat_ky_id_seq"', 1512, true);
+SELECT pg_catalog.setval('"public"."nhat_ky_id_seq"', 1532, true);
 
 
 --
 -- PostgreSQL database dump complete
 --
 
--- \unrestrict D7Q5mp07UkpWcyfd9xGOAl63NWyL0S9BFvDWSDS1JM66YvaXy0FXpxhnekX0Nxd
+-- \unrestrict YNsDQfLRdrzh3bD2kiJ0PXlslWjwIBmvobt7m9nXXSqftO0dMiVWdRydCxXd70a
 
 RESET ALL;
