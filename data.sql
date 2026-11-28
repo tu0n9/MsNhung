@@ -4,7 +4,7 @@ SET session_replication_role = replica;
 -- PostgreSQL database dump
 --
 
--- \restrict yoIbGXuXbWnC2sWZ6Ws7wZDUau1SVSBkLY5Sl99gN0ecHJtSetR75GzFWSI2HCV
+-- \restrict rKs9pYor6DTUohUXMhy5gOkdcnkPtXKRCVfZY1obhZ4XRemsSZePlYXw03ILDOA
 
 -- Dumped from database version 17.11
 -- Dumped by pg_dump version 17.12
@@ -50,10 +50,10 @@ COPY "auth"."flow_state" ("id", "user_id", "auth_code", "code_challenge_method",
 --
 
 COPY "auth"."users" ("instance_id", "id", "aud", "role", "email", "encrypted_password", "email_confirmed_at", "invited_at", "confirmation_token", "confirmation_sent_at", "recovery_token", "recovery_sent_at", "email_change_token_new", "email_change", "email_change_sent_at", "last_sign_in_at", "raw_app_meta_data", "raw_user_meta_data", "is_super_admin", "created_at", "updated_at", "phone", "phone_confirmed_at", "phone_change", "phone_change_token", "phone_change_sent_at", "email_change_token_current", "email_change_confirm_status", "banned_until", "reauthentication_token", "reauthentication_sent_at", "is_sso_user", "deleted_at", "is_anonymous") FROM stdin;
+00000000-0000-0000-0000-000000000000	43d2ab0d-e902-49d7-9e81-a3696d296ad2	authenticated	authenticated	admin@msnhung.local	$2a$10$BCdkciwG3PPPv4yCMa50oefbpbFKmU9xlXou.UTQCXONcdSKZxnAO	2026-11-15 10:27:58.76274+00	\N		\N		\N			\N	2026-11-27 12:44:54.864601+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-15 10:27:58.741954+00	2026-11-27 14:32:20.42221+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	authenticated	authenticated	8a80fc97-4996-4655-afee-8eac991e9a12@msnhung.local	$2a$10$97fyKO0vuMQfYkBUWS32X.Q56vy5lBsfCC.aooYX7mAnGjFJmA3xW	2026-11-18 10:48:28.317304+00	\N		\N		\N			\N	2026-11-26 12:57:46.007037+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:48:28.280417+00	2026-11-26 14:07:55.870298+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	877e2be5-c648-4abe-b7a6-8ceff0df9d68	authenticated	authenticated	b3a2e022-4ac8-4e39-bf92-8eb8929f8818@msnhung.local	$2a$10$Qs1dEePeo9NfuXobIUwD5uPgQYkTbuNobiZr9KdEJUN45D6hgYzWS	2026-11-18 10:51:52.198234+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:51:52.194016+00	2026-11-18 10:51:52.202419+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	d45793f2-33af-41bf-91e4-410cf31087cc	authenticated	authenticated	f11afff5-2031-4c08-8ed1-1fb7a6e992b6@msnhung.local	$2a$10$3qL3UVR8xbLh.LD.BgmOu.BiYDs0rU2kNfqFwIP/yHVfeAnRyMBp6	2026-11-18 10:49:48.026277+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:49:48.022325+00	2026-11-18 10:49:48.027809+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	43d2ab0d-e902-49d7-9e81-a3696d296ad2	authenticated	authenticated	admin@msnhung.local	$2a$10$BCdkciwG3PPPv4yCMa50oefbpbFKmU9xlXou.UTQCXONcdSKZxnAO	2026-11-15 10:27:58.76274+00	\N		\N		\N			\N	2026-11-26 12:58:09.096909+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-15 10:27:58.741954+00	2026-11-27 01:18:14.394094+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	7925dcdb-7311-4634-896a-b4b6386b2df2	authenticated	authenticated	8ebb1955-2bf2-40c6-98fd-94c9104c1119@msnhung.local	$2a$10$.qKVyn44KDMq/QbVRuTwdO3arECmyPF2h0itwWyd/CfXAhMtW0bIq	2026-11-18 10:51:11.090954+00	\N		\N		\N			\N	2026-11-19 15:33:10.474457+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:51:11.085776+00	2026-11-19 15:33:19.891315+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	8b0b82af-8eee-477b-bc50-b5c72837c2f7	authenticated	authenticated	9b44af75-9759-4353-8276-9a34385879ac@msnhung.local	$2a$10$8vao8LW315Dfkchm1MBos.ijJyY9XJ1wNm.MG.jh30CoYiaS2ng2a	2026-11-18 10:58:11.97509+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 10:58:11.951136+00	2026-11-18 10:58:11.976631+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	9b8a626d-c10d-443e-adcf-8b152a9b6c90	authenticated	authenticated	ac70b571-f88b-4b91-910e-2056e06887f5@msnhung.local	$2a$10$L6Hx8GBRQb3UJP0RgrP49uzhjOQobgfNWJ4h4I/xunR7cf5q/sRSW	2026-11-18 11:01:13.795726+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-11-18 11:01:13.775131+00	2026-11-18 11:01:13.797193+00	\N	\N			\N		0	\N		\N	f	\N	f
@@ -105,15 +105,17 @@ COPY "auth"."sessions" ("id", "user_id", "created_at", "updated_at", "factor_id"
 138b0991-bade-4ac1-99f0-d5b4e29bfcce	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	2026-11-18 11:15:04.570018+00	2026-11-19 09:28:18.636381+00	\N	aal1	\N	2026-11-19 09:28:18.636189	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Mobile/15E148 Safari/604.1	171.251.153.178	\N	\N	\N	\N	\N
 2e3ad4f2-a57e-494e-b69c-a8753cee3b40	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	2026-11-26 12:57:46.00716+00	2026-11-26 14:07:55.8962+00	\N	aal1	\N	2026-11-26 14:07:55.896042	Mozilla/5.0 (iPhone; CPU iPhone OS 27_2_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/24B156 [FBAN/FBIOS;FBAV/588.0.0.20.106;FBBV/1114939974;FBDV/iPhone14,7;FBMD/iPhone;FBSN/iOS;FBSV/27.2.1;FBSS/3;FBCR/;FBID/phone;FBLC/vi_VN;FBOP/80]	171.224.179.70	\N	\N	\N	\N	\N
 eeb51907-2ea4-4b83-ac18-4d4d82e61ad1	7925dcdb-7311-4634-896a-b4b6386b2df2	2026-11-19 15:33:10.47744+00	2026-11-19 15:33:10.47744+00	\N	aal1	\N	\N	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36 Edg/157.0.0.0	183.80.74.68	\N	\N	\N	\N	\N
+3d0177fd-b2ed-422f-9811-5f8032ad5fac	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-23 13:23:32.976327+00	2026-11-27 14:25:55.786814+00	\N	aal1	\N	2026-11-27 14:25:55.786642	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6.1 Mobile/15E148 Safari/604.1	183.80.189.164	\N	\N	\N	\N	\N
 98d9f79f-0ff0-4861-aa57-09ae20073ef4	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	2026-11-20 09:39:16.892389+00	2026-11-23 20:18:50.056325+00	\N	aal1	\N	2026-11-23 20:18:50.056192	Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Mobile Safari/537.36	117.0.94.101	\N	\N	\N	\N	\N
 2c82d461-3acd-4170-a5ec-b2ae40a1acb7	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-24 13:30:31.326893+00	2026-11-26 17:04:21.47496+00	\N	aal1	\N	2026-11-26 17:04:21.474829	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36 Edg/158.0.0.0	183.80.97.88	\N	\N	\N	\N	\N
-3d0177fd-b2ed-422f-9811-5f8032ad5fac	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-23 13:23:32.976327+00	2026-11-26 21:18:26.071198+00	\N	aal1	\N	2026-11-26 21:18:26.071073	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.6.1 Mobile/15E148 Safari/604.1	116.106.99.160	\N	\N	\N	\N	\N
+91e47d3a-53bd-4429-a0f2-dc4534030f14	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-24 05:00:06.048452+00	2026-11-27 14:28:04.153222+00	\N	aal1	\N	2026-11-27 14:28:04.153027	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Zalo iOS/261101802 ZaloTheme/dark ZaloLanguage/vn	116.96.46.150	\N	\N	\N	\N	\N
 8e6a1d94-8892-4b24-b5bd-4cad592d6538	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-23 13:32:50.022516+00	2026-11-24 08:23:09.659108+00	\N	aal1	\N	2026-11-24 08:23:09.65898	Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1	104.28.84.125	\N	\N	\N	\N	\N
 d40337c9-7ace-4e7c-9156-892f185cfddd	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-25 15:00:52.244087+00	2026-11-27 01:18:14.419628+00	\N	aal1	\N	2026-11-27 01:18:14.419501	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36 Edg/158.0.0.0	42.115.198.183	\N	\N	\N	\N	\N
 c0d0a073-5f8e-45d2-b701-61fb6aee22fd	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	2026-11-19 13:09:30.604521+00	2026-11-20 06:20:35.345899+00	\N	aal1	\N	2026-11-20 06:20:35.345772	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Mobile/15E148 Safari/604.1	118.68.111.181	\N	\N	\N	\N	\N
-91e47d3a-53bd-4429-a0f2-dc4534030f14	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-24 05:00:06.048452+00	2026-11-25 13:13:54.712797+00	\N	aal1	\N	2026-11-25 13:13:54.711039	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Zalo iOS/261101802 ZaloTheme/dark ZaloLanguage/vn	42.118.51.176	\N	\N	\N	\N	\N
-fe85c6d8-5568-466a-820f-1825a509392b	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-23 13:26:54.228971+00	2026-11-26 04:13:45.089225+00	\N	aal1	\N	2026-11-26 04:13:45.085865	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36 Edg/158.0.0.0	117.1.90.139	\N	\N	\N	\N	\N
-67172279-b1b1-4f95-a2c0-034c8b76e19b	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-23 14:17:18.498688+00	2026-11-26 06:30:56.782597+00	\N	aal1	\N	2026-11-26 06:30:56.782468	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Mobile/15E148 Safari/604.1	171.251.54.86	\N	\N	\N	\N	\N
+1ba6edfa-eb86-4ffa-8cd2-9b6bfb02b34d	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-27 01:28:32.665991+00	2026-11-27 01:28:32.665991+00	\N	aal1	\N	\N	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36	42.115.198.183	\N	\N	\N	\N	\N
+fe85c6d8-5568-466a-820f-1825a509392b	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-23 13:26:54.228971+00	2026-11-27 14:30:33.579186+00	\N	aal1	\N	2026-11-27 14:30:33.579054	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36 Edg/158.0.0.0	14.191.155.67	\N	\N	\N	\N	\N
+a3b94125-b431-4690-a0c9-7958c2f1780c	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-27 12:44:54.865975+00	2026-11-27 14:32:20.436563+00	\N	aal1	\N	2026-11-27 14:32:20.436327	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Mobile/15E148 Safari/604.1	14.191.155.67	\N	\N	\N	\N	\N
+67172279-b1b1-4f95-a2c0-034c8b76e19b	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-23 14:17:18.498688+00	2026-11-27 13:45:10.387168+00	\N	aal1	\N	2026-11-27 13:45:10.387035	Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.2 Mobile/15E148 Safari/604.1	171.251.54.43	\N	\N	\N	\N	\N
 88977290-d350-4e6e-9975-da2dbcdb4e2b	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-26 12:58:09.097077+00	2026-11-26 12:58:09.097077+00	\N	aal1	\N	\N	Mozilla/5.0 (iPhone; CPU iPhone OS 27_0_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/24A446 [FBAN/FBIOS;FBAV/588.0.0.20.106;FBBV/1114939974;FBDV/iPhone15,3;FBMD/iPhone;FBSN/iOS;FBSV/27.0.1;FBSS/3;FBCR/;FBID/phone;FBLC/vi_VN;FBOP/80]	42.112.254.32	\N	\N	\N	\N	\N
 \.
 
@@ -132,6 +134,8 @@ fe85c6d8-5568-466a-820f-1825a509392b	2026-11-23 13:26:54.240047+00	2026-11-23 13
 d40337c9-7ace-4e7c-9156-892f185cfddd	2026-11-25 15:00:52.298577+00	2026-11-25 15:00:52.298577+00	password	1314207e-8154-47be-accd-24e5d71ad8d4
 2e3ad4f2-a57e-494e-b69c-a8753cee3b40	2026-11-26 12:57:46.038535+00	2026-11-26 12:57:46.038535+00	password	7d578f17-b794-49df-bb7d-205c583842e1
 88977290-d350-4e6e-9975-da2dbcdb4e2b	2026-11-26 12:58:09.103737+00	2026-11-26 12:58:09.103737+00	password	c99bf44e-fca5-45a0-b9a7-0bf3e100f6cb
+1ba6edfa-eb86-4ffa-8cd2-9b6bfb02b34d	2026-11-27 01:28:32.705065+00	2026-11-27 01:28:32.705065+00	password	af9e8849-b059-4606-893d-8f66bf5a9f09
+a3b94125-b431-4690-a0c9-7958c2f1780c	2026-11-27 12:44:54.927092+00	2026-11-27 12:44:54.927092+00	password	b3e3ebb0-7e85-43eb-9271-cbca6b19a5a4
 138b0991-bade-4ac1-99f0-d5b4e29bfcce	2026-11-18 11:15:04.66948+00	2026-11-18 11:15:04.66948+00	password	0e8bcbd4-b605-4f8d-92ef-a09f44104bec
 c0d0a073-5f8e-45d2-b701-61fb6aee22fd	2026-11-19 13:09:30.662961+00	2026-11-19 13:09:30.662961+00	password	af8deb5d-c21a-41f3-832b-e2efa8a9f085
 eeb51907-2ea4-4b83-ac18-4d4d82e61ad1	2026-11-19 15:33:10.569478+00	2026-11-19 15:33:10.569478+00	password	f9153c04-47e8-4095-9108-0105f4f831fa
@@ -230,7 +234,6 @@ COPY "auth"."refresh_tokens" ("instance_id", "id", "token", "user_id", "revoked"
 00000000-0000-0000-0000-000000000000	784	x6xsnz5jujak	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-24 14:34:38.146601+00	2026-11-25 10:03:05.4346+00	yzabqihb3bit	2c82d461-3acd-4170-a5ec-b2ae40a1acb7
 00000000-0000-0000-0000-000000000000	777	ctvgqquosaut	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-24 05:00:06.088971+00	2026-11-25 13:13:54.65545+00	\N	91e47d3a-53bd-4429-a0f2-dc4534030f14
 00000000-0000-0000-0000-000000000000	499	he4pscw7nv4q	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-18 13:22:21.175637+00	2026-11-18 16:34:59.646129+00	oiucqvgppb62	138b0991-bade-4ac1-99f0-d5b4e29bfcce
-00000000-0000-0000-0000-000000000000	787	tsthrkv2eynv	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-25 13:13:54.676344+00	2026-11-25 13:13:54.676344+00	ctvgqquosaut	91e47d3a-53bd-4429-a0f2-dc4534030f14
 00000000-0000-0000-0000-000000000000	776	hhfysgx5bp7d	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-24 01:17:42.166294+00	2026-11-25 13:42:07.138613+00	cj36at7kpnzf	67172279-b1b1-4f95-a2c0-034c8b76e19b
 00000000-0000-0000-0000-000000000000	785	qg2lfblhay7g	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-25 03:09:29.560455+00	2026-11-25 14:03:34.428818+00	h4icwc74mfh2	3d0177fd-b2ed-422f-9811-5f8032ad5fac
 00000000-0000-0000-0000-000000000000	786	riewycxz7jve	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-25 10:03:05.453308+00	2026-11-25 15:05:57.165842+00	x6xsnz5jujak	2c82d461-3acd-4170-a5ec-b2ae40a1acb7
@@ -245,9 +248,7 @@ COPY "auth"."refresh_tokens" ("instance_id", "id", "token", "user_id", "revoked"
 00000000-0000-0000-0000-000000000000	515	tez5ezxmlo7a	7925dcdb-7311-4634-896a-b4b6386b2df2	f	2026-11-19 15:33:10.535556+00	2026-11-19 15:33:10.535556+00	\N	eeb51907-2ea4-4b83-ac18-4d4d82e61ad1
 00000000-0000-0000-0000-000000000000	794	bmdmkxf2btza	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-26 01:43:05.130623+00	2026-11-26 04:13:45.047768+00	7ywwv35yje6w	fe85c6d8-5568-466a-820f-1825a509392b
 00000000-0000-0000-0000-000000000000	514	uqzjyb2jzeez	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	t	2026-11-19 13:09:30.633872+00	2026-11-19 16:31:49.504555+00	\N	c0d0a073-5f8e-45d2-b701-61fb6aee22fd
-00000000-0000-0000-0000-000000000000	798	d3hibicou3uz	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-26 04:13:45.058625+00	2026-11-26 04:13:45.058625+00	bmdmkxf2btza	fe85c6d8-5568-466a-820f-1825a509392b
 00000000-0000-0000-0000-000000000000	788	k6kx4wfjf7k2	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-25 13:42:07.147164+00	2026-11-26 06:30:56.730683+00	hhfysgx5bp7d	67172279-b1b1-4f95-a2c0-034c8b76e19b
-00000000-0000-0000-0000-000000000000	799	47ezigze3p3a	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-26 06:30:56.750487+00	2026-11-26 06:30:56.750487+00	k6kx4wfjf7k2	67172279-b1b1-4f95-a2c0-034c8b76e19b
 00000000-0000-0000-0000-000000000000	584	4hswtw7g2mpu	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	t	2026-11-20 15:05:28.582283+00	2026-11-21 10:06:35.968768+00	vdo4zwc6q2dr	98d9f79f-0ff0-4861-aa57-09ae20073ef4
 00000000-0000-0000-0000-000000000000	795	ae4g5e77pp4v	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-26 02:34:14.841918+00	2026-11-26 07:44:20.523928+00	o5ammvn4525u	3d0177fd-b2ed-422f-9811-5f8032ad5fac
 00000000-0000-0000-0000-000000000000	796	36gwjtvztq5j	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-26 03:30:40.04427+00	2026-11-26 07:47:21.27162+00	hsotyow23exc	d40337c9-7ace-4e7c-9156-892f185cfddd
@@ -259,11 +260,27 @@ COPY "auth"."refresh_tokens" ("instance_id", "id", "token", "user_id", "revoked"
 00000000-0000-0000-0000-000000000000	803	q5bfrw7jqu5a	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-26 12:56:43.406028+00	2026-11-26 14:55:10.858759+00	76vcwqkji2nm	3d0177fd-b2ed-422f-9811-5f8032ad5fac
 00000000-0000-0000-0000-000000000000	806	fapg7wj5dnc4	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-26 13:23:40.255382+00	2026-11-26 17:04:21.419029+00	5ru5wpjwdrwk	2c82d461-3acd-4170-a5ec-b2ae40a1acb7
 00000000-0000-0000-0000-000000000000	801	xza6w32b6h2c	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-26 07:47:21.279645+00	2026-11-27 01:18:14.368546+00	36gwjtvztq5j	d40337c9-7ace-4e7c-9156-892f185cfddd
+00000000-0000-0000-0000-000000000000	787	tsthrkv2eynv	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-25 13:13:54.676344+00	2026-11-27 05:53:00.531449+00	ctvgqquosaut	91e47d3a-53bd-4429-a0f2-dc4534030f14
+00000000-0000-0000-0000-000000000000	799	47ezigze3p3a	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-26 06:30:56.750487+00	2026-11-27 07:00:25.705295+00	k6kx4wfjf7k2	67172279-b1b1-4f95-a2c0-034c8b76e19b
+00000000-0000-0000-0000-000000000000	798	d3hibicou3uz	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-26 04:13:45.058625+00	2026-11-27 14:30:33.568394+00	bmdmkxf2btza	fe85c6d8-5568-466a-820f-1825a509392b
 00000000-0000-0000-0000-000000000000	807	o7lkkxuxkffu	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	f	2026-11-26 14:07:55.862473+00	2026-11-26 14:07:55.862473+00	4ayxatu2jnd5	2e3ad4f2-a57e-494e-b69c-a8753cee3b40
 00000000-0000-0000-0000-000000000000	809	tvvuliszkxea	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-26 17:04:21.443394+00	2026-11-26 17:04:21.443394+00	fapg7wj5dnc4	2c82d461-3acd-4170-a5ec-b2ae40a1acb7
 00000000-0000-0000-0000-000000000000	808	lw52iircw6ll	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-26 14:55:10.882969+00	2026-11-26 21:18:26.024402+00	q5bfrw7jqu5a	3d0177fd-b2ed-422f-9811-5f8032ad5fac
-00000000-0000-0000-0000-000000000000	810	pgttmoohylgc	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-26 21:18:26.036797+00	2026-11-26 21:18:26.036797+00	lw52iircw6ll	3d0177fd-b2ed-422f-9811-5f8032ad5fac
 00000000-0000-0000-0000-000000000000	811	d2fpciyi5up4	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-27 01:18:14.384294+00	2026-11-27 01:18:14.384294+00	xza6w32b6h2c	d40337c9-7ace-4e7c-9156-892f185cfddd
+00000000-0000-0000-0000-000000000000	812	y6dbm5ssr73t	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-27 01:28:32.689816+00	2026-11-27 01:28:32.689816+00	\N	1ba6edfa-eb86-4ffa-8cd2-9b6bfb02b34d
+00000000-0000-0000-0000-000000000000	814	xwvmupjfe2y5	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-27 07:00:25.728563+00	2026-11-27 08:40:55.032011+00	47ezigze3p3a	67172279-b1b1-4f95-a2c0-034c8b76e19b
+00000000-0000-0000-0000-000000000000	813	4wdlcs3ueka4	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-27 05:53:00.556121+00	2026-11-27 10:36:11.511686+00	tsthrkv2eynv	91e47d3a-53bd-4429-a0f2-dc4534030f14
+00000000-0000-0000-0000-000000000000	810	pgttmoohylgc	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-26 21:18:26.036797+00	2026-11-27 12:05:23.011681+00	lw52iircw6ll	3d0177fd-b2ed-422f-9811-5f8032ad5fac
+00000000-0000-0000-0000-000000000000	816	obfnpcl45i26	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-27 10:36:11.533099+00	2026-11-27 12:52:22.464077+00	4wdlcs3ueka4	91e47d3a-53bd-4429-a0f2-dc4534030f14
+00000000-0000-0000-0000-000000000000	815	mr5ehiwvcbjc	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-27 08:40:55.048418+00	2026-11-27 13:45:10.326893+00	xwvmupjfe2y5	67172279-b1b1-4f95-a2c0-034c8b76e19b
+00000000-0000-0000-0000-000000000000	820	tpcuuvj5eqnf	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-27 13:45:10.352927+00	2026-11-27 13:45:10.352927+00	mr5ehiwvcbjc	67172279-b1b1-4f95-a2c0-034c8b76e19b
+00000000-0000-0000-0000-000000000000	817	igs42ltnyxc4	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-27 12:05:23.027038+00	2026-11-27 14:25:55.724839+00	pgttmoohylgc	3d0177fd-b2ed-422f-9811-5f8032ad5fac
+00000000-0000-0000-0000-000000000000	821	nlh3olflazel	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-27 14:25:55.749859+00	2026-11-27 14:25:55.749859+00	igs42ltnyxc4	3d0177fd-b2ed-422f-9811-5f8032ad5fac
+00000000-0000-0000-0000-000000000000	819	nktpcqxygb6d	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-27 12:52:22.478457+00	2026-11-27 14:28:04.114844+00	obfnpcl45i26	91e47d3a-53bd-4429-a0f2-dc4534030f14
+00000000-0000-0000-0000-000000000000	822	k6tewwhwo4va	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-27 14:28:04.126766+00	2026-11-27 14:28:04.126766+00	nktpcqxygb6d	91e47d3a-53bd-4429-a0f2-dc4534030f14
+00000000-0000-0000-0000-000000000000	823	hnl3hhbcnmut	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-27 14:30:33.56981+00	2026-11-27 14:30:33.56981+00	d3hibicou3uz	fe85c6d8-5568-466a-820f-1825a509392b
+00000000-0000-0000-0000-000000000000	818	6tdlvfofxm34	43d2ab0d-e902-49d7-9e81-a3696d296ad2	t	2026-11-27 12:44:54.90447+00	2026-11-27 14:32:20.403022+00	\N	a3b94125-b431-4690-a0c9-7958c2f1780c
+00000000-0000-0000-0000-000000000000	824	l2qh2rcibabu	43d2ab0d-e902-49d7-9e81-a3696d296ad2	f	2026-11-27 14:32:20.418013+00	2026-11-27 14:32:20.418013+00	6tdlvfofxm34	a3b94125-b431-4690-a0c9-7958c2f1780c
 \.
 
 
@@ -451,6 +468,9 @@ c8cd1910-9af1-45e6-8e3c-684680078a79	81a08445-8690-4ba5-9fc5-2331ede97bb5	buoi/8
 9b2e34bd-90c0-46c8-80cb-2c0407e31bd7	7e26a780-214a-4c13-8a28-7f897936eec2	buoi/7e26a780-214a-4c13-8a28-7f897936eec2/2b7f49a9-15ec-4d5f-964e-0869d1c13a88.jpg	2026-11-25 14:54:47.172102+00
 08155b58-cf3b-43a0-beb6-85ccad353a34	ceb1cfa4-71bf-44bb-8697-f8fa4958502b	buoi/ceb1cfa4-71bf-44bb-8697-f8fa4958502b/51310855-feb7-4c43-9ac9-4117b258d7b8.jpg	2026-11-26 12:57:25.491236+00
 a1d7ab73-c76d-4bf3-ac37-e6265e2e8fc8	95891a84-ae6b-474c-b54b-452bf5debda7	buoi/95891a84-ae6b-474c-b54b-452bf5debda7/f8edb7a1-2c23-482c-9825-b5579cf8d0c4.jpg	2026-11-26 13:43:34.484822+00
+b820a4f2-587b-4af8-aab0-f4ae304ad8bb	14c61656-86ac-4ed2-b712-4349c7d908af	buoi/14c61656-86ac-4ed2-b712-4349c7d908af/ee3d91bb-559d-4b0c-9a72-122ad3688b95.jpg	2026-11-27 07:00:52.43027+00
+48ceac27-5586-45ce-a3b2-97ea83464d39	67e5ca37-7a1e-4f4d-90f9-66edc5d2bdb0	buoi/67e5ca37-7a1e-4f4d-90f9-66edc5d2bdb0/35b56e3f-3d90-47e3-8e88-7478eb8cf415.jpg	2026-11-27 08:41:17.49006+00
+0c3643ca-5882-479c-ba35-4b301f1760c9	da811ac9-8644-4249-acb0-be74e6bdaa81	buoi/da811ac9-8644-4249-acb0-be74e6bdaa81/9c889061-d51a-4e58-8478-457a4db92844.jpg	2026-11-27 13:45:48.356826+00
 \.
 
 
@@ -1079,16 +1099,24 @@ eea2018b-766f-4172-aefc-f89454e11876	bc4166c1-2a49-43d1-9769-f752dcc2d91c	hoc_bu
 ceb1cfa4-71bf-44bb-8697-f8fa4958502b	55328067-088a-4f1b-ae66-507f6d56aa15	vang	0
 ceb1cfa4-71bf-44bb-8697-f8fa4958502b	e1d9c6da-9520-433a-9485-201be17d736d	vang	0
 ceb1cfa4-71bf-44bb-8697-f8fa4958502b	b218ff29-82e7-4386-8eae-0dd472b1894b	vang	0
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	6ef103a4-fc2b-4fc6-bb1a-e113033e7f91	co_mat	5
 95891a84-ae6b-474c-b54b-452bf5debda7	e561c6d5-6fbc-462a-ab2e-e1423f3b692f	co_mat	10
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	0377768d-cc45-49f5-a96d-8d170c3bf41f	co_mat	4
 95891a84-ae6b-474c-b54b-452bf5debda7	b3065572-cd6a-4131-bae6-4f0b9ed4f46f	co_mat	10
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	d2c38a11-b7b8-41da-9cf9-9f5808755c9b	co_mat	3
 95891a84-ae6b-474c-b54b-452bf5debda7	9c5e27df-2361-46d3-9551-92dc6109c2f5	co_mat	10
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	f85931d6-9ede-45a1-acde-ba4789c6e853	co_mat	5
 95891a84-ae6b-474c-b54b-452bf5debda7	1b364415-27c0-4528-b772-6f9331702874	co_mat	10
 95891a84-ae6b-474c-b54b-452bf5debda7	98deb901-bd60-4e1a-94c1-0ab944440ecb	co_mat	10
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	bc4166c1-2a49-43d1-9769-f752dcc2d91c	co_mat	11
 95891a84-ae6b-474c-b54b-452bf5debda7	6125884c-53f0-45ee-a303-3d03bc111254	co_mat	10
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	78e11889-7937-481d-8234-98df5fc25ddc	co_mat	4
 95891a84-ae6b-474c-b54b-452bf5debda7	2a71aebf-2868-4496-8c0d-26a9c5fdac6d	co_mat	10
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	ff386fd8-15b5-42a0-b103-536c60684008	co_mat	5
 95891a84-ae6b-474c-b54b-452bf5debda7	09426ac0-e7af-47bc-a029-195fcee72b46	co_mat	10
 ceb1cfa4-71bf-44bb-8697-f8fa4958502b	da8f3b69-bcb6-46d7-b324-e5f61183d270	co_mat	5
 ceb1cfa4-71bf-44bb-8697-f8fa4958502b	3e45fe76-7884-4e40-8f60-d54cb47ea033	co_mat	4
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	1555600c-8358-42eb-b9f3-611dbeab3641	co_mat	5
 ceb1cfa4-71bf-44bb-8697-f8fa4958502b	5f872515-0a7e-4cd7-8a63-01c8c51d8b04	hoc_bu	10
 ceb1cfa4-71bf-44bb-8697-f8fa4958502b	47de7f3c-c311-44a9-b8e9-d535f63909c5	co_mat	4
 ceb1cfa4-71bf-44bb-8697-f8fa4958502b	a5df955d-2040-41d3-a691-2a9526050dba	co_mat	8
@@ -1097,10 +1125,20 @@ ceb1cfa4-71bf-44bb-8697-f8fa4958502b	64a37c23-5108-4025-bcb3-e7ea6b1fe979	co_mat
 ceb1cfa4-71bf-44bb-8697-f8fa4958502b	e6af6149-70f4-4687-8390-4f3886b7a42e	co_mat	3
 ceb1cfa4-71bf-44bb-8697-f8fa4958502b	e5d63dee-19fe-4ae1-a741-08a03111eb1d	co_mat	5
 ceb1cfa4-71bf-44bb-8697-f8fa4958502b	bc4166c1-2a49-43d1-9769-f752dcc2d91c	hoc_bu	7
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	5f872515-0a7e-4cd7-8a63-01c8c51d8b04	hoc_bu	8
 ceb1cfa4-71bf-44bb-8697-f8fa4958502b	127cf384-4ac0-4a57-8d3e-7f3755cf5e76	co_mat	4
+da811ac9-8644-4249-acb0-be74e6bdaa81	b64ca36c-4f68-4afd-ac90-9f3a5fbe6381	co_mat	10
 ceb1cfa4-71bf-44bb-8697-f8fa4958502b	4d36c077-ad54-4671-8a64-3c7d297faca3	co_mat	7
 ceb1cfa4-71bf-44bb-8697-f8fa4958502b	10e6b491-c559-4087-bbc6-d6520f6d21f5	co_mat	6
 ceb1cfa4-71bf-44bb-8697-f8fa4958502b	d96f705a-caed-4aed-8c5a-2f729630dd64	co_mat	6
+14c61656-86ac-4ed2-b712-4349c7d908af	e561c6d5-6fbc-462a-ab2e-e1423f3b692f	co_mat	10
+67e5ca37-7a1e-4f4d-90f9-66edc5d2bdb0	7dd34d24-cee2-4506-98f3-90bc27e293a9	co_mat	10
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	552de5e9-d599-4a8e-ace8-d80518dfe059	co_mat	0
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	55328067-088a-4f1b-ae66-507f6d56aa15	co_mat	0
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	9706bbdf-ef70-4ea9-950c-f8062c4ac033	vang	0
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	892394ca-8163-4263-9b19-957de160996b	co_mat	0
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	242f8971-c4c0-44d1-8f4e-c26d77efd8ef	vang	0
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	60cdb4a9-3025-44d3-8086-b14612242c76	vang	0
 \.
 
 
@@ -1308,6 +1346,7 @@ COPY "public"."nhat_ky" ("id", "luc", "nguoi", "ten_nguoi", "bang", "hanh_dong",
 1581	2026-11-26 04:11:53.69344+00	\N	\N	hoc_sinh	sua	Trần Gia Khiêm (Voi)	{"link_zalo": [null, "https://zalo.me/g/xwzvnw168"]}
 1591	2026-11-26 07:59:29.624988+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Lê Minh Huy	{"avatar": [null, "avatar/ff386fd8-15b5-42a0-b103-536c60684008-1795679968966.jpg"]}
 1603	2026-11-26 13:21:53.805601+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	sticker_cong_tru	them	Vũ Dương Bảo An	{"id": "f24a221e-16e4-47fa-987d-626e4f4a982b", "so": -40, "ngay": "2026-11-26", "ly_do": "Đổi quà", "nguoi": "43d2ab0d-e902-49d7-9e81-a3696d296ad2", "tao_luc": "2026-11-26T13:21:53.805601+00:00", "ten_nguoi": "Quản trị", "hoc_sinh_id": "da8f3b69-bcb6-46d7-b324-e5f61183d270"}
+1613	2026-11-27 01:28:33.211179+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
 1258	2026-11-21 08:57:13.183957+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
 1288	2026-11-21 11:18:48.717537+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Khuất Hoàng An 	{"link_zalo": [null, "https://zalo.me/g/rd741dryczmk29nfhvgw"]}
 1300	2026-11-22 15:03:34.523597+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
@@ -1346,6 +1385,7 @@ COPY "public"."nhat_ky" ("id", "luc", "nguoi", "ten_nguoi", "bang", "hanh_dong",
 1582	2026-11-26 04:11:53.808439+00	\N	\N	hoc_sinh	sua	Chu Bảo Ngân	{"link_zalo": [null, "https://zalo.me/g/hkeena333jqshalzmtan"]}
 1592	2026-11-26 08:00:31.714527+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Lê Tiến Anh	{"avatar": [null, "avatar/4d36c077-ad54-4671-8a64-3c7d297faca3-1795680030601.jpg"]}
 1604	2026-11-26 13:22:19.881273+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	sticker_cong_tru	them	Nguyễn Ngọc Châu An	{"id": "814689b5-2ae9-4a65-8e70-b3f84df979b1", "so": -50, "ngay": "2026-11-26", "ly_do": "Đổi quà", "nguoi": "43d2ab0d-e902-49d7-9e81-a3696d296ad2", "tao_luc": "2026-11-26T13:22:19.881273+00:00", "ten_nguoi": "Quản trị", "hoc_sinh_id": "e5d63dee-19fe-4ae1-a741-08a03111eb1d"}
+1614	2026-11-27 12:44:55.18486+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
 1259	2026-11-21 08:59:13.384652+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	xoa	Chu Bảo Ngân	{"id": "ad4eb7e3-ef7e-442e-9e18-766284275ff7", "avatar": "avatar/ad4eb7e3-ef7e-442e-9e18-766284275ff7-1794999976075.jpg", "ho_ten": "Chu Bảo Ngân", "lop_id": "0d76975d-4f18-47de-adb8-3992850432eb", "ghi_chu": null, "tao_luc": "2026-11-18T11:06:16.031289+00:00", "ngay_vao": "2026-11-01", "link_zalo": null, "trang_thai": "dang_hoc", "phu_huynh_id": null, "don_gia_rieng": null, "sdt_phu_huynh": null, "ten_phu_huynh": null, "sticker_dau_ky": 0}
 1260	2026-11-21 08:59:13.384652+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	xoa	Hoàng Diệu Linh	{"id": "e57f5ae7-1615-43da-89c0-af87f74cdc97", "avatar": "avatar/e57f5ae7-1615-43da-89c0-af87f74cdc97-1795000028815.jpg", "ho_ten": "Hoàng Diệu Linh", "lop_id": "0d76975d-4f18-47de-adb8-3992850432eb", "ghi_chu": null, "tao_luc": "2026-11-18T11:07:08.678948+00:00", "ngay_vao": "2026-11-01", "link_zalo": null, "trang_thai": "dang_hoc", "phu_huynh_id": null, "don_gia_rieng": null, "sdt_phu_huynh": null, "ten_phu_huynh": null, "sticker_dau_ky": 0}
 1261	2026-11-21 08:59:13.384652+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	xoa	Lê Thị Anh Thư	{"id": "e83a1cf4-c38e-4ddc-acd0-ff0fb166c6af", "avatar": "avatar/e83a1cf4-c38e-4ddc-acd0-ff0fb166c6af-1795003669718.jpg", "ho_ten": "Lê Thị Anh Thư", "lop_id": "0d76975d-4f18-47de-adb8-3992850432eb", "ghi_chu": null, "tao_luc": "2026-11-18T11:08:14.94948+00:00", "ngay_vao": "2026-11-01", "link_zalo": null, "trang_thai": "dang_hoc", "phu_huynh_id": null, "don_gia_rieng": null, "sdt_phu_huynh": null, "ten_phu_huynh": null, "sticker_dau_ky": 0}
@@ -1472,6 +1512,7 @@ COPY "public"."nhat_ky" ("id", "luc", "nguoi", "ten_nguoi", "bang", "hanh_dong",
 1594	2026-11-26 08:01:38.7585+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Nguyễn Gia Bảo	{"avatar": [null, "avatar/9649475f-b209-4855-8e4f-f991a3ccce82-1795680097288.jpg"]}
 1605	2026-11-26 13:23:51.134226+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	sticker_cong_tru	them	Phạm Ngọc Anh	{"id": "a432e37f-9749-4e4d-976e-c94873b79982", "so": -56, "ngay": "2026-11-26", "ly_do": "Đổi quà", "nguoi": "43d2ab0d-e902-49d7-9e81-a3696d296ad2", "tao_luc": "2026-11-26T13:23:51.134226+00:00", "ten_nguoi": "Quản trị", "hoc_sinh_id": "10e6b491-c559-4087-bbc6-d6520f6d21f5"}
 1606	2026-11-26 13:24:03.416444+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	sticker_cong_tru	them	Hoàng Trung Đức	{"id": "1766adb3-b628-413a-919c-0fc0697262f2", "so": -60, "ngay": "2026-11-26", "ly_do": "Đổi quà", "nguoi": "43d2ab0d-e902-49d7-9e81-a3696d296ad2", "tao_luc": "2026-11-26T13:24:03.416444+00:00", "ten_nguoi": "Quản trị", "hoc_sinh_id": "a5df955d-2040-41d3-a691-2a9526050dba"}
+1615	2026-11-27 13:06:46.388915+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	Thành · Ca 1 tối t6 · 27/11/2026	{"buoi_id": "1a2bdf87-fb6d-4b4e-a660-5517e4efd474", "don_gia": 100000, "tro_giang_id": "d45793f2-33af-41bf-91e4-410cf31087cc"}
 1282	2026-11-21 10:06:59.212955+00	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	Ngân	tro_giang_buoi	them	Ngân · Pre-A1+Ielts bổ trợ · 21/11/2026	{"buoi_id": "2a9b49fe-888a-4327-9b2b-92cf74c0ffad", "don_gia": 100000, "tro_giang_id": "77ffcb33-c53a-41b3-a728-f1fdb13cc37b"}
 1294	2026-11-21 11:24:12.994089+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Phạm Minh Khôi 	{"link_zalo": [null, "https://zalo.me/g/xpgehs363"]}
 1306	2026-11-23 06:24:11.830836+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	test · 1-1 Trung Dũng  · 23/11/2026	{"buoi_id": "01d029a9-b0f8-47b3-867a-008624e4ed9d", "don_gia": 1000000, "tro_giang_id": "8f2ca2fa-e36b-4f1c-89a0-aade2484f779"}
@@ -1504,6 +1545,7 @@ COPY "public"."nhat_ky" ("id", "luc", "nguoi", "ten_nguoi", "bang", "hanh_dong",
 1598	2026-11-26 12:57:51.092475+00	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	Anh Tuấn	buoi_hoc	sua	Lớp Ielts nâng cao · 26/11/2026	{"lop_nghi": [false, true]}
 1607	2026-11-26 13:25:15.164148+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	sticker_cong_tru	them	Đặng Bảo An	{"id": "194135c9-3b24-4de9-903b-5ddcfbcffb58", "so": -60, "ngay": "2026-11-26", "ly_do": "Đổi quà", "nguoi": "43d2ab0d-e902-49d7-9e81-a3696d296ad2", "tao_luc": "2026-11-26T13:25:15.164148+00:00", "ten_nguoi": "Quản trị", "hoc_sinh_id": "8449f57a-28fa-40e2-b016-52d8fdfb1a1a"}
 1609	2026-11-26 13:25:45.123472+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	sticker_cong_tru	them	Trần Gia Khiêm (Voi)	{"id": "caef808c-e439-44ce-be49-33528daeaab0", "so": -64, "ngay": "2026-11-26", "ly_do": "Đổi quà", "nguoi": "43d2ab0d-e902-49d7-9e81-a3696d296ad2", "tao_luc": "2026-11-26T13:25:45.123472+00:00", "ten_nguoi": "Quản trị", "hoc_sinh_id": "e6af6149-70f4-4687-8390-4f3886b7a42e"}
+1616	2026-11-27 13:06:49.639739+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	Minh Dương · Ca 1 tối t6 · 27/11/2026	{"buoi_id": "1a2bdf87-fb6d-4b4e-a660-5517e4efd474", "don_gia": 100000, "tro_giang_id": "877e2be5-c648-4abe-b7a6-8ceff0df9d68"}
 1283	2026-11-21 11:08:45.79064+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tai_khoan	dang_nhap	Quản trị	\N
 1295	2026-11-21 11:26:05.481909+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	hoc_sinh	sua	Vũ Hải Hà 	{"link_zalo": [null, "https://zalo.me/g/l3uhkuophq7uzcn8qqrj"]}
 1307	2026-11-23 06:24:58.291083+00	43d2ab0d-e902-49d7-9e81-a3696d296ad2	Quản trị	tro_giang_buoi	them	test · Lớp ielts cơ bản cn · 22/11/2026	{"buoi_id": "896a645c-e7c4-4117-940f-d49b23298936", "don_gia": 1000000, "tro_giang_id": "8f2ca2fa-e36b-4f1c-89a0-aade2484f779"}
@@ -1743,8 +1785,10 @@ a1c02c20-6317-4d61-ba6b-656c1156c884	d45793f2-33af-41bf-91e4-410cf31087cc	100000
 eea2018b-766f-4172-aefc-f89454e11876	d45793f2-33af-41bf-91e4-410cf31087cc	100000
 ceb1cfa4-71bf-44bb-8697-f8fa4958502b	d45793f2-33af-41bf-91e4-410cf31087cc	100000
 ceb1cfa4-71bf-44bb-8697-f8fa4958502b	906a5d63-7289-4b55-a279-ff8db9b1a5c4	100000
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	d45793f2-33af-41bf-91e4-410cf31087cc	100000
 c0f883fc-0857-4b2b-bc18-2e057ddde6a7	77ffcb33-c53a-41b3-a728-f1fdb13cc37b	100000
 c0f883fc-0857-4b2b-bc18-2e057ddde6a7	877e2be5-c648-4abe-b7a6-8ceff0df9d68	100000
+1a2bdf87-fb6d-4b4e-a660-5517e4efd474	877e2be5-c648-4abe-b7a6-8ceff0df9d68	100000
 \.
 
 
@@ -1834,11 +1878,14 @@ d54dce0e-1875-40bb-9bdb-fb68b066c3a5	anh	buoi/5953209e-2472-4fb7-916a-b242ad4fa5
 65f70535-cba0-4890-8638-3c29eb469942	anh	buoi/804fbd08-2178-4c1a-9c0a-293b1ca0462a/febd7102-68da-47bb-8408-7436b9bcd9cb.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-25 13:15:22.458238+00	2026-11-25 13:15:22.458238+00	2026-11-25 13:15:22.458238+00	{"eTag": "\\"2bbc4b1da96d9d468ff49fddf10f9ec8\\"", "size": 666885, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-25T13:15:23.000Z", "contentLength": 666885, "httpStatusCode": 200}	bf5ec457-dc3e-4449-9b5b-52ada33e62df	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
 b8682ed4-17e6-48d7-843b-28a8864c22bf	anh	avatar/9649475f-b209-4855-8e4f-f991a3ccce82-1795680097288.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-26 08:01:38.608513+00	2026-11-26 08:01:38.608513+00	2026-11-26 08:01:38.608513+00	{"eTag": "\\"f1d5842577ba5cc7bb25f153ac740a24\\"", "size": 34562, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-26T08:01:39.000Z", "contentLength": 34562, "httpStatusCode": 200}	ef780f9a-53bc-4c33-a8e0-9057a66d03db	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
 78d6c42b-9db5-4de8-92f7-2d83c4aabf66	anh	buoi/95891a84-ae6b-474c-b54b-452bf5debda7/f8edb7a1-2c23-482c-9825-b5579cf8d0c4.jpg	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	2026-11-26 13:43:34.235463+00	2026-11-26 13:43:34.235463+00	2026-11-26 13:43:34.235463+00	{"eTag": "\\"a53194dee4751288bb195fa8719610ce\\"", "size": 310046, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-26T13:43:35.000Z", "contentLength": 310046, "httpStatusCode": 200}	f32df3d6-321f-4ad3-a419-19a4a6f57419	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	{}	\N	f	f
+4231ed9a-d01e-4b27-bb5a-90b2ea9b282e	anh	buoi/67e5ca37-7a1e-4f4d-90f9-66edc5d2bdb0/35b56e3f-3d90-47e3-8e88-7478eb8cf415.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-27 08:41:17.310161+00	2026-11-27 08:41:17.310161+00	2026-11-27 08:41:17.310161+00	{"eTag": "\\"b58b8392b96e58c157064610752d59ab\\"", "size": 448296, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-27T08:41:18.000Z", "contentLength": 448296, "httpStatusCode": 200}	9ed2fa69-7aa3-479f-a83b-eaba5cc775cd	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
 6362f617-2bd0-4e9e-a5b4-0185ac57b79b	anh	buoi/997fe90e-6a07-4050-a18e-2c2e251643cd/e3b51695-d754-4a97-a83b-bd76ef994726.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-25 14:39:26.379469+00	2026-11-25 14:39:26.379469+00	2026-11-25 14:39:26.379469+00	{"eTag": "\\"a096577aa1ddab5de54340c27373839f\\"", "size": 359218, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-25T14:39:27.000Z", "contentLength": 359218, "httpStatusCode": 200}	21f139c0-2349-4f52-a272-92705395041b	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
 00efaf16-7b0f-4282-8c63-b263f2a804c2	anh	buoi/896a645c-e7c4-4117-940f-d49b23298936/e83f827a-e74b-4cac-960b-e484948b3cab.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-25 14:50:31.652197+00	2026-11-25 14:50:31.652197+00	2026-11-25 14:50:31.652197+00	{"eTag": "\\"afd043e430dbe86ea186f94401c976b8\\"", "size": 409013, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-25T14:50:32.000Z", "contentLength": 409013, "httpStatusCode": 200}	9676a961-ca35-4959-8568-246ad55db87e	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
 25fb50f0-9271-46b8-9fd6-a11be5cd9867	anh	buoi/7e26a780-214a-4c13-8a28-7f897936eec2/0dfced6d-88ed-448f-95a1-10a8282b5b43.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-25 14:54:23.250355+00	2026-11-25 14:54:23.250355+00	2026-11-25 14:54:23.250355+00	{"eTag": "\\"06b5847e9386b983e7bebf736c41f201\\"", "size": 334148, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-25T14:54:24.000Z", "contentLength": 334148, "httpStatusCode": 200}	ed272ce4-4daf-4cf9-a77d-145263688b5d	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
 23e4eb0d-c6e0-44a5-876e-6336466c1308	anh	buoi/7e26a780-214a-4c13-8a28-7f897936eec2/2b7f49a9-15ec-4d5f-964e-0869d1c13a88.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-25 14:54:46.777481+00	2026-11-25 14:54:46.777481+00	2026-11-25 14:54:46.777481+00	{"eTag": "\\"efe15fd662eea5c1fdd004e750355876\\"", "size": 439948, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-25T14:54:47.000Z", "contentLength": 439948, "httpStatusCode": 200}	da6c542a-e3c9-4339-9cc9-17aef3c95ec4	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
 1d70f884-0451-4ce4-aa47-df72224314fe	anh	buoi/ceb1cfa4-71bf-44bb-8697-f8fa4958502b/51310855-feb7-4c43-9ac9-4117b258d7b8.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-26 12:57:25.281765+00	2026-11-26 12:57:25.281765+00	2026-11-26 12:57:25.281765+00	{"eTag": "\\"5fa206d99f6788f560ba9e4f1e2e5105\\"", "size": 586111, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-26T12:57:26.000Z", "contentLength": 586111, "httpStatusCode": 200}	c1241580-c618-4217-9b08-0726cc1e7058	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
+da39e50a-eaa6-45af-be34-7bd7b41930c2	anh	buoi/14c61656-86ac-4ed2-b712-4349c7d908af/ee3d91bb-559d-4b0c-9a72-122ad3688b95.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-27 07:00:51.552449+00	2026-11-27 07:00:51.552449+00	2026-11-27 07:00:51.552449+00	{"eTag": "\\"04464473883bf32e7b29ee64719f1348\\"", "size": 383948, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-27T07:00:52.000Z", "contentLength": 383948, "httpStatusCode": 200}	811a2dbb-6d41-4b22-8125-15656e338c5a	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
+95a06381-a462-44ef-b7f0-48c50fd8a91f	anh	buoi/da811ac9-8644-4249-acb0-be74e6bdaa81/9c889061-d51a-4e58-8478-457a4db92844.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-27 13:45:48.089437+00	2026-11-27 13:45:48.089437+00	2026-11-27 13:45:48.089437+00	{"eTag": "\\"338666c32b89b8403aefbec2748b0d5a\\"", "size": 347523, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-27T13:45:49.000Z", "contentLength": 347523, "httpStatusCode": 200}	f9c19c50-faaa-4502-976b-2d60015b9154	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
 a9971b81-8c50-4a67-9657-eb125038e646	anh	buoi/92b3cab2-5ac5-48d8-a4a8-9b189028353a/2c9ad16e-8d97-4db5-9b10-a08643e38e86.jpg	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	2026-11-18 12:20:49.658409+00	2026-11-18 12:20:49.658409+00	2026-11-18 12:20:49.658409+00	{"eTag": "\\"1bbc5df55c60290e44ba41c8bae027aa\\"", "size": 576396, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-18T12:20:50.000Z", "contentLength": 576396, "httpStatusCode": 200}	3b343f0a-95ce-46e1-9da4-9b961203b945	69dc8fb7-cf4b-4ce8-9dac-fe767f6968ed	{}	\N	f	f
 cf860e4a-ec2f-4bbb-8626-4e4ab0c6c188	anh	buoi/b58e02fa-a696-449e-bdab-8586041d5620/141820af-28e8-457a-b1e4-a411095c240a.jpg	43d2ab0d-e902-49d7-9e81-a3696d296ad2	2026-11-20 14:42:39.737219+00	2026-11-20 14:42:39.737219+00	2026-11-20 14:42:39.737219+00	{"eTag": "\\"6ab6be1db0dd386ca407f58aa2e40b2c\\"", "size": 415997, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-20T14:42:40.000Z", "contentLength": 415997, "httpStatusCode": 200}	62f09cd5-3828-4b16-97fa-d1a491089bca	43d2ab0d-e902-49d7-9e81-a3696d296ad2	{}	\N	f	f
 8037db5f-1bc1-4b80-a216-5765d99fffc7	anh	buoi/71e54043-f25e-48e8-873d-9f249bd6150c/d65e8130-864b-4a59-b33b-326b36931b00.jpg	906a5d63-7289-4b55-a279-ff8db9b1a5c4	2026-11-19 13:05:41.780632+00	2026-11-19 13:05:41.780632+00	2026-11-19 13:05:41.780632+00	{"eTag": "\\"da22bb5c3c352d42b461d6032ba44f6e\\"", "size": 523990, "mimetype": "image/jpeg", "cacheControl": "max-age=3600", "lastModified": "2026-11-19T13:05:42.000Z", "contentLength": 523990, "httpStatusCode": 200}	b3f0992c-eec2-42df-90b9-f4ada59945d1	906a5d63-7289-4b55-a279-ff8db9b1a5c4	{}	\N	f	f
@@ -1877,7 +1924,7 @@ COPY "storage"."vector_indexes" ("id", "name", "bucket_id", "data_type", "dimens
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: supabase_auth_admin
 --
 
-SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 811, true);
+SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 824, true);
 
 
 --
@@ -1898,13 +1945,13 @@ SELECT pg_catalog.setval('"public"."nhat_ky_chot_so_id_seq"', 173, true);
 -- Name: nhat_ky_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."nhat_ky_id_seq"', 1612, true);
+SELECT pg_catalog.setval('"public"."nhat_ky_id_seq"', 1616, true);
 
 
 --
 -- PostgreSQL database dump complete
 --
 
--- \unrestrict yoIbGXuXbWnC2sWZ6Ws7wZDUau1SVSBkLY5Sl99gN0ecHJtSetR75GzFWSI2HCV
+-- \unrestrict rKs9pYor6DTUohUXMhy5gOkdcnkPtXKRCVfZY1obhZ4XRemsSZePlYXw03ILDOA
 
 RESET ALL;
